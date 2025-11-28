@@ -15,3 +15,7 @@ docker run -d --name conduktor_quick_start_in_a_single_container \
 ```
 
 After the container starts, open http://localhost:8080 to access Conduktor Console.
+
+## Demo 
+
+[![asciicast](https://asciinema.org/a/OQsYnTz33wnUUMBU4bFJWIIR5.svg)](https://asciinema.org/a/OQsYnTz33wnUUMBU4bFJWIIR5)
