@@ -2,6 +2,9 @@
 
 This repo builds and runs a single Docker image that bundles Conduktor Console, Gateway, Redpanda, and supporting services.
 
+> [!WARNING]
+> DO NOT DO THIS AT HOME. 
+
 ## Build
 ```sh
 docker build . -t conduktor_quick_start_in_a_single_container
