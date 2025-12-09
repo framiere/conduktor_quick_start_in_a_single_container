@@ -32,6 +32,14 @@ conduktor token create admin myToken
 ```
 
 
+# How to setup `conduktor` cli
+
+https://docs.conduktor.io/guide/conduktor-in-production/automate/cli-automation
+
+or go to https://github.com/conduktor/ctl
+
+
+
 ## Demo 
 
 [![asciicast](https://asciinema.org/a/wZOS7MG8NJsySqskvkbLszDiJ.svg)](https://asciinema.org/a/wZOS7MG8NJsySqskvkbLszDiJ)
