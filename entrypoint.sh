@@ -84,6 +84,8 @@ env \
   CDK_DATABASE_URL=postgresql://conduktor:change_me@localhost:5432/conduktor-console \
   CDK_KAFKASQL_DATABASE_URL=postgresql://conduktor:change_me@localhost:5433/conduktor-sql \
   CDK_ORGANIZATION_NAME=getting-started \
+  CDK_ADMIN_EMAIL=admin@demo.dev \
+  CDK_ADMIN_PASSWORD=123=ABC_abc  \
   CDK_CLUSTERS_0_ID=local-kafka \
   CDK_CLUSTERS_0_NAME=local-kafka \
   CDK_CLUSTERS_0_BOOTSTRAPSERVERS=localhost:9092 \

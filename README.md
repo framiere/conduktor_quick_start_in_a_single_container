@@ -19,6 +19,19 @@ docker run -d --name conduktor_quick_start_in_a_single_container \
 
 After the container starts, open http://localhost:8080 to access Conduktor Console.
 
+  login `admin@demo.dev`
+  password: `123=ABC_abc`
+
+On the command line:
+
+```sh
+export CDK_USER=admin@demo.dev
+export CDK_PASSWORD=123=ABC_abc
+export CDK_BASE_URL=http://localhost:8080/
+conduktor token create admin sauveur myToken
+```
+
+
 ## Demo 
 
-[![asciicast](https://asciinema.org/a/OQsYnTz33wnUUMBU4bFJWIIR5.svg)](https://asciinema.org/a/OQsYnTz33wnUUMBU4bFJWIIR5)
+[![asciicast](https://asciinema.org/a/wZOS7MG8NJsySqskvkbLszDiJ.svg)](https://asciinema.org/a/wZOS7MG8NJsySqskvkbLszDiJ)
