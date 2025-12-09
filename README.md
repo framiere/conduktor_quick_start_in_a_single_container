@@ -28,7 +28,7 @@ On the command line:
 export CDK_USER=admin@demo.dev
 export CDK_PASSWORD=123=ABC_abc
 export CDK_BASE_URL=http://localhost:8080/
-conduktor token create admin sauveur myToken
+conduktor token create admin myToken
 ```
 
 
