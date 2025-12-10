@@ -72,7 +72,11 @@ env \
   JAVA_HOME=/opt/java/openjdk \
   PATH=/opt/java/openjdk/bin:$PATH \
   KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
-  GATEWAY_ACL_ENABLED=false \
+  GATEWAY_ADVERTISED_HOST=localhost \
+  GATEWAY_SECURITY_PROTOCOL=SASL_PLAINTEXT \
+  GATEWAY_USER_POOL_SECRET_KEY=Tie8Qtjv/CHcRYJdg+df201ecVErnT5dx0upbD4jPeg=  \
+  GATEWAY_ADMIN_API_USERS='[{username: admin, password: conduktor, admin: true}]' \
+  GATEWAY_ACL_ENABLED=true \
   JAVA_OPTS="-Xms256m -Xmx512m" \
   sh -c 'cd /opt/gateway-app && exec "$JAVA_HOME/bin/java" $JAVA_OPTS -cp @/opt/gateway-app/jib-classpath-file @/opt/gateway-app/jib-main-class-file' >"$LOGDIR/gateway.log" 2>&1 &
 
@@ -85,24 +89,13 @@ env \
   CDK_KAFKASQL_DATABASE_URL=postgresql://conduktor:change_me@localhost:5433/conduktor-sql \
   CDK_ORGANIZATION_NAME=getting-started \
   CDK_ADMIN_EMAIL=admin@demo.dev \
-  CDK_ADMIN_PASSWORD=123=ABC_abc  \
+  CDK_ADMIN_PASSWORD=123_ABC_abc  \
   CDK_CLUSTERS_0_ID=local-kafka \
   CDK_CLUSTERS_0_NAME=local-kafka \
   CDK_CLUSTERS_0_BOOTSTRAPSERVERS=localhost:9092 \
   CDK_CLUSTERS_0_SCHEMAREGISTRY_URL=http://localhost:8081 \
   CDK_CLUSTERS_0_COLOR=#6A57C8 \
   CDK_CLUSTERS_0_ICON=kafka \
-  CDK_CLUSTERS_1_ID=cdk-gateway \
-  CDK_CLUSTERS_1_NAME=cdk-gateway \
-  CDK_CLUSTERS_1_BOOTSTRAPSERVERS=localhost:6969 \
-  CDK_CLUSTERS_1_SCHEMAREGISTRY_URL=http://localhost:8081 \
-  CDK_CLUSTERS_1_KAFKAFLAVOR_URL=http://localhost:8888 \
-  CDK_CLUSTERS_1_KAFKAFLAVOR_USER=admin \
-  CDK_CLUSTERS_1_KAFKAFLAVOR_PASSWORD=conduktor \
-  CDK_CLUSTERS_1_KAFKAFLAVOR_VIRTUALCLUSTER=passthrough \
-  CDK_CLUSTERS_1_KAFKAFLAVOR_TYPE=Gateway \
-  CDK_CLUSTERS_1_COLOR=#6A57C8 \
-  CDK_CLUSTERS_1_ICON=dog \
   CDK_MONITORING_CORTEX-URL=http://localhost:9009/ \
   CDK_MONITORING_ALERT-MANAGER-URL=http://localhost:9010/ \
   CDK_MONITORING_CALLBACK-URL=http://localhost:8080/monitoring/api/ \
@@ -116,9 +109,16 @@ env \
   PATH=/opt/java/openjdk/bin:$PATH \
   KAFKA_SCHEMA_REGISTRY_URL=http://localhost:8081 \
   GATEWAY_ADMIN_API=http://localhost:8888 \
-  KAFKA_BOOTSTRAP_SERVERS=localhost:6969 \
+  KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
   sh -c 'cd /opt/datagen-app && exec "$JAVA_HOME/bin/java" -jar /opt/datagen-app/myapp.jar' >"$LOGDIR/datagen.log" 2>&1 &
 
-echo "All services started. Tailing logs..."
+echo "All services started."
 
+# Run setup script in background
+if [ -x /opt/conduktor/setup_gateway.sh ]; then
+  echo "Running setup script in background..."
+  /opt/conduktor/setup_gateway.sh >"$LOGDIR/setup.log" 2>&1 &
+fi
+
+echo "Tailing logs..."
 exec tail -F "$LOGDIR"/*.log
