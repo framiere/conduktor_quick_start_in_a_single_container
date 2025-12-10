@@ -130,7 +130,6 @@ conduktor get VirtualCluster
 conduktor get GatewayServiceAccount
 ```
 
-or 
 
 ## Demo
 
