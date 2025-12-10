@@ -134,8 +134,7 @@ or
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/kVLKsgcBU3XMettxvflF0F9Rz.svg)](https://asciinema.org/a/kVLKsgcBU3XMettxvflF0F9Rz)
-
+[![asciicast](https://asciinema.org/a/BwMB9aeRhHC5kzkbFlFOpWCqd.svg)](https://asciinema.org/a/BwMB9aeRhHC5kzkbFlFOpWCqd)
 
 
 <details>
