@@ -137,8 +137,15 @@ or
 [![asciicast](https://asciinema.org/a/kVLKsgcBU3XMettxvflF0F9Rz.svg)](https://asciinema.org/a/kVLKsgcBU3XMettxvflF0F9Rz)
 
 
+
+<details>
+  <summary>All resources created</summary>
+
 ```sh
-$ conduktor get all
+conduktor get all
+```
+
+```yaml
 ---
 apiVersion: v1
 kind: DataQualityRule
@@ -412,3 +419,4 @@ spec:
             sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='{{username}}' password='{{password}}';
 
 ```
+</details>
