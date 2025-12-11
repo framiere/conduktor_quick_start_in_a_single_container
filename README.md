@@ -293,10 +293,10 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 - **Gateway** connects to Redpanda via plaintext internally
 - **Console** connects to Redpanda directly via plaintext
 - **Console** connects to Gateway HTTP admin API on port 8888
-- **Console** connects to Gateway mtls Kafka on port 6969
+- **Console** connects to Gateway mTLS Kafka on port 6969
 - **Schema Registry** is HTTP (plaintext)
 - **Certificate CN** determines which vCluster and Service Account is used
-- **ACLs** are enforced per-vCluster (only `demo-acl` has ACL enabled)
+- **ACLs** are enforced in Gateway per-vCluster (only `demo-acl` has ACL enabled)
 
 ## Makefile Targets
 
