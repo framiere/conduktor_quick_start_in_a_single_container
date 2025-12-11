@@ -3,11 +3,19 @@ package io.conduktor.quickstart;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import io.conduktor.gateway.client.ApiException;
+import io.conduktor.gateway.client.api.CliGatewayServiceAccountGatewayV210Api;
+import io.conduktor.gateway.client.api.CliVirtualClusterGatewayV27Api;
+import io.conduktor.gateway.client.model.*;
 import okhttp3.*;
+import org.openapitools.client.ApiClient;
+import org.openapitools.client.Configuration;
+import org.openapitools.client.api.CliKafkaClusterConsoleV22Api;
+import org.openapitools.client.api.CliServiceAccountSelfServeV111Api;
+import org.openapitools.client.model.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,9 +36,16 @@ public class SetupGateway {
     private final String vClusterAclAdmin;
     private final String vClusterAclUser;
 
-    private final OkHttpClient client;
+    private final OkHttpClient httpClient;
     private final Gson gson;
-    private String cdkToken;
+
+    // Console SDK clients
+    private CliKafkaClusterConsoleV22Api kafkaClusterApi;
+    private CliServiceAccountSelfServeV111Api serviceAccountApi;
+
+    // Gateway SDK clients
+    private CliVirtualClusterGatewayV27Api virtualClusterApi;
+    private CliGatewayServiceAccountGatewayV210Api gatewayServiceAccountApi;
 
     public SetupGateway() {
         this.cdkBaseUrl = env("CDK_BASE_URL", "http://localhost:8080");
@@ -48,12 +63,21 @@ public class SetupGateway {
         this.vClusterAclAdmin = vClusterAcl + "-admin";
         this.vClusterAclUser = vClusterAcl + "-user";
 
-        this.client = new OkHttpClient.Builder()
+        this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
 
         this.gson = new GsonBuilder().setPrettyPrinting().create();
+
+        // Initialize Gateway SDK clients
+        io.conduktor.gateway.client.ApiClient gatewayApiClient = new io.conduktor.gateway.client.ApiClient();
+        gatewayApiClient.setBasePath(cdkGatewayBaseUrl);
+        gatewayApiClient.setUsername(cdkGatewayUser);
+        gatewayApiClient.setPassword(cdkGatewayPassword);
+
+        this.virtualClusterApi = new CliVirtualClusterGatewayV27Api(gatewayApiClient);
+        this.gatewayServiceAccountApi = new CliGatewayServiceAccountGatewayV210Api(gatewayApiClient);
     }
 
     private static String env(String name, String defaultValue) {
@@ -74,9 +98,9 @@ public class SetupGateway {
     public void run() throws Exception {
         // Wait for services
         waitForService("Conduktor Console", cdkBaseUrl + "/platform/api/modules/resources/health/live");
-        waitForService("Gateway Admin API", cdkGatewayBaseUrl + "/health/ready");
+        waitForGateway();
 
-        // Authenticate
+        // Authenticate and initialize Console SDK clients
         authenticate();
 
         System.out.println();
@@ -109,8 +133,35 @@ public class SetupGateway {
         System.out.println(name + " is ready.");
     }
 
+    private void waitForGateway() throws InterruptedException {
+        if (isGatewayHealthy()) {
+            System.out.println("Gateway Admin API is ready.");
+            return;
+        }
+
+        System.out.print("Waiting for Gateway Admin API to be ready");
+        while (!isGatewayHealthy()) {
+            Thread.sleep(1000);
+            System.out.print(".");
+        }
+        System.out.println();
+        System.out.println("Gateway Admin API is ready.");
+    }
+
+    private boolean isGatewayHealthy() {
+        Request request = new Request.Builder()
+                .url(cdkGatewayBaseUrl + "/health/ready")
+                .get()
+                .build();
+        try (Response response = httpClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     private boolean isServiceReady(Request request) {
-        try (Response response = client.newCall(request).execute()) {
+        try (Response response = httpClient.newCall(request).execute()) {
             return response.isSuccessful();
         } catch (IOException e) {
             return false;
@@ -129,192 +180,148 @@ public class SetupGateway {
                 .post(RequestBody.create(gson.toJson(loginBody), MediaType.parse("application/json")))
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        String token;
+        try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Failed to authenticate: " + response.code());
             }
-
             JsonObject jsonResponse = gson.fromJson(response.body().string(), JsonObject.class);
-            cdkToken = jsonResponse.get("access_token").getAsString();
-
-            if (cdkToken == null || cdkToken.isEmpty()) {
-                throw new IOException("Failed to get access token");
-            }
+            token = jsonResponse.get("access_token").getAsString();
         }
+
+        // Initialize Console SDK clients with Bearer token
+        ApiClient apiClient = Configuration.getDefaultApiClient();
+        apiClient.setBasePath(cdkBaseUrl);
+        apiClient.setBearerToken(token);
+
+        kafkaClusterApi = new CliKafkaClusterConsoleV22Api(apiClient);
+        serviceAccountApi = new CliServiceAccountSelfServeV111Api(apiClient);
 
         System.out.println("Authenticated.");
-    }
-
-    // Gateway API call (Basic auth)
-    private JsonObject gatewayApi(String method, String endpoint, Object body) throws IOException {
-        String credentials = Base64.getEncoder().encodeToString(
-                (cdkGatewayUser + ":" + cdkGatewayPassword).getBytes());
-
-        Request.Builder builder = new Request.Builder()
-                .url(cdkGatewayBaseUrl + endpoint)
-                .header("Authorization", "Basic " + credentials)
-                .header("Content-Type", "application/json");
-
-        if ("PUT".equals(method)) {
-            builder.put(RequestBody.create(gson.toJson(body), MediaType.parse("application/json")));
-        } else if ("POST".equals(method)) {
-            builder.post(RequestBody.create(gson.toJson(body), MediaType.parse("application/json")));
-        }
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            String responseBody = response.body().string();
-            if (!response.isSuccessful()) {
-                throw new IOException("Gateway API error: " + response.code() + " - " + responseBody);
-            }
-            return gson.fromJson(responseBody, JsonObject.class);
-        }
-    }
-
-    // Console API call (Bearer token)
-    private JsonObject consoleApi(String method, String endpoint, Object body) throws IOException {
-        Request.Builder builder = new Request.Builder()
-                .url(cdkBaseUrl + endpoint)
-                .header("Authorization", "Bearer " + cdkToken)
-                .header("Content-Type", "application/json");
-
-        if ("PUT".equals(method)) {
-            builder.put(RequestBody.create(gson.toJson(body), MediaType.parse("application/json")));
-        } else if ("POST".equals(method)) {
-            builder.post(RequestBody.create(gson.toJson(body), MediaType.parse("application/json")));
-        }
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            String responseBody = response.body().string();
-            if (!response.isSuccessful()) {
-                throw new IOException("Console API error: " + response.code() + " - " + responseBody);
-            }
-            return gson.fromJson(responseBody, JsonObject.class);
-        }
     }
 
     private void generateSslProperties(String user) throws IOException {
         String propsFile = user + ".properties";
         try (FileWriter writer = new FileWriter(propsFile)) {
-            writer.write("security.protocol=SSL\n");
-            writer.write("ssl.truststore.location=" + certDir + "/" + user + ".truststore.jks\n");
-            writer.write("ssl.truststore.password=conduktor\n");
-            writer.write("ssl.keystore.location=" + certDir + "/" + user + ".keystore.jks\n");
-            writer.write("ssl.keystore.password=conduktor\n");
-            writer.write("ssl.key.password=conduktor\n");
+            writer.write("""
+                    security.protocol=SSL
+                    ssl.truststore.location=%s/%s.truststore.jks
+                    ssl.truststore.password=conduktor
+                    ssl.keystore.location=%s/%s.keystore.jks
+                    ssl.keystore.password=conduktor
+                    ssl.key.password=conduktor
+                    """.formatted(certDir, user, certDir, user));
         }
         System.out.println("Created: " + propsFile);
     }
 
-    private void setupDemoVCluster() throws IOException {
+    // Workaround for SDK response deserialization bug
+    private void upsertVirtualCluster(VirtualCluster vc) throws ApiException {
+        try {
+            virtualClusterApi.upsertAVirtualClusterOptionallyIncludingACLs(vc, false);
+        } catch (com.google.gson.JsonSyntaxException e) {
+            // API succeeded but response parsing failed - ignore
+        }
+    }
+
+    // Workaround for SDK response deserialization bug
+    private void upsertServiceAccount(External sa) throws ApiException {
+        try {
+            gatewayServiceAccountApi.upsertAServiceAccount(new GatewayServiceAccount(sa), false);
+        } catch (com.google.gson.JsonSyntaxException e) {
+            // API succeeded but response parsing failed - ignore
+        }
+    }
+
+    private void setupDemoVCluster() throws IOException, org.openapitools.client.ApiException, ApiException {
         System.out.println();
         System.out.println("Creating vCluster: " + vCluster + "...");
 
-        gatewayApi("PUT", "/gateway/v2/virtual-cluster", Map.of(
-                "kind", "VirtualCluster",
-                "apiVersion", "gateway/v2",
-                "metadata", Map.of(
-                        "name", vCluster
-                ),
-                "spec", Map.of(
-                        "aclMode", "KAFKA_API",
-                        "superUsers", List.of(vClusterAdmin)
-                )
-        ));
+        upsertVirtualCluster(new VirtualCluster()
+                .kind("VirtualCluster")
+                .apiVersion("gateway/v2")
+                .metadata(new VirtualClusterMetadata().name(vCluster))
+                .spec(new VirtualClusterSpec()
+                        .aclMode("KAFKA_API")
+                        .superUsers(List.of(vClusterAdmin))));
         System.out.println("VirtualCluster/" + vCluster + " created");
 
         System.out.println("Creating service account: " + vClusterAdmin + "...");
-        gatewayApi("PUT", "/gateway/v2/service-account", Map.of(
-                "kind", "GatewayServiceAccount",
-                "apiVersion", "gateway/v2",
-                "metadata", Map.of(
-                        "vCluster", vCluster,
-                        "name", vClusterAdmin
-                ),
-                "spec", Map.of(
-                        "type", "EXTERNAL",
-                        "externalNames", List.of("CN=" + vClusterAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK")
-                )
-        ));
+        upsertServiceAccount(new External()
+                .kind("GatewayServiceAccount")
+                .apiVersion("gateway/v2")
+                .metadata(new ExternalMetadata()
+                        .vCluster(vCluster)
+                        .name(vClusterAdmin))
+                .spec(new ExternalSpec()
+                        .type("EXTERNAL")
+                        .externalNames(List.of("CN=" + vClusterAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         System.out.println("GatewayServiceAccount/" + vClusterAdmin + " created");
 
         generateSslProperties(vClusterAdmin);
 
         System.out.println();
         System.out.println("Adding vCluster " + vCluster + " to Console...");
-        consoleApi("PUT", "/api/public/console/v2/kafka-cluster", Map.of(
-                "apiVersion", "v2",
-                "kind", "KafkaCluster",
-                "metadata", Map.of(
-                        "name", vCluster
-                ),
-                "spec", Map.of(
-                        "displayName", vCluster + " (mTLS)",
-                        "bootstrapServers", "localhost:6969",
-                        "properties", Map.of(
+
+        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
+                .apiVersion("v2")
+                .kind(KafkaClusterKind.KAFKA_CLUSTER)
+                .metadata(new KafkaClusterMetadata().name(vCluster))
+                .spec(new KafkaClusterSpec()
+                        .displayName(vCluster + " (mTLS)")
+                        .bootstrapServers("localhost:6969")
+                        .properties(Map.of(
                                 "security.protocol", "SSL",
-                                "ssl.truststore.location", "/var/lib/conduktor/certs/" + vClusterAdmin + ".truststore.jks",
+                                "ssl.truststore.location",  "/var/lib/conduktor/certs/" + vClusterAdmin + ".truststore.jks",
                                 "ssl.truststore.password", "conduktor",
-                                "ssl.keystore.location", "/var/lib/conduktor/certs/" + vClusterAdmin + ".keystore.jks",
+                                "ssl.keystore.location", "/var/lib/conduktor/certs/"  + vClusterAdmin + ".keystore.jks",
                                 "ssl.keystore.password", "conduktor",
                                 "ssl.key.password", "conduktor"
-                        ),
-                        "kafkaFlavor", Map.of(
-                                "type", "Gateway",
-                                "url", cdkGatewayBaseUrl,
-                                "user", cdkGatewayUser,
-                                "password", cdkGatewayPassword,
-                                "virtualCluster", vCluster
-                        )
-                )
-        ));
+                        ))
+                        .kafkaFlavor(new KafkaFlavor(new Gateway()
+                                .type(Gateway.TypeEnum.GATEWAY)
+                                .url(cdkGatewayBaseUrl)
+                                .user(cdkGatewayUser)
+                                .password(cdkGatewayPassword)
+                                .virtualCluster(vCluster)))), null);
         System.out.println("KafkaCluster/" + vCluster + " created in Console");
     }
 
-    private void setupDemoAclVCluster() throws IOException {
+    private void setupDemoAclVCluster() throws IOException, org.openapitools.client.ApiException, ApiException {
         System.out.println();
         System.out.println("Creating vCluster: " + vClusterAcl + " (ACL enabled)...");
 
-        gatewayApi("PUT", "/gateway/v2/virtual-cluster", Map.of(
-                "kind", "VirtualCluster",
-                "apiVersion", "gateway/v2",
-                "metadata", Map.of(
-                        "name", vClusterAcl
-                ),
-                "spec", Map.of(
-                        "aclEnabled", true,
-                        "superUsers", List.of(vClusterAclAdmin)
-                )
-        ));
+        upsertVirtualCluster(new VirtualCluster()
+                .kind("VirtualCluster")
+                .apiVersion("gateway/v2")
+                .metadata(new VirtualClusterMetadata().name(vClusterAcl))
+                .spec(new VirtualClusterSpec()
+                        .aclEnabled(true)
+                        .superUsers(List.of(vClusterAclAdmin))));
         System.out.println("VirtualCluster/" + vClusterAcl + " created");
 
         System.out.println("Creating service account: " + vClusterAclAdmin + "...");
-        gatewayApi("PUT", "/gateway/v2/service-account", Map.of(
-                "kind", "GatewayServiceAccount",
-                "apiVersion", "gateway/v2",
-                "metadata", Map.of(
-                        "vCluster", vClusterAcl,
-                        "name", vClusterAclAdmin
-                ),
-                "spec", Map.of(
-                        "type", "EXTERNAL",
-                        "externalNames", List.of("CN=" + vClusterAclAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK")
-                )
-        ));
+        upsertServiceAccount(new External()
+                .kind("GatewayServiceAccount")
+                .apiVersion("gateway/v2")
+                .metadata(new ExternalMetadata()
+                        .vCluster(vClusterAcl)
+                        .name(vClusterAclAdmin))
+                .spec(new ExternalSpec()
+                        .type("EXTERNAL")
+                        .externalNames(List.of("CN=" + vClusterAclAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         System.out.println("GatewayServiceAccount/" + vClusterAclAdmin + " created");
 
         System.out.println("Creating service account: " + vClusterAclUser + "...");
-        gatewayApi("PUT", "/gateway/v2/service-account", Map.of(
-                "kind", "GatewayServiceAccount",
-                "apiVersion", "gateway/v2",
-                "metadata", Map.of(
-                        "vCluster", vClusterAcl,
-                        "name", vClusterAclUser
-                ),
-                "spec", Map.of(
-                        "type", "EXTERNAL",
-                        "externalNames", List.of("CN=" + vClusterAclUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK")
-                )
-        ));
+        upsertServiceAccount(new External()
+                .kind("GatewayServiceAccount")
+                .apiVersion("gateway/v2")
+                .metadata(new ExternalMetadata()
+                        .vCluster(vClusterAcl)
+                        .name(vClusterAclUser))
+                .spec(new ExternalSpec()
+                        .type("EXTERNAL")
+                        .externalNames(List.of("CN=" + vClusterAclUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         System.out.println("GatewayServiceAccount/" + vClusterAclUser + " created");
 
         generateSslProperties(vClusterAclAdmin);
@@ -322,67 +329,58 @@ public class SetupGateway {
 
         System.out.println();
         System.out.println("Adding vCluster " + vClusterAcl + " to Console...");
-        consoleApi("PUT", "/api/public/console/v2/kafka-cluster", Map.of(
-                "apiVersion", "v2",
-                "kind", "KafkaCluster",
-                "metadata", Map.of(
-                        "name", vClusterAcl
-                ),
-                "spec", Map.of(
-                        "displayName", vClusterAcl + " (mTLS + ACL)",
-                        "bootstrapServers", "localhost:6969",
-                        "properties", Map.of(
+
+        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
+                .apiVersion("v2")
+                .kind(KafkaClusterKind.KAFKA_CLUSTER)
+                .metadata(new KafkaClusterMetadata().name(vClusterAcl))
+                .spec(new KafkaClusterSpec()
+                        .displayName(vClusterAcl + " (mTLS + ACL)")
+                        .bootstrapServers("localhost:6969")
+                        .properties(Map.of(
                                 "security.protocol", "SSL",
                                 "ssl.truststore.location", "/var/lib/conduktor/certs/" + vClusterAclAdmin + ".truststore.jks",
                                 "ssl.truststore.password", "conduktor",
                                 "ssl.keystore.location", "/var/lib/conduktor/certs/" + vClusterAclAdmin + ".keystore.jks",
                                 "ssl.keystore.password", "conduktor",
                                 "ssl.key.password", "conduktor"
-                        ),
-                        "kafkaFlavor", Map.of(
-                                "type", "Gateway",
-                                "url", cdkGatewayBaseUrl,
-                                "user", cdkGatewayUser,
-                                "password", cdkGatewayPassword,
-                                "virtualCluster", vClusterAcl
-                        )
-                )
-        ));
+                        ))
+                        .kafkaFlavor(new KafkaFlavor(new Gateway()
+                                .type(Gateway.TypeEnum.GATEWAY)
+                                .url(cdkGatewayBaseUrl)
+                                .user(cdkGatewayUser)
+                                .password(cdkGatewayPassword)
+                                .virtualCluster(vClusterAcl)))), null);
         System.out.println("KafkaCluster/" + vClusterAcl + " created in Console");
 
         System.out.println();
         System.out.println("Creating Console ServiceAccount with ACLs for " + vClusterAclUser + "...");
-        consoleApi("PUT", "/api/public/self-serve/v1/cluster/" + vClusterAcl + "/service-account", Map.of(
-                "apiVersion", "v1",
-                "kind", "ServiceAccount",
-                "metadata", Map.of(
-                        "cluster", vClusterAcl,
-                        "name", vClusterAclUser
-                ),
-                "spec", Map.of(
-                        "authorization", Map.of(
-                                "type", "KAFKA_ACL",
-                                "acls", List.of(
-                                        Map.of(
-                                                "type", "TOPIC",
-                                                "name", "click",
-                                                "patternType", "PREFIXED",
-                                                "operations", List.of("read"),
-                                                "host", "*",
-                                                "permission", "Allow"
-                                        ),
-                                        Map.of(
-                                                "type", "CONSUMER_GROUP",
-                                                "name", "myconsumer-",
-                                                "patternType", "PREFIXED",
-                                                "operations", List.of("read"),
-                                                "host", "*",
-                                                "permission", "Allow"
-                                        )
-                                )
-                        )
-                )
-        ));
+
+        serviceAccountApi.createOrUpdateServiceAccountV1(vClusterAcl, new ServiceAccountResourceV1()
+                .apiVersion("v1")
+                .kind(ServiceAccountKind.SERVICE_ACCOUNT)
+                .metadata(new ServiceAccountMetadata()
+                        .name(vClusterAclUser)
+                        .cluster(vClusterAcl))
+                .spec(new ServiceAccountSpec()
+                        .authorization(new ServiceAccountAuthorization(new KAFKAACL()
+                                .type(KAFKAACL.TypeEnum.KAFKA_ACL)
+                                .acls(List.of(
+                                        new KafkaServiceAccountACL()
+                                                .type(AclResourceType.TOPIC)
+                                                .name("click")
+                                                .patternType(ResourcePatternType.PREFIXED)
+                                                .operations(List.of(Operation.READ))
+                                                .host("*")
+                                                .permission(AclPermissionTypeForAccessControlEntry.ALLOW),
+                                        new KafkaServiceAccountACL()
+                                                .type(AclResourceType.CONSUMER_GROUP)
+                                                .name("myconsumer-")
+                                                .patternType(ResourcePatternType.PREFIXED)
+                                                .operations(List.of(Operation.READ))
+                                                .host("*")
+                                                .permission(AclPermissionTypeForAccessControlEntry.ALLOW)
+                                ))))), null);
         System.out.println("ServiceAccount/" + vClusterAclUser + " created in Console");
     }
 }

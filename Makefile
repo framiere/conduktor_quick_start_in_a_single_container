@@ -5,8 +5,10 @@ CERTS_DIR := ./certs
 # Default target
 all: rm build run setup
 
-# Build the Docker image
+# Build the Docker image and Java SDK
 build:
+	@echo "Building Java SDK..."
+	cd java_sdk && mvn compile -q
 	@echo "Building Docker image..."
 	docker build . -t $(IMAGE_NAME)
 
@@ -23,15 +25,12 @@ run:
 	@printf "Waiting for SSL certificates generation"
 	@while [ ! -f $(CERTS_DIR)/.certs-complete ]; do sleep 1; printf "."; done
 	@echo 
-	@echo "SSL certificates generated."
 	@printf "Waiting for Console to be ready"
 	@while ! curl -sf http://localhost:8080/platform/api/modules/resources/health/live >/dev/null 2>&1; do sleep 1; printf "."; done
 	@echo 
-	@echo "Console is ready."
 	@printf "Waiting for Gateway to be ready"
 	@while ! curl -sf http://localhost:8888/health/ready >/dev/null 2>&1; do sleep 1; printf "."; done
 	@echo 
-	@echo "Gateway is ready."
 	@echo "All services are up and running!"
 
 # Stop the container
@@ -45,10 +44,12 @@ rm: stop
 	-docker rm $(CONTAINER_NAME) 2>/dev/null || true
 	@rm -rf $(CERTS_DIR)
 
-# Clean everything (container + image)
+# Clean everything (container + image + Java SDK)
 clean: rm
 	@echo "Removing image..."
 	-docker rmi $(IMAGE_NAME) 2>/dev/null || true
+	@echo "Cleaning Java SDK..."
+	cd java_sdk && mvn clean -q
 	@echo "Removing local certs..."
 	-rm -rf $(CERTS_DIR) 2>/dev/null || true
 	-rm -f *.properties 2>/dev/null || true
@@ -72,11 +73,11 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all         - Remove, build, run, and setup (default)"
-	@echo "  build       - Build Docker image"
+	@echo "  build       - Build Java SDK and Docker image"
 	@echo "  run         - Run container and wait for services"
 	@echo "  stop        - Stop container"
 	@echo "  rm          - Stop and remove container"
-	@echo "  clean       - Remove container, image, and local certs"
+	@echo "  clean       - Remove container, image, Java SDK target, and local certs"
 	@echo "  logs        - Follow container logs"
 	@echo "  setup-logs  - View setup script logs"
 	@echo "  setup       - Run setup_gateway.sh"

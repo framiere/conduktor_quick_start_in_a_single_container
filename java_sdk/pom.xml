@@ -96,17 +96,49 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>${openapi-generator.version}</version>
                 <executions>
+                    <!-- Console SDK -->
                     <execution>
+                        <id>generate-console-sdk</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <skipIfSpecIsUnchanged>true</skipIfSpecIsUnchanged>
                             <inputSpec>${project.basedir}/public-api-doc.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <output>${project.build.directory}/generated-sources/openapi</output>
                             <apiPackage>org.openapitools.client.api</apiPackage>
                             <modelPackage>org.openapitools.client.model</modelPackage>
                             <invokerPackage>org.openapitools.client</invokerPackage>
+                            <configOptions>
+                                <sourceFolder>src/main/java</sourceFolder>
+                                <library>okhttp-gson</library>
+                                <dateLibrary>java8</dateLibrary>
+                                <useJakartaEe>false</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
+                                <serializableModel>true</serializableModel>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <useRuntimeException>true</useRuntimeException>
+                                <useOneOfDiscriminatorLookup>true</useOneOfDiscriminatorLookup>
+                            </configOptions>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                        </configuration>
+                    </execution>
+                    <!-- Gateway SDK -->
+                    <execution>
+                        <id>generate-gateway-sdk</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <skipIfSpecIsUnchanged>true</skipIfSpecIsUnchanged>
+                            <inputSpec>${project.basedir}/gateway-api-doc.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <output>${project.build.directory}/generated-sources/openapi-gateway</output>
+                            <apiPackage>io.conduktor.gateway.client.api</apiPackage>
+                            <modelPackage>io.conduktor.gateway.client.model</modelPackage>
+                            <invokerPackage>io.conduktor.gateway.client</invokerPackage>
                             <configOptions>
                                 <sourceFolder>src/main/java</sourceFolder>
                                 <library>okhttp-gson</library>
@@ -140,6 +172,7 @@
                         <configuration>
                             <sources>
                                 <source>${project.build.directory}/generated-sources/openapi/src/main/java</source>
+                                <source>${project.build.directory}/generated-sources/openapi-gateway/src/main/java</source>
                             </sources>
                         </configuration>
                     </execution>
