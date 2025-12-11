@@ -69,7 +69,8 @@ i=0
 apply_yaml() {
     local tmpfile=$(mktemp)
     cat > "$tmpfile"
-    cp $tmpfile $i.yaml
+    mkdir -p .temp 
+    cp $tmpfile .temp/$i.yaml
     i=$((i+1))
     conduktor apply -f "$tmpfile"
     local rc=$?
