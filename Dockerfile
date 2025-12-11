@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates curl gosu tzdata iproute2 jq \
-     postgresql-16 postgresql-client-16 htop kafkacat \
+     postgresql-16 postgresql-client-16 htop kafkacat openssl netcat-openbsd \
   && rm -rf /var/lib/apt/lists/* \
   && curl -sSL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o /usr/local/bin/yq \
   && chmod +x /usr/local/bin/yq \
@@ -33,11 +33,12 @@ COPY --from=docker.redpanda.com/redpandadata/redpanda:v24.1.6 /etc/redpanda /etc
 COPY --from=docker.redpanda.com/redpandadata/redpanda:v24.1.6 /opt/redpanda /opt/redpanda
 COPY redpanda.yaml /etc/redpanda/redpanda.yaml
 
-RUN mkdir -p /var/lib/conduktor/pg1 /var/lib/conduktor/pg2 /var/lib/conduktor/redpanda /var/log/conduktor
+RUN mkdir -p /var/lib/conduktor/pg1 /var/lib/conduktor/pg2 /var/lib/conduktor/redpanda /var/lib/conduktor/certs /var/log/conduktor
 
 COPY entrypoint.sh /entrypoint.sh
 COPY setup_gateway.sh /opt/conduktor/setup_gateway.sh
-RUN chmod +x /entrypoint.sh /opt/conduktor/setup_gateway.sh
+COPY certs.sh /opt/conduktor/certs.sh
+RUN chmod +x /entrypoint.sh /opt/conduktor/setup_gateway.sh /opt/conduktor/certs.sh
 
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="$JAVA_HOME/bin:$PATH"

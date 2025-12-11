@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+kind: KafkaCluster
+metadata:
+  name: demo
+spec:
+  displayName: "demo (mTLS)"
+  bootstrapServers: localhost:6969
+  properties: |
+    security.protocol=SSL
+    ssl.truststore.location=/var/lib/conduktor/certs/admin.truststore.jks
+    ssl.truststore.password=conduktor
+    ssl.keystore.location=/var/lib/conduktor/certs/admin.keystore.jks
+    ssl.keystore.password=conduktor
+    ssl.key.password=conduktor
+  kafkaFlavor:
+    type: Gateway
+    url: http://localhost:8888
+    user: admin
+    password: conduktor
+    virtualCluster: demo

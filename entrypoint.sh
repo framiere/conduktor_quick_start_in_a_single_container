@@ -4,6 +4,7 @@ set -euo pipefail
 PGBIN=/usr/lib/postgresql/16/bin
 DATA1=/var/lib/conduktor/pg1
 DATA2=/var/lib/conduktor/pg2
+CERT_DIR=/var/lib/conduktor/certs
 LOGDIR=/var/log/conduktor
 mkdir -p "$LOGDIR"
 
@@ -55,10 +56,15 @@ SQL
 create_sql 5432 "conduktor-console" || true
 create_sql 5433 "conduktor-sql" || true
 
+# Generate certificates for Gateway mTLS (clients connect to Gateway via mTLS)
+echo "Generating mTLS certificates for Gateway..."
+CERT_DIR="$CERT_DIR" /opt/conduktor/certs.sh >"$LOGDIR/certs.log" 2>&1
+
 # allow more async IO for redpanda
 echo 1048576 > /proc/sys/fs/aio-max-nr || true
 
-# Redpanda using packaged config (server binary directly)
+# Redpanda using packaged config (plaintext - no TLS)
+echo "Starting Redpanda (plaintext)..."
 /usr/bin/redpanda \
   --redpanda-cfg /etc/redpanda/redpanda.yaml \
   --smp 1 \
@@ -66,15 +72,35 @@ echo 1048576 > /proc/sys/fs/aio-max-nr || true
   --overprovisioned \
   --default-log-level=info >"$LOGDIR/redpanda.log" 2>&1 &
 
-# Gateway
+# Wait for Redpanda to start
+echo "Waiting for Redpanda to be ready..."
+for i in $(seq 1 60); do
+  if nc -z localhost 9092 2>/dev/null; then
+    echo "Redpanda is ready"
+    break
+  fi
+  echo "  Waiting for Redpanda... ($i/60)"
+  sleep 2
+done
+
+/opt/conduktor/certs.sh
+
+# Gateway - connects to Redpanda via PLAINTEXT, exposes SSL (mTLS) to clients
+echo "Starting Gateway with mTLS (backend: plaintext, frontend: mTLS)..."
 sed -i 's#/app/#/opt/gateway-app/#g' /opt/gateway-app/jib-classpath-file || true
 env \
   JAVA_HOME=/opt/java/openjdk \
   PATH=/opt/java/openjdk/bin:$PATH \
   KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
   GATEWAY_ADVERTISED_HOST=localhost \
-  GATEWAY_SECURITY_PROTOCOL=SASL_PLAINTEXT \
-  GATEWAY_USER_POOL_SECRET_KEY=Tie8Qtjv/CHcRYJdg+df201ecVErnT5dx0upbD4jPeg=  \
+  GATEWAY_SECURITY_PROTOCOL=SSL \
+  GATEWAY_SSL_KEY_STORE_PATH=$CERT_DIR/gateway.keystore.jks \
+  GATEWAY_SSL_KEY_STORE_PASSWORD=conduktor \
+  GATEWAY_SSL_KEY_PASSWORD=conduktor \
+  GATEWAY_SSL_TRUST_STORE_PATH=$CERT_DIR/gateway.truststore.jks \
+  GATEWAY_SSL_TRUST_STORE_PASSWORD=conduktor \
+  GATEWAY_SSL_CLIENT_AUTH=REQUIRE \
+  GATEWAY_USER_POOL_SECRET_KEY=Tie8Qtjv/CHcRYJdg+df201ecVErnT5dx0upbD4jPeg= \
   GATEWAY_ADMIN_API_USERS='[{username: admin, password: conduktor, admin: true}]' \
   GATEWAY_ACL_ENABLED=true \
   JAVA_OPTS="-Xms256m -Xmx512m" \
@@ -83,7 +109,8 @@ env \
 # Monitoring (Cortex) - start with default config if present
 # Monitoring disabled for now (config missing)
 
-# Console env
+# Console env - connects directly to Redpanda via plaintext
+echo "Starting Console..."
 env \
   CDK_DATABASE_URL=postgresql://conduktor:change_me@localhost:5432/conduktor-console \
   CDK_KAFKASQL_DATABASE_URL=postgresql://conduktor:change_me@localhost:5433/conduktor-sql \
@@ -103,7 +130,8 @@ env \
   BE_CONFIG_ENV=production \
   sh -c 'cd /opt/conduktor/scripts && exec ./run.sh' >"$LOGDIR/console.log" 2>&1 &
 
-# Data generator
+# Data generator - connects to Redpanda directly (plaintext)
+echo "Starting Data Generator..."
 env \
   JAVA_HOME=/opt/java/openjdk \
   PATH=/opt/java/openjdk/bin:$PATH \
@@ -112,12 +140,12 @@ env \
   KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
   sh -c 'cd /opt/datagen-app && exec "$JAVA_HOME/bin/java" -jar /opt/datagen-app/myapp.jar' >"$LOGDIR/datagen.log" 2>&1 &
 
-echo "All services started."
+echo "All services started (Gateway with mTLS, Redpanda plaintext)."
 
 # Run setup script in background
 if [ -x /opt/conduktor/setup_gateway.sh ]; then
   echo "Running setup script in background..."
-  /opt/conduktor/setup_gateway.sh >"$LOGDIR/setup.log" 2>&1 &
+  CERT_DIR="$CERT_DIR" /opt/conduktor/setup_gateway.sh >"$LOGDIR/setup.log" 2>&1 &
 fi
 
 echo "Tailing logs..."
