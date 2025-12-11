@@ -479,6 +479,13 @@ conduktor get VirtualCluster
 conduktor get GatewayServiceAccount
 ```
 
+or
+
+```sh
+conduktor get all
+```
+
+
 ## Certificate Details
 
 Certificates are generated at container startup and mounted to `./certs/`:
@@ -503,4 +510,4 @@ Certificate properties:
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/BwMB9aeRhHC5kzkbFlFOpWCqd.svg)](https://asciinema.org/a/BwMB9aeRhHC5kzkbFlFOpWCqd)
+[![asciicast](https://asciinema.org/a/mu1KXuyx1GAx9HGUIt04oDckZ.svg)](https://asciinema.org/a/mu1KXuyx1GAx9HGUIt04oDckZ)
