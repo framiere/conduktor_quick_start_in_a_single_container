@@ -38,14 +38,6 @@ docker run -d --name conduktor_quick_start_in_a_single_container \
 ./setup_gateway.sh
 ```
 
-### Exposed Ports
-
-| Port | Service |
-|------|---------|
-| 8080 | Conduktor Console |
-| 8888 | Gateway Admin API |
-| 6969 | Gateway Kafka Bootstrap (mTLS) |
-
 ## Architecture
 
 ### Step 1: Container Startup
