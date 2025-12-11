@@ -151,8 +151,9 @@ subjectAltName = $san_list
 
 
 create_certificate "gateway"
-create_certificate "admin"
-create_certificate "user1"
+create_certificate "demo-admin"
+create_certificate "demo-acl-admin"
+create_certificate "demo-acl-user"
 
 # Cleanup intermediate files
 rm -f *.csr *.der *.p12 *-signed.crt 2>/dev/null || true

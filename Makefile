@@ -17,6 +17,7 @@ run:
 		-p 8080:8080 \
 		-p 8888:8888 \
 		-p 6969:6969 \
+		-v $(PWD)/certs/:/var/lib/conduktor/certs \
 		$(IMAGE_NAME)
 	@echo "Container started. Waiting for services..."
 

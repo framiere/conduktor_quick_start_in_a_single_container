@@ -10,8 +10,12 @@ export CDK_GATEWAY_USER="${CDK_GATEWAY_USER:-admin}"
 export CDK_GATEWAY_PASSWORD="${CDK_GATEWAY_PASSWORD:-conduktor}"
 
 CERT_DIR="${CERT_DIR:-certs}"
-VCLUSTER_NAME="${VCLUSTER_NAME:-demo}"
-VCLUSTER_ACL_NAME="${VCLUSTER_NAME}-acl"
+VCLUSTER="${VCLUSTER:-demo}"
+VCLUSTER_ACL="${VCLUSTER}-acl"
+VCLUSTER_ADMIN="${VCLUSTER}-admin"
+ 
+VCLUSTER_ACL_ADMIN="${VCLUSTER_ACL}-admin"
+VCLUSTER_ACL_USER="${VCLUSTER_ACL}-user"
 
 # Helper: wait for service to be ready
 wait_for_service() {
@@ -36,16 +40,16 @@ wait_for_service "Gateway Admin API" "$CDK_GATEWAY_BASE_URL/health/ready" 90
 if [ $# -ge 1 ]; then
     if [ -f "$1" ]; then
         EXTRACTED=$(yq eval '.metadata.scope.vCluster // .metadata.vCluster // .metadata.name' "$1" 2>/dev/null || echo "")
-        [ -n "$EXTRACTED" ] && [ "$EXTRACTED" != "null" ] && VCLUSTER_NAME="$EXTRACTED"
+        [ -n "$EXTRACTED" ] && [ "$EXTRACTED" != "null" ] && VCLUSTER="$EXTRACTED"
     else
-        VCLUSTER_NAME="$1"
+        VCLUSTER="$1"
     fi
 fi
 
 # Helper: generate SSL properties file for a user
 generate_ssl_properties() {
-    local vcluster="$1" user="$2"
-    local props_file="$vcluster-$user.properties"
+    local user="$1"
+    local props_file="$user.properties"
 
     cat > "$props_file" <<EOF
 security.protocol=SSL
@@ -66,6 +70,7 @@ apply_yaml() {
     local tmpfile=$(mktemp)
     cat > "$tmpfile"
     cp $tmpfile $i.yaml
+    i=$((i+1))
     conduktor apply -f "$tmpfile"
     local rc=$?
     rm -f "$tmpfile"
@@ -73,55 +78,56 @@ apply_yaml() {
 }
 
 echo
-echo "Setting up vClusters with mTLS: $VCLUSTER_NAME, $VCLUSTER_ACL_NAME"
+echo "Setting up vClusters with mTLS: $VCLUSTER, $VCLUSTER_ACL"
 
 # =============================================================================
 # vCluster 1: demo (ACL disabled)
 # =============================================================================
 
 echo
-echo "Creating vCluster: $VCLUSTER_NAME..."
+echo "Creating vCluster: $VCLUSTER..."
 apply_yaml <<EOF
 ---
 kind: VirtualCluster
 apiVersion: gateway/v2
 metadata:
-  name: $VCLUSTER_NAME
+  name: $VCLUSTER
 spec:
   aclMode: KAFKA_API
   superUsers:
-  - admin
+  - $VCLUSTER_ADMIN
 ---
 kind: GatewayServiceAccount
 apiVersion: gateway/v2
 metadata:
-  vCluster: $VCLUSTER_NAME
-  name: admin
+  vCluster: $VCLUSTER
+  name: $VCLUSTER_ADMIN
 spec:
   type: EXTERNAL
   externalNames:
-    - CN=admin,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
+    - CN=$VCLUSTER_ADMIN,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
+
 EOF
 
-generate_ssl_properties "$VCLUSTER_NAME" "admin"
+generate_ssl_properties "$VCLUSTER_ADMIN"
 
 echo
-echo "Adding vCluster: $VCLUSTER_NAME... to Console"
+echo "Adding vCluster: $VCLUSTER... to Console"
 
 apply_yaml <<EOF
 ---
 apiVersion: v2
 kind: KafkaCluster
 metadata:
-  name: $VCLUSTER_NAME
+  name: $VCLUSTER
 spec:
-  displayName: "$VCLUSTER_NAME (mTLS)"
+  displayName: "$VCLUSTER (mTLS)"
   bootstrapServers: localhost:6969
   properties:
     security.protocol: SSL
-    ssl.truststore.location: /var/lib/conduktor/certs/admin.truststore.jks
+    ssl.truststore.location: /var/lib/conduktor/certs/$VCLUSTER_ADMIN.truststore.jks
     ssl.truststore.password: conduktor
-    ssl.keystore.location: /var/lib/conduktor/certs/admin.keystore.jks
+    ssl.keystore.location: /var/lib/conduktor/certs/$VCLUSTER_ADMIN.keystore.jks
     ssl.keystore.password: conduktor
     ssl.key.password: conduktor
   kafkaFlavor:
@@ -129,7 +135,7 @@ spec:
     url: $CDK_GATEWAY_BASE_URL
     user: $CDK_GATEWAY_USER
     password: $CDK_GATEWAY_PASSWORD
-    virtualCluster: $VCLUSTER_NAME
+    virtualCluster: $VCLUSTER
 EOF
 
 # Apply interceptor file if provided
@@ -140,59 +146,59 @@ EOF
 # =============================================================================
 
 echo
-echo "Creating vCluster: $VCLUSTER_ACL_NAME (ACL enabled)..."
+echo "Creating vCluster: $VCLUSTER_ACL (ACL enabled)..."
 apply_yaml <<EOF
 ---
 apiVersion: gateway/v2
 kind: VirtualCluster
 metadata:
-  name: $VCLUSTER_ACL_NAME
+  name: $VCLUSTER_ACL
 spec:
   aclEnabled: true
   superUsers:
-  - admin
+  - $VCLUSTER_ACL_ADMIN
 ---
 apiVersion: gateway/v2
 kind: GatewayServiceAccount
 metadata:
-  vCluster: $VCLUSTER_ACL_NAME
-  name: admin
+  vCluster: $VCLUSTER_ACL
+  name: $VCLUSTER_ACL_ADMIN
 spec:
   type: EXTERNAL
   externalNames:
-    - CN=admin,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
+    - CN=$VCLUSTER_ACL_ADMIN,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
 ---
 apiVersion: gateway/v2
 kind: GatewayServiceAccount
 metadata:
-  vCluster: $VCLUSTER_ACL_NAME
-  name: user1
+  vCluster: $VCLUSTER_ACL
+  name: $VCLUSTER_ACL_USER
 spec:
   type: EXTERNAL
   externalNames:
-    - CN=user1,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
+    - CN=$VCLUSTER_ACL_USER,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK
 EOF
 
-generate_ssl_properties "$VCLUSTER_ACL_NAME" "admin"
-generate_ssl_properties "$VCLUSTER_ACL_NAME" "user1"
+generate_ssl_properties "$VCLUSTER_ACL_ADMIN"
+generate_ssl_properties "$VCLUSTER_ACL_USER"
 
 echo
-echo "Adding vCluster: $VCLUSTER_ACL_NAME to console"
+echo "Adding vCluster: $VCLUSTER_ACL to console"
 
 apply_yaml <<EOF
 ---
 apiVersion: v2
 kind: KafkaCluster
 metadata:
-  name: $VCLUSTER_ACL_NAME
+  name: $VCLUSTER_ACL
 spec:
-  displayName: "$VCLUSTER_ACL_NAME (mTLS + ACL)"
+  displayName: "$VCLUSTER_ACL (mTLS + ACL)"
   bootstrapServers: localhost:6969
   properties:
     security.protocol: SSL
-    ssl.truststore.location: /var/lib/conduktor/certs/admin.truststore.jks
+    ssl.truststore.location: /var/lib/conduktor/certs/$VCLUSTER_ACL_ADMIN.truststore.jks
     ssl.truststore.password: conduktor
-    ssl.keystore.location: /var/lib/conduktor/certs/admin.keystore.jks
+    ssl.keystore.location: /var/lib/conduktor/certs/$VCLUSTER_ACL_ADMIN.keystore.jks
     ssl.keystore.password: conduktor
     ssl.key.password: conduktor
   kafkaFlavor:
@@ -200,13 +206,13 @@ spec:
     url: $CDK_GATEWAY_BASE_URL
     user: $CDK_GATEWAY_USER
     password: $CDK_GATEWAY_PASSWORD
-    virtualCluster: $VCLUSTER_ACL_NAME
+    virtualCluster: $VCLUSTER_ACL
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  cluster: $VCLUSTER_ACL_NAME
-  name: user1
+  cluster: $VCLUSTER_ACL
+  name: $VCLUSTER_ACL_USER
 spec:
   authorization:
     type: KAFKA_ACL
@@ -235,98 +241,44 @@ echo ""
 echo "=== Virtual ACL Demo (mTLS) ==="
 
 echo
-echo "Admin can create the topic"
+echo "$VCLUSTER_ACL_ADMIN can create the topic"
 kafka-topics \
   --bootstrap-server localhost:6969 \
-  --command-config demo-acl-admin.properties \
+  --command-config $VCLUSTER_ACL_ADMIN.properties \
   --create --if-not-exists \
   --topic click-stream \
   --partitions 3 \
   --replication-factor 1
 
 echo
-echo "Admin can write in the topic"
+echo "$VCLUSTER_ACL_ADMIN can write in the topic"
 echo '{"event":"admin-test"}'  | kafka-console-producer \
   --bootstrap-server localhost:6969 \
-  --producer.config demo-acl-admin.properties \
+  --producer.config $VCLUSTER_ACL_ADMIN.properties \
   --topic click-stream \
 
 echo
-echo "Admin can read from the topic"
+echo "$VCLUSTER_ACL_ADMIN can read from the topic"
 kafka-console-consumer \
   --bootstrap-server localhost:6969 \
-  --consumer.config demo-acl-admin.properties \
+  --consumer.config $VCLUSTER_ACL_ADMIN.properties \
   --topic click-stream \
   --from-beginning \
   --max-messages 1
 
 echo
-echo "user1 cannot write to the topic"
-echo '{"event":"user1-test"}'  | kafka-console-producer \
+echo "$VCLUSTER_ACL_USER cannot write to the topic"
+echo '{"event":"user-test"}'  | kafka-console-producer \
   --bootstrap-server localhost:6969 \
-  --producer.config demo-acl-user1.properties \
+  --producer.config $VCLUSTER_ACL_USER.properties \
   --topic click-stream
 
 echo
-echo "user1 can read from the topic, as kafka-console-consumer is using a consumer group, we specify its name to match the ACL"
+echo "$VCLUSTER_ACL_USER can read from the topic, as kafka-console-consumer is using a consumer group, we specify its name to match the ACL"
 kafka-console-consumer \
   --bootstrap-server localhost:6969 \
-  --consumer.config demo-acl-user1.properties \
+  --consumer.config $VCLUSTER_ACL_USER.properties \
   --topic click-stream \
   --group myconsumer-demo \
   --from-beginning \
   --max-messages 1
-
-
-# =============================================================================
-# Summary
-# =============================================================================
-
-cat <<EOF
-
-==============================================
-Setup completed! (mTLS Authentication)
-==============================================
-
-Console: $CDK_BASE_URL
-    Username: $CDK_USER
-    Password: $CDK_PASSWORD
-
-Gateway API: $CDK_GATEWAY_BASE_URL
-    Username: $CDK_GATEWAY_USER
-    Password: $CDK_GATEWAY_PASSWORD
-
-vCluster: $VCLUSTER_NAME (ACL disabled, mTLS)
-  Certificate: $CERT_DIR/admin.keystore.jks
-  Properties file: demo-admin.properties
-
-vCluster: $VCLUSTER_ACL_NAME (ACL enabled, mTLS)
-  admin:
-    Certificate: $CERT_DIR/admin.keystore.jks
-    Properties file: demo-acl-admin.properties
-  user1 (can only access click.* topics):
-    Certificate: $CERT_DIR/user1.keystore.jks
-    Properties file: demo-acl-user1.properties
-
-==============================================
-Example usage with mTLS:
-
-# List topics as admin
-kafka-topics --bootstrap-server localhost:6969 \\
-  --command-config demo-admin.properties --list
-
-# Produce with admin certificate
-echo '{"message":"hello"}' | kafka-console-producer \\
-  --bootstrap-server localhost:6969 \\
-  --producer.config demo-admin.properties \\
-  --topic my-topic
-
-# Consume with user1 certificate (restricted to click.* topics)
-kafka-console-consumer \\
-  --bootstrap-server localhost:6969 \\
-  --consumer.config demo-acl-user1.properties \\
-  --topic click-stream \\
-  --group myconsumer-demo \\
-  --from-beginning
-==============================================
-EOF
