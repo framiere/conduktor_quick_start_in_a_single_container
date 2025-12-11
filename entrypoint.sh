@@ -83,7 +83,29 @@ for i in $(seq 1 60); do
   sleep 2
 done
 
-/opt/conduktor/certs.sh
+# Console env - connects directly to Redpanda via plaintext
+echo "Starting Console..."
+env \
+  CDK_DATABASE_URL=postgresql://conduktor:change_me@localhost:5432/conduktor-console \
+  CDK_KAFKASQL_DATABASE_URL=postgresql://conduktor:change_me@localhost:5433/conduktor-sql \
+  CDK_ORGANIZATION_NAME=getting-started \
+  CDK_ADMIN_EMAIL=admin@demo.dev \
+  CDK_ADMIN_PASSWORD=123_ABC_abc  \
+  CDK_CLUSTERS_0_ID=local-kafka \
+  CDK_CLUSTERS_0_NAME=local-kafka \
+  CDK_CLUSTERS_0_BOOTSTRAPSERVERS=localhost:9092 \
+  CDK_CLUSTERS_0_SCHEMAREGISTRY_URL=http://localhost:8081 \
+  CDK_CLUSTERS_0_COLOR=#6A57C8 \
+  CDK_CLUSTERS_0_ICON=kafka \
+  CDK_MONITORING_CORTEX-URL=http://localhost:9009/ \
+  CDK_MONITORING_ALERT-MANAGER-URL=http://localhost:9010/ \
+  CDK_MONITORING_CALLBACK-URL=http://localhost:8080/monitoring/api/ \
+  CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL=http://localhost:8080 \
+  BE_CONFIG_ENV=production \
+  sh -c 'cd /opt/conduktor/scripts && exec ./run.sh' >"$LOGDIR/console.log" 2>&1 &
+
+
+/opt/conduktor/certs.sh 
 
 # Gateway - connects to Redpanda via PLAINTEXT, exposes SSL (mTLS) to clients
 echo "Starting Gateway with mTLS (backend: plaintext, frontend: mTLS)..."
@@ -109,26 +131,6 @@ env \
 # Monitoring (Cortex) - start with default config if present
 # Monitoring disabled for now (config missing)
 
-# Console env - connects directly to Redpanda via plaintext
-echo "Starting Console..."
-env \
-  CDK_DATABASE_URL=postgresql://conduktor:change_me@localhost:5432/conduktor-console \
-  CDK_KAFKASQL_DATABASE_URL=postgresql://conduktor:change_me@localhost:5433/conduktor-sql \
-  CDK_ORGANIZATION_NAME=getting-started \
-  CDK_ADMIN_EMAIL=admin@demo.dev \
-  CDK_ADMIN_PASSWORD=123_ABC_abc  \
-  CDK_CLUSTERS_0_ID=local-kafka \
-  CDK_CLUSTERS_0_NAME=local-kafka \
-  CDK_CLUSTERS_0_BOOTSTRAPSERVERS=localhost:9092 \
-  CDK_CLUSTERS_0_SCHEMAREGISTRY_URL=http://localhost:8081 \
-  CDK_CLUSTERS_0_COLOR=#6A57C8 \
-  CDK_CLUSTERS_0_ICON=kafka \
-  CDK_MONITORING_CORTEX-URL=http://localhost:9009/ \
-  CDK_MONITORING_ALERT-MANAGER-URL=http://localhost:9010/ \
-  CDK_MONITORING_CALLBACK-URL=http://localhost:8080/monitoring/api/ \
-  CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL=http://localhost:8080 \
-  BE_CONFIG_ENV=production \
-  sh -c 'cd /opt/conduktor/scripts && exec ./run.sh' >"$LOGDIR/console.log" 2>&1 &
 
 # Data generator - connects to Redpanda directly (plaintext)
 echo "Starting Data Generator..."
@@ -141,12 +143,6 @@ env \
   sh -c 'cd /opt/datagen-app && exec "$JAVA_HOME/bin/java" -jar /opt/datagen-app/myapp.jar' >"$LOGDIR/datagen.log" 2>&1 &
 
 echo "All services started (Gateway with mTLS, Redpanda plaintext)."
-
-# Run setup script in background
-if [ -x /opt/conduktor/setup_gateway.sh ]; then
-  echo "Running setup script in background..."
-  CERT_DIR="$CERT_DIR" /opt/conduktor/setup_gateway.sh >"$LOGDIR/setup.log" 2>&1 &
-fi
 
 echo "Tailing logs..."
 exec tail -F "$LOGDIR"/*.log

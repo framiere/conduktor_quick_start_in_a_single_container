@@ -24,18 +24,14 @@ run:
 	@while [ ! -f $(CERTS_DIR)/.certs-complete ]; do sleep 1; printf "."; done
 	@echo 
 	@echo "SSL certificates generated."
-	@printf "Waiting for Redpanda to be ready"
-	@while ! docker exec $(CONTAINER_NAME) rpk cluster health 2>/dev/null | grep -q "Healthy"; do sleep 1; printf "."; done
-	@echo
-	@echo "Redpanda is ready."
-	@printf "Waiting for Gateway to be ready"
-	@while ! curl -s -o /dev/null -w '' http://localhost:8888/health/ready 2>/dev/null; do sleep 1; printf "."; done
-	@echo 
-	@echo "Gateway is ready."
 	@printf "Waiting for Console to be ready"
-	@while ! curl -s -o /dev/null -w '' http://localhost:8080/platform/api/modules/resources/health/live 2>/dev/null; do sleep 1; printf "."; done
+	@while ! curl -sf http://localhost:8080/platform/api/modules/resources/health/live >/dev/null 2>&1; do sleep 1; printf "."; done
 	@echo 
 	@echo "Console is ready."
+	@printf "Waiting for Gateway to be ready"
+	@while ! curl -sf http://localhost:8888/health/ready >/dev/null 2>&1; do sleep 1; printf "."; done
+	@echo 
+	@echo "Gateway is ready."
 	@echo "All services are up and running!"
 
 # Stop the container

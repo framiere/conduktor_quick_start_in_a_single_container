@@ -21,6 +21,7 @@ VCLUSTER_ACL_USER="${VCLUSTER_ACL}-user"
 wait_for_service() {
     local name="$1" url="$2" max_attempts="${3:-90}"
     for i in $(seq 1 $max_attempts); do
+        echo $url
         if curl -sf -o /dev/null "$url"; then
             return 0
         fi
