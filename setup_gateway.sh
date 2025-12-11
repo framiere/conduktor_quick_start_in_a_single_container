@@ -117,13 +117,13 @@ metadata:
 spec:
   displayName: "$VCLUSTER_NAME (mTLS)"
   bootstrapServers: localhost:6969
-  properties: |
-    security.protocol=SSL
-    ssl.truststore.location=/var/lib/conduktor/certs/admin.truststore.jks
-    ssl.truststore.password=conduktor
-    ssl.keystore.location=/var/lib/conduktor/certs/admin.keystore.jks
-    ssl.keystore.password=conduktor
-    ssl.key.password=conduktor
+  properties:
+    security.protocol: SSL
+    ssl.truststore.location: /var/lib/conduktor/certs/admin.truststore.jks
+    ssl.truststore.password: conduktor
+    ssl.keystore.location: /var/lib/conduktor/certs/admin.keystore.jks
+    ssl.keystore.password: conduktor
+    ssl.key.password: conduktor
   kafkaFlavor:
     type: Gateway
     url: $CDK_GATEWAY_BASE_URL
@@ -188,13 +188,13 @@ metadata:
 spec:
   displayName: "$VCLUSTER_ACL_NAME (mTLS + ACL)"
   bootstrapServers: localhost:6969
-  properties: |
-    security.protocol=SSL
-    ssl.truststore.location=/var/lib/conduktor/certs/admin.truststore.jks
-    ssl.truststore.password=conduktor
-    ssl.keystore.location=/var/lib/conduktor/certs/admin.keystore.jks
-    ssl.keystore.password=conduktor
-    ssl.key.password=conduktor
+  properties:
+    security.protocol: SSL
+    ssl.truststore.location: /var/lib/conduktor/certs/admin.truststore.jks
+    ssl.truststore.password: conduktor
+    ssl.keystore.location: /var/lib/conduktor/certs/admin.keystore.jks
+    ssl.keystore.password: conduktor
+    ssl.key.password: conduktor
   kafkaFlavor:
     type: Gateway
     url: $CDK_GATEWAY_BASE_URL
