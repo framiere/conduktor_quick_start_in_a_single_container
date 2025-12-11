@@ -58,24 +58,17 @@ When the container starts, it launches all internal services:
 │                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
 │  │   Redpanda   │  │   Gateway    │  │   Console    │  │  Schema     │  │
-│  │    :9092     │  │ :6969 :8888  │  │    :8080     │  │  Registry   │  │
-│  │   (Kafka)    │  │  (Proxy)     │  │    (UI)      │  │   :8081     │  │
+│  │    :9092     │  │ :6969  :8888 │  │    :8080     │  │  Registry   │  │
+│  │   (Kafka)    │  │ :kafka :api  │  │    (UI)      │  │   :8081     │  │
 │  └──────────────┘  └──────────────┘  └──────────────┘  └─────────────┘  │
 │         │                 │                 │                │          │
-│         └────────┬────────┴────────┬────────┘                │          │
-│                  │      Internal   │                         │          │
-│                  │     Network     │                         │          │
-│                  └─────────────────┴─────────────────────────┘          │
-│                                                                         │
+│         └─────────────────┴────────┬────────┴────────────────┘          │
+│                                    │                                    │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
 │  │  /var/lib/conduktor/certs/  (mounted from ./certs/)              │   │
 │  │  - ca.crt, gateway.keystore.jks, demo-admin.keystore.jks, ...    │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
-         │              │               │
-         │           :6969           :8080
-      :8888          mTLS            HTTP
-       HTTP          Kafka            UI
 ```
 
 ### Step 2: Certificate Generation
@@ -88,41 +81,40 @@ Certificates are generated at container startup by `certs.sh`:
                     │ ca.conduktor.local  │
                     └─────────┬───────────┘
                               │ signs
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│    gateway    │     │  demo-admin   │     │demo-acl-admin │
-│  (server cert)│     │ (client cert) │     │ (client cert) │
-│   CN=gateway  │     │CN=demo-admin  │     │CN=demo-acl-   │
-│               │     │               │     │     admin     │
-└───────────────┘     └───────────────┘     └───────────────┘
-        │                     │                     │
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│gateway.key-   │     │demo-admin.    │     │demo-acl-admin.│
-│  store.jks    │     │keystore.jks   │     │ keystore.jks  │
-│gateway.trust- │     │demo-admin.    │     │demo-acl-admin.│
-│  store.jks    │     │truststore.jks │     │truststore.jks │
-└───────────────┘     └───────────────┘     └───────────────┘
-
-                              │
-                              ▼
-                      ┌───────────────┐
-                      │demo-acl-user  │
-                      │ (client cert) │
-                      │CN=demo-acl-   │
-                      │     user      │
-                      └───────────────┘
-                              │
-                              ▼
-                      ┌───────────────┐
-                      │demo-acl-user. │
-                      │ keystore.jks  │
-                      │demo-acl-user. │
-                      │truststore.jks │
-                      └───────────────┘
+                    ┌─────────────────────┐
+                    │                     │
+                    ▼                     ▼
+            ┌───────────────┐     ┌───────────────┐
+            │  demo-admin   │     │demo-acl-admin │
+            │ (client cert) │     │ (client cert) │
+            │CN=demo-admin  │     │CN=demo-acl-   │
+            │               │     │     admin     │
+            └───────────────┘     └───────────────┘
+                    │                     │
+                    │                     │
+                    ▼                     ▼
+            ┌───────────────┐     ┌───────────────┐
+            │demo-admin.    │     │demo-acl-admin.│
+            │keystore.jks   │     │ keystore.jks  │
+            │demo-admin.    │     │demo-acl-admin.│
+            │truststore.jks │     │truststore.jks │
+            └───────────────┘     └───────────────┘
+                                          │
+                                          ▼
+                                  ┌───────────────┐
+                                  │demo-acl-user  │
+                                  │ (client cert) │
+                                  │CN=demo-acl-   │
+                                  │     user      │
+                                  └───────────────┘
+                                          │
+                                          ▼
+                                  ┌───────────────┐
+                                  │demo-acl-user. │
+                                  │ keystore.jks  │
+                                  │demo-acl-user. │
+                                  │truststore.jks │
+                                  └───────────────┘
 ```
 
 ### Step 3: Gateway Setup (setup_gateway.sh)
@@ -259,12 +251,11 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 │  ┌─────────────────────────────────────────────────────────────────┐    │
 │  │                     ACL Enforcement Examples                    │    │
 │  │                                                                 │    │
-│  │   demo-acl-admin                    demo-acl-user               │    │
-│  │   ──────────────                    ──────────────              │    │
-│  │   CREATE click-stream  ──▶ ✓        CREATE click-stream  ──▶ ✗  │    │
-│  │   WRITE  click-stream  ──▶ ✓        WRITE  click-stream  ──▶ ✗  │    │
-│  │   READ   click-stream  ──▶ ✓        READ   click-stream  ──▶ ✓  │    │
-│  │   DELETE click-stream  ──▶ ✓        DELETE click-stream  ──▶ ✗  │    │
+│  │   demo-acl-admin                   demo-acl-user                │    │
+│  │   ──────────────                   ──────────────               │    │
+│  │   CREATE  click-stream  ──▶ ✓       CREATE click-stream  ──▶ ✗  │    │
+│  │   PRODUCE click-stream  ──▶ ✓       WRITE  click-stream  ──▶ ✗  │    │
+│  │   READ    click-stream  ──▶ ✓       READ   click-stream  ──▶ ✓  │    │
 │  │                                                                 │    │
 │  └─────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -273,42 +264,44 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 ### Overall System View
 
 ```
-┌─────────────────────────────────────────-----------------------------──────┐
-│                              Host Machine                                  │
-│                                                                            │
-│   ./certs/                         ┌─────────────────────────────────────┐ │
-│   ├── ca.crt                       │         Docker Container            │ │
-│   ├── demo-admin.keystore.jks      │                                     │ │
-│   ├── demo-acl-admin.keystore.jks  │  :8080 ──▶ Console (UI)             │ │
-│   └── demo-acl-user.keystore.jks   │                                     │ │
-│            │                       │  :8888 ──▶ Gateway Admin API        │ │
-│            │  volume mount         │                                     │ │
-│            └──────────────────────▶│  :6969 ──▶ Gateway Kafka (mTLS)     │ │
-│                                    │               │                     │ │
-│   demo-admin.properties            │               ▼                     │ │
-│   demo-acl-admin.properties        │         ┌──────────┐ ┌───────────┐  │ │
-│   demo-acl-user.properties         │         │  demo    │ │ demo-acl  │  │ │
-│            │                       │         │ vCluster │ │ vCluster  │  │ │
-│            │                       │         └────┬─────┘ └─────┬─────┘  │ │
-│            │                       │              │             │        │ │
-│            │                       │              └──────┬──────┘        │ │
-│            │                       │                     │               │ │
-│            │                       │                     ▼               │ │
-│            │                       │              ┌────────────┐         │ │
-│            ▼                       │              │  Redpanda  │         │ │
-│   kafka-topics --bootstrap-server  │              │   :9092    │         │ │
-│     localhost:6969                 │              └────────────┘         │ │
-│     --command-config               │                                     │ │
-│     demo-admin.properties          └─────────────────────────────────────┘ │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────-----------------------------─--─────┐
+│                              Host Machine                                    │
+│                                                                              │
+│   ./certs/                         ┌──────────────────────────────────--───┐ │
+│   ├── ca.crt                       │         Docker Container              │ │
+│   ├── demo-admin.keystore.jks      │                                       │ │
+│   ├── demo-acl-admin.keystore.jks  │  :8080 ──▶ Console (UI)               │ │
+│   └── demo-acl-user.keystore.jks   │                                       │ │
+│            │                       │  :8888 ──▶ Gateway Admin API (HTTP)   │ │
+│            │  volume mount         │                                       │ │
+│            └──────────────────────▶│  :6969 ──▶ Gateway Kafka (Kafka mTLS) │ │
+│                                    │               │                       │ │
+│   demo-admin.properties            │               ▼                       │ │
+│   demo-acl-admin.properties        │         ┌──────────┐ ┌───────────┐    │ │
+│   demo-acl-user.properties         │         │  demo    │ │ demo-acl  │    │ │
+│            │                       │         │ vCluster │ │ vCluster  │    │ │
+│            │                       │         └────┬─────┘ └─────┬─────┘    │ │
+│            │                       │              │             │          │ │
+│            │                       │              └──────┬──────┘          │ │
+│            │                       │               Kafka │ Plaintext       │ │
+│            │                       │                     ▼                 │ │
+│            │                       │              ┌────────────┐           │ │
+│            ▼                       │              │  Redpanda  │           │ │
+│   kafka-topics --bootstrap-server  │              │   :9092    │           │ │
+│     localhost:6969                 │              └────────────┘           │ │
+│     --command-config               │                                       │ │
+│     demo-admin.properties          └────────────────────────────────────--─┘ │
+│                                                                              │
+└───────────────────────────────────────────────────────────────────────────--─┘
 ```
 
 ### Summary
 
-- **Gateway** exposes mTLS to clients on port 6969
+- **Gateway** exposes mTLS to kafka clients on port 6969
 - **Gateway** connects to Redpanda via plaintext internally
 - **Console** connects to Redpanda directly via plaintext
+- **Console** connects to Gateway HTTP admin API on port 8888
+- **Console** connects to Gateway mtls Kafka on port 6969
 - **Schema Registry** is HTTP (plaintext)
 - **Certificate CN** determines which vCluster and Service Account is used
 - **ACLs** are enforced per-vCluster (only `demo-acl` has ACL enabled)
