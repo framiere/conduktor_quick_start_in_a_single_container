@@ -19,22 +19,20 @@ VCLUSTER_ACL_USER="${VCLUSTER_ACL}-user"
 
 # Helper: wait for service to be ready
 wait_for_service() {
-    local name="$1" url="$2" max_attempts="${3:-90}"
-    for i in $(seq 1 $max_attempts); do
-        echo $url
-        if curl -sf -o /dev/null "$url"; then
-            return 0
-        fi
-        echo "  Attempt $i/$max_attempts - $name not ready yet..."
-        sleep 5
-    done
-    echo "ERROR: $name did not become ready in time"
-    return 1
+    local name="$1" url="$2"
+    if curl -sf "$url" >/dev/null 2>&1; then
+        echo "$name is ready."
+        return
+    fi
+    printf "Waiting for %s to be ready" "$name"
+    while ! curl -sf "$url" >/dev/null 2>&1; do sleep 1; printf "."; done
+    echo
+    echo "$name is ready."
 }
 
 # Wait for Console and Gateway to be up
-wait_for_service "Conduktor Console" "$CDK_BASE_URL/platform/api/modules/resources/health/live" 90
-wait_for_service "Gateway Admin API" "$CDK_GATEWAY_BASE_URL/health/ready" 90
+wait_for_service "Conduktor Console" "$CDK_BASE_URL/platform/api/modules/resources/health/live"
+wait_for_service "Gateway Admin API" "$CDK_GATEWAY_BASE_URL/health/ready"
 
 # Parse arguments
 if [ $# -ge 1 ]; then
