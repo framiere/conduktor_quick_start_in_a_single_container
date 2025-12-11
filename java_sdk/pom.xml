@@ -169,6 +169,16 @@
                     </includes>
                 </configuration>
             </plugin>
+
+            <!-- Exec plugin for running the setup -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>io.conduktor.quickstart.SetupGateway</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
