@@ -22,7 +22,6 @@ wait_for_service() {
     local name="$1" url="$2" max_attempts="${3:-90}"
     for i in $(seq 1 $max_attempts); do
         if curl -sf -o /dev/null "$url"; then
-            echo "$name is ready"
             return 0
         fi
         echo "  Attempt $i/$max_attempts - $name not ready yet..."
@@ -283,3 +282,5 @@ kafka-console-consumer \
   --group myconsumer-demo \
   --from-beginning \
   --max-messages 1
+
+echo "Demo complete"

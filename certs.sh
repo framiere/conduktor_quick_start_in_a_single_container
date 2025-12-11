@@ -162,3 +162,6 @@ echo ""
 echo "Certificate generation complete!"
 echo "Files created in: $CERT_DIR"
 ls -la "$CERT_DIR"
+
+# Create marker file to indicate completion
+touch "$CERT_DIR/.certs-complete"

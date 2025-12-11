@@ -302,18 +302,15 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 
 | Target | Description |
 |--------|-------------|
-| `make all` | Build, run, copy certs, and setup (default) |
+| `make all` | Build, run, and setup (default) |
 | `make build` | Build Docker image |
-| `make run` | Run container |
+| `make run` | Run container and wait for services |
 | `make stop` | Stop container |
 | `make rm` | Stop and remove container |
 | `make clean` | Remove container, image, and local certs |
 | `make logs` | Follow container logs |
 | `make setup-logs` | View setup script logs |
 | `make setup` | Run setup_gateway.sh |
-| `make certs` | Copy certificates from container |
-| `make status` | Show connection information |
-| `make test` | Test mTLS connection with kafka-topics |
 | `make help` | Show help |
 
 ## Automatic Setup

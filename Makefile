@@ -3,7 +3,7 @@ CONTAINER_NAME := conduktor_quick_start_in_a_single_container
 CERTS_DIR := ./certs
 
 # Default target
-all: rm build run certs setup
+all: rm build run setup
 
 # Build the Docker image
 build:
@@ -20,6 +20,23 @@ run:
 		-v $(PWD)/certs/:/var/lib/conduktor/certs \
 		$(IMAGE_NAME)
 	@echo "Container started. Waiting for services..."
+	@printf "Waiting for SSL certificates generation"
+	@while [ ! -f $(CERTS_DIR)/.certs-complete ]; do sleep 1; printf "."; done
+	@echo 
+	@echo "SSL certificates generated."
+	@printf "Waiting for Redpanda to be ready"
+	@while ! docker exec $(CONTAINER_NAME) rpk cluster health 2>/dev/null | grep -q "Healthy"; do sleep 1; printf "."; done
+	@echo
+	@echo "Redpanda is ready."
+	@printf "Waiting for Gateway to be ready"
+	@while ! curl -s -o /dev/null -w '' http://localhost:8888/health/ready 2>/dev/null; do sleep 1; printf "."; done
+	@echo 
+	@echo "Gateway is ready."
+	@printf "Waiting for Console to be ready"
+	@while ! curl -s -o /dev/null -w '' http://localhost:8080/platform/api/modules/resources/health/live 2>/dev/null; do sleep 1; printf "."; done
+	@echo 
+	@echo "Console is ready."
+	@echo "All services are up and running!"
 
 # Stop the container
 stop:
@@ -30,6 +47,7 @@ stop:
 rm: stop
 	@echo "Removing container..."
 	-docker rm $(CONTAINER_NAME) 2>/dev/null || true
+	@rm -rf $(CERTS_DIR)
 
 # Clean everything (container + image)
 clean: rm
@@ -50,75 +68,6 @@ setup-logs:
 setup:
 	./setup_gateway.sh
 
-# Copy certificates from container
-certs:
-	@echo "Copying certificates from container..."
-	@mkdir -p $(CERTS_DIR)
-	docker cp $(CONTAINER_NAME):/var/lib/conduktor/certs/ca.crt $(CERTS_DIR)/
-	docker cp $(CONTAINER_NAME):/var/lib/conduktor/certs/user1.keystore.jks $(CERTS_DIR)/
-	docker cp $(CONTAINER_NAME):/var/lib/conduktor/certs/user1.truststore.jks $(CERTS_DIR)/
-	@echo ""
-	@echo "Creating properties files..."
-	@echo "security.protocol=SSL" > admin.properties
-	@echo "ssl.truststore.location=$(CERTS_DIR)/admin.truststore.jks" >> admin.properties
-	@echo "ssl.truststore.password=conduktor" >> admin.properties
-	@echo "ssl.keystore.location=$(CERTS_DIR)/admin.keystore.jks" >> admin.properties
-	@echo "ssl.keystore.password=conduktor" >> admin.properties
-	@echo "ssl.key.password=conduktor" >> admin.properties
-	@echo ""
-	@echo "security.protocol=SSL" > user1.properties
-	@echo "ssl.truststore.location=$(CERTS_DIR)/user1.truststore.jks" >> user1.properties
-	@echo "ssl.truststore.password=conduktor" >> user1.properties
-	@echo "ssl.keystore.location=$(CERTS_DIR)/user1.keystore.jks" >> user1.properties
-	@echo "ssl.keystore.password=conduktor" >> user1.properties
-	@echo "ssl.key.password=conduktor" >> user1.properties
-	@echo ""
-	@echo "Certificates copied to $(CERTS_DIR)/"
-	@echo "Properties files created: admin.properties, user1.properties"
-	@ls -la $(CERTS_DIR)/
-
-# Show status
-status:
-	@echo "=============================================="
-	@echo "  Conduktor Quick Start (mTLS)"
-	@echo "=============================================="
-	@echo ""
-	@echo "Console:     http://localhost:8080"
-	@echo "  Login:     admin@demo.dev"
-	@echo "  Password:  123_ABC_abc"
-	@echo ""
-	@echo "Gateway API: http://localhost:8888"
-	@echo "  Username:  admin"
-	@echo "  Password:  conduktor"
-	@echo ""
-	@echo "Gateway Kafka (mTLS): localhost:6969"
-	@echo ""
-	@echo "Virtual Clusters:"
-	@echo "  - demo       (ACL disabled)"
-	@echo "  - demo-acl   (ACL enabled)"
-	@echo ""
-	@echo "To get certificates for local use:"
-	@echo "  make certs"
-	@echo ""
-	@echo "To test with kafka-topics:"
-	@echo "  make certs"
-	@echo "  kafka-topics --bootstrap-server localhost:6969 \\"
-	@echo "    --command-config admin.properties --list"
-	@echo ""
-	@echo "=============================================="
-
-# Test mTLS connection
-test:
-	@echo "Testing mTLS connection to Gateway..."
-	@if [ ! -f admin.properties ]; then \
-		echo "Certificates not found. Running 'make certs' first..."; \
-		$(MAKE) certs; \
-	fi
-	@echo ""
-	@echo "Listing topics as admin..."
-	kafka-topics --bootstrap-server localhost:6969 \
-		--command-config admin.properties --list
-
 # Help
 help:
 	@echo "Conduktor Quick Start Makefile"
@@ -128,14 +77,11 @@ help:
 	@echo "Targets:"
 	@echo "  all         - Remove, build, run, and setup (default)"
 	@echo "  build       - Build Docker image"
-	@echo "  run         - Run container"
+	@echo "  run         - Run container and wait for services"
 	@echo "  stop        - Stop container"
 	@echo "  rm          - Stop and remove container"
 	@echo "  clean       - Remove container, image, and local certs"
 	@echo "  logs        - Follow container logs"
 	@echo "  setup-logs  - View setup script logs"
-	@echo "  setup       - Wait for services and show status"
-	@echo "  certs       - Copy certificates from container"
-	@echo "  status      - Show connection information"
-	@echo "  test        - Test mTLS connection with kafka-topics"
+	@echo "  setup       - Run setup_gateway.sh"
 	@echo "  help        - Show this help"
