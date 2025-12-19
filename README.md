@@ -471,6 +471,12 @@ export CDK_GATEWAY_PASSWORD=conduktor
 export CDK_GATEWAY_BASE_URL=http://localhost:8888
 ```
 
+Create token
+
+```sh
+conduktor token create admin myToken
+```
+
 ### List Resources
 
 ```sh
