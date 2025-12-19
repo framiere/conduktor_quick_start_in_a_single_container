@@ -103,6 +103,7 @@
                         <configuration>
                             <inputSpec>${project.basedir}/public-api-doc.yaml</inputSpec>
                             <generatorName>java</generatorName>
+                            <skipIfSpecIsUnchanged>true</skipIfSpecIsUnchanged>
                             <output>${project.build.directory}/generated-sources/openapi</output>
                             <apiPackage>org.openapitools.client.api</apiPackage>
                             <modelPackage>org.openapitools.client.model</modelPackage>
