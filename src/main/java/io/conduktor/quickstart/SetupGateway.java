@@ -872,7 +872,8 @@ public class SetupGateway {
                         MessagingDeclaration cr = parseAndValidate(docMap, MessagingDeclaration.class, documentIndex);
                         result.messagingDeclarations.add(cr);
                     }
-                    default -> throw new IllegalArgumentException("Document #" + documentIndex + " has unknown kind: " + kind);
+                    default ->
+                            throw new IllegalArgumentException("Document #" + documentIndex + " has unknown kind: " + kind);
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to parse document #" + documentIndex + " (kind: " + kind + "): " + e.getMessage(), e);
@@ -1118,10 +1119,12 @@ public class SetupGateway {
 
         // Resolve references
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
+        if (serviceAccount == null)
+            throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
+        if (vCluster == null)
+            throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
@@ -1168,13 +1171,16 @@ public class SetupGateway {
 
         // Resolve references: Topic -> MessagingService -> VirtualCluster
         MessagingServiceCR msgService = messagingServiceMap.get(topic.spec.serviceRef);
-        if (msgService == null) throw new IllegalArgumentException("Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef);
+        if (msgService == null)
+            throw new IllegalArgumentException("Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
+        if (vCluster == null)
+            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
+        if (serviceAccount == null)
+            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         String vClusterName = vCluster.spec.clusterId;
         String serviceName = serviceAccount.spec.name;
@@ -1215,13 +1221,16 @@ public class SetupGateway {
 
         // Resolve references: ACL -> MessagingService -> ServiceAccount + VirtualCluster
         MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
-        if (msgService == null) throw new IllegalArgumentException("ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef);
+        if (msgService == null)
+            throw new IllegalArgumentException("ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef);
 
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
+        if (serviceAccount == null)
+            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
+        if (vCluster == null)
+            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
