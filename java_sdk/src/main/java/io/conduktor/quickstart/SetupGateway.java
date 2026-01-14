@@ -195,6 +195,8 @@ public class SetupGateway {
 
     // Track vClusters already created in this session
     private final java.util.Set<String> createdVClusters = new java.util.HashSet<>();
+    // Track which vClusters need ACL support (determined by scanning all CRDs upfront)
+    private final java.util.Set<String> vClustersRequiringAcls = new java.util.HashSet<>();
 
     public SetupGateway() {
         this.cdkBaseUrl = env("CDK_BASE_URL", "http://localhost:8080");
@@ -251,8 +253,13 @@ public class SetupGateway {
 
         log.info("Setting up vClusters with mTLS: {}, {}", vCluster, vClusterAcl);
 
-        // Parse and process all CRDs
+        // Parse all CRDs
         List<MessagingDeclaration> crds = parseAllCrds(CRDS);
+
+        // Scan all CRDs to determine which vClusters need ACL support
+        scanForAclRequirements(crds);
+
+        // Process each CRD
         for (MessagingDeclaration crd : crds) {
             processCRD(crd);
         }
@@ -400,6 +407,27 @@ public class SetupGateway {
         }
     }
 
+    /**
+     * Scan all CRDs to determine which vClusters require ACL support.
+     * A vCluster needs ACLs if ANY CRD referencing it defines ACLs.
+     */
+    private void scanForAclRequirements(List<MessagingDeclaration> crds) {
+        for (MessagingDeclaration crd : crds) {
+            String vClusterName = crd.spec.virtualClusterId;
+            boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
+
+            if (hasAcls) {
+                vClustersRequiringAcls.add(vClusterName);
+                log.debug("vCluster {} requires ACL support (detected from service {})",
+                        vClusterName, crd.spec.serviceName);
+            }
+        }
+
+        if (!vClustersRequiringAcls.isEmpty()) {
+            log.info("vClusters requiring ACL support: {}", vClustersRequiringAcls);
+        }
+    }
+
     // CRD Processing Methods
 
     /**
@@ -483,7 +511,8 @@ public class SetupGateway {
 
         String adminUser;
         if (hasAcls) {
-            adminUser = serviceName + "-admin";
+            // Use the serviceName as-is if it already designates an admin user
+            adminUser = serviceName.endsWith("-admin") ? serviceName : serviceName + "-admin";
             spec.aclEnabled(true).superUsers(List.of(adminUser));
         } else {
             adminUser = serviceName;
@@ -531,39 +560,51 @@ public class SetupGateway {
 
         String displayName = vClusterName + " (mTLS" + (aclEnabled ? " + ACL" : "") + ")";
 
-        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
-                .apiVersion("v2")
-                .kind(KafkaClusterKind.KAFKA_CLUSTER)
-                .metadata(new KafkaClusterMetadata().name(vClusterName))
-                .spec(new KafkaClusterSpec()
-                        .displayName(displayName)
-                        .bootstrapServers("localhost:6969")
-                        .properties(Map.of(
-                                "security.protocol", "SSL",
-                                "ssl.truststore.location", "/var/lib/conduktor/certs/" + adminUser + ".truststore.jks",
-                                "ssl.truststore.password", "conduktor",
-                                "ssl.keystore.location", "/var/lib/conduktor/certs/" + adminUser + ".keystore.jks",
-                                "ssl.keystore.password", "conduktor",
-                                "ssl.key.password", "conduktor"
-                        ))
-                        .kafkaFlavor(new KafkaFlavor(new Gateway()
-                                .type(Gateway.TypeEnum.GATEWAY)
-                                .url(cdkGatewayBaseUrl)
-                                .user(cdkGatewayUser)
-                                .password(cdkGatewayPassword)
-                                .virtualCluster(vClusterName)))), null);
-        log.info("KafkaCluster/{} created in Console", vClusterName);
+        try {
+            kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
+                    .apiVersion("v2")
+                    .kind(KafkaClusterKind.KAFKA_CLUSTER)
+                    .metadata(new KafkaClusterMetadata().name(vClusterName))
+                    .spec(new KafkaClusterSpec()
+                            .displayName(displayName)
+                            .bootstrapServers("localhost:6969")
+                            .properties(Map.of(
+                                    "security.protocol", "SSL",
+                                    "ssl.truststore.location", "/var/lib/conduktor/certs/" + adminUser + ".truststore.jks",
+                                    "ssl.truststore.password", "conduktor",
+                                    "ssl.keystore.location", "/var/lib/conduktor/certs/" + adminUser + ".keystore.jks",
+                                    "ssl.keystore.password", "conduktor",
+                                    "ssl.key.password", "conduktor"
+                            ))
+                            .kafkaFlavor(new KafkaFlavor(new Gateway()
+                                    .type(Gateway.TypeEnum.GATEWAY)
+                                    .url(cdkGatewayBaseUrl)
+                                    .user(cdkGatewayUser)
+                                    .password(cdkGatewayPassword)
+                                    .virtualCluster(vClusterName)))), null);
+            log.info("KafkaCluster/{} created in Console", vClusterName);
+        } catch (org.openapitools.client.ApiException e) {
+            // Handle "cluster already exists" error gracefully
+            if (e.getCode() == 500 && e.getResponseBody() != null && e.getResponseBody().contains("cluster slug already exist")) {
+                log.info("KafkaCluster/{} already exists in Console, skipping creation", vClusterName);
+            } else {
+                throw e;
+            }
+        }
 
         // Mark as created
         createdVClusters.add(vClusterName);
 
         // Wait for Console to establish connection to the cluster
         log.info("Waiting for Console to connect to vCluster {}...", vClusterName);
-        Thread.sleep(5000);
+        Thread.sleep(10000);
     }
 
     private void createTopicsFromCRD(String vClusterName, List<TopicDef> topics)
-            throws org.openapitools.client.ApiException {
+            throws org.openapitools.client.ApiException, InterruptedException {
+        // Wait for Console to be ready to handle operations on this vCluster
+        waitForConsoleReady(vClusterName);
+
         for (TopicDef topic : topics) {
             createTopic(
                     vClusterName,
@@ -575,8 +616,18 @@ public class SetupGateway {
         }
     }
 
+    private void waitForConsoleReady(String vClusterName) throws InterruptedException {
+        log.info("Waiting for Console to be ready for vCluster {}...", vClusterName);
+        // Give Console additional time to establish connection and index the cluster
+        Thread.sleep(30000);  // 30 seconds
+        log.info("Proceeding with operations on vCluster {}", vClusterName);
+    }
+
     private void createAclsFromCRD(String vClusterName, String serviceName, List<AclDef> acls)
-            throws org.openapitools.client.ApiException {
+            throws org.openapitools.client.ApiException, InterruptedException {
+        // Wait for Console to be ready to handle operations on this vCluster
+        waitForConsoleReady(vClusterName);
+
         List<KafkaServiceAccountACL> kafkaAcls = new ArrayList<>();
 
         // Convert CRD ACLs to Kafka ACLs
@@ -616,11 +667,16 @@ public class SetupGateway {
         log.info("Processing CRD for service: {}", serviceName);
 
         // 2. Upsert vCluster (only if it doesn't already exist in Console)
-        boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
+        // Use pre-computed ACL requirement (considers ALL CRDs for this vCluster)
+        boolean vClusterRequiresAcls = vClustersRequiringAcls.contains(vClusterName);
         boolean vClusterExistsInConsole = vClusterExistsInConsole(vClusterName);
 
         if (!vClusterExistsInConsole) {
-            upsertVClusterFromCRD(vClusterName, hasAcls, serviceName);
+            upsertVClusterFromCRD(vClusterName, vClusterRequiresAcls, serviceName);
+        } else {
+            // vCluster already exists - wait for Console to be ready
+            log.info("vCluster {} already exists, ensuring Console connection is ready", vClusterName);
+            Thread.sleep(5000);
         }
 
         // 3. Upsert Gateway ServiceAccount for the service (mTLS)
