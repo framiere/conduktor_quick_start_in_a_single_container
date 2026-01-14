@@ -1,5 +1,7 @@
 package com.example.messaging.operator.crd;
 
+import com.example.messaging.operator.events.ReconciliationEvent;
+import com.example.messaging.operator.events.ReconciliationEventPublisher;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.*;
 import org.openapitools.client.model.Operation;
@@ -29,47 +31,155 @@ class CrdReconciliationTest {
     private static final String DIFFERENT_APP_SERVICE = "unauthorized-service";
 
     /**
-     * In-memory CRD store simulating etcd behavior
+     * In-memory CRD store simulating etcd behavior with event publishing
      */
     static class CRDStore {
         private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
         private final AtomicLong resourceVersionCounter = new AtomicLong(1);
+        private final ReconciliationEventPublisher eventPublisher;
+
+        public CRDStore() {
+            this(new ReconciliationEventPublisher(false));
+        }
+
+        public CRDStore(ReconciliationEventPublisher eventPublisher) {
+            this.eventPublisher = eventPublisher;
+        }
+
+        public ReconciliationEventPublisher getEventPublisher() {
+            return eventPublisher;
+        }
 
         private String getKey(String kind, String namespace, String name) {
             return String.format("%s/%s/%s", kind, namespace, name);
         }
 
         public <T> T create(String kind, String namespace, T resource) {
-            String key = getKey(kind, namespace, getName(resource));
-            if (store.containsKey(key)) {
-                throw new IllegalStateException("Resource already exists: " + key);
+            String name = getName(resource);
+            String appService = getApplicationServiceRef(resource);
+
+            // Publish BEFORE event
+            eventPublisher.publishBefore(
+                    ReconciliationEvent.Operation.CREATE,
+                    kind,
+                    name,
+                    namespace,
+                    appService
+            );
+
+            try {
+                String key = getKey(kind, namespace, name);
+                if (store.containsKey(key)) {
+                    String errorMessage = "Resource already exists: " + key;
+                    eventPublisher.publishFailure(
+                            ReconciliationEvent.Operation.CREATE,
+                            kind,
+                            name,
+                            namespace,
+                            appService,
+                            errorMessage
+                    );
+                    throw new IllegalStateException(errorMessage);
+                }
+
+                long version = resourceVersionCounter.getAndIncrement();
+                setResourceVersion(resource, String.valueOf(version));
+                setUid(resource, UUID.randomUUID().toString());
+
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("resource", resource);
+                entry.put("timestamp", System.currentTimeMillis());
+                store.put(key, entry);
+
+                // Publish AFTER SUCCESS event
+                eventPublisher.publishSuccess(
+                        ReconciliationEvent.Operation.CREATE,
+                        kind,
+                        name,
+                        namespace,
+                        appService,
+                        version
+                );
+
+                return resource;
+            } catch (IllegalStateException e) {
+                // Already published failure event, just rethrow
+                throw e;
+            } catch (Exception e) {
+                // Unexpected exception, publish failure and rethrow
+                eventPublisher.publishFailure(
+                        ReconciliationEvent.Operation.CREATE,
+                        kind,
+                        name,
+                        namespace,
+                        appService,
+                        e.getMessage()
+                );
+                throw e;
             }
-
-            setResourceVersion(resource, String.valueOf(resourceVersionCounter.getAndIncrement()));
-            setUid(resource, UUID.randomUUID().toString());
-
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("resource", resource);
-            entry.put("timestamp", System.currentTimeMillis());
-            store.put(key, entry);
-
-            return resource;
         }
 
         public <T> T update(String kind, String namespace, String name, T resource) {
-            String key = getKey(kind, namespace, name);
-            if (!store.containsKey(key)) {
-                throw new IllegalStateException("Resource not found: " + key);
+            String appService = getApplicationServiceRef(resource);
+
+            // Publish BEFORE event
+            eventPublisher.publishBefore(
+                    ReconciliationEvent.Operation.UPDATE,
+                    kind,
+                    name,
+                    namespace,
+                    appService
+            );
+
+            try {
+                String key = getKey(kind, namespace, name);
+                if (!store.containsKey(key)) {
+                    String errorMessage = "Resource not found: " + key;
+                    eventPublisher.publishFailure(
+                            ReconciliationEvent.Operation.UPDATE,
+                            kind,
+                            name,
+                            namespace,
+                            appService,
+                            errorMessage
+                    );
+                    throw new IllegalStateException(errorMessage);
+                }
+
+                long version = resourceVersionCounter.getAndIncrement();
+                setResourceVersion(resource, String.valueOf(version));
+
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("resource", resource);
+                entry.put("timestamp", System.currentTimeMillis());
+                store.put(key, entry);
+
+                // Publish AFTER SUCCESS event
+                eventPublisher.publishSuccess(
+                        ReconciliationEvent.Operation.UPDATE,
+                        kind,
+                        name,
+                        namespace,
+                        appService,
+                        version
+                );
+
+                return resource;
+            } catch (IllegalStateException e) {
+                // Already published failure event, just rethrow
+                throw e;
+            } catch (Exception e) {
+                // Unexpected exception, publish failure and rethrow
+                eventPublisher.publishFailure(
+                        ReconciliationEvent.Operation.UPDATE,
+                        kind,
+                        name,
+                        namespace,
+                        appService,
+                        e.getMessage()
+                );
+                throw e;
             }
-
-            setResourceVersion(resource, String.valueOf(resourceVersionCounter.getAndIncrement()));
-
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("resource", resource);
-            entry.put("timestamp", System.currentTimeMillis());
-            store.put(key, entry);
-
-            return resource;
         }
 
         @SuppressWarnings("unchecked")
@@ -87,8 +197,62 @@ class CrdReconciliationTest {
         }
 
         public boolean delete(String kind, String namespace, String name) {
-            String key = getKey(kind, namespace, name);
-            return store.remove(key) != null;
+            return delete(kind, namespace, name, null);
+        }
+
+        public boolean delete(String kind, String namespace, String name, String requestingAppService) {
+            // Get resource before deletion to extract appService
+            Object existingResource = get(kind, namespace, name);
+            String appService = existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
+
+            // Publish BEFORE event
+            eventPublisher.publishBefore(
+                    ReconciliationEvent.Operation.DELETE,
+                    kind,
+                    name,
+                    namespace,
+                    appService
+            );
+
+            try {
+                String key = getKey(kind, namespace, name);
+                boolean deleted = store.remove(key) != null;
+
+                if (deleted) {
+                    // Publish AFTER SUCCESS event
+                    eventPublisher.publishSuccess(
+                            ReconciliationEvent.Operation.DELETE,
+                            kind,
+                            name,
+                            namespace,
+                            appService,
+                            null  // No version after delete
+                    );
+                } else {
+                    eventPublisher.publishAfter(
+                            ReconciliationEvent.Operation.DELETE,
+                            kind,
+                            name,
+                            namespace,
+                            appService,
+                            ReconciliationEvent.Result.NOT_FOUND,
+                            "Resource not found",
+                            null
+                    );
+                }
+
+                return deleted;
+            } catch (Exception e) {
+                eventPublisher.publishFailure(
+                        ReconciliationEvent.Operation.DELETE,
+                        kind,
+                        name,
+                        namespace,
+                        appService,
+                        e.getMessage()
+                );
+                throw e;
+            }
         }
 
         public void clear() {
@@ -111,6 +275,23 @@ class CrdReconciliationTest {
                 return ((ACL) resource).getMetadata().getName();
             }
             throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
+        }
+
+        private String getApplicationServiceRef(Object resource) {
+            if (resource instanceof ApplicationService) {
+                return ((ApplicationService) resource).getSpec().getName();
+            } else if (resource instanceof VirtualCluster) {
+                return ((VirtualCluster) resource).getSpec().getApplicationServiceRef();
+            } else if (resource instanceof ServiceAccount) {
+                return ((ServiceAccount) resource).getSpec().getApplicationServiceRef();
+            } else if (resource instanceof Topic) {
+                return ((Topic) resource).getSpec().getApplicationServiceRef();
+            } else if (resource instanceof ConsumerGroup) {
+                return ((ConsumerGroup) resource).getSpec().getApplicationServiceRef();
+            } else if (resource instanceof ACL) {
+                return ((ACL) resource).getSpec().getApplicationServiceRef();
+            }
+            return null;
         }
 
         private void setResourceVersion(Object resource, String version) {
@@ -883,6 +1064,232 @@ class CrdReconciliationTest {
                     .containsEntry("ServiceAccount", 0)
                     .containsEntry("Topic", 0)
                     .containsEntry("ACL", 0);
+        }
+    }
+
+    @Nested
+    @DisplayName("Event Publishing Tests")
+    class EventPublishingTest {
+
+        private List<ReconciliationEvent> capturedEvents;
+        private ReconciliationEventPublisher.ReconciliationEventListener eventCapture;
+
+        @BeforeEach
+        void setupEventCapture() {
+            capturedEvents = new ArrayList<>();
+            eventCapture = event -> capturedEvents.add(event);
+            crdStore.getEventPublisher().addListener(eventCapture);
+        }
+
+        @AfterEach
+        void cleanupEventCapture() {
+            crdStore.getEventPublisher().removeListener(eventCapture);
+        }
+
+        @Test
+        @DisplayName("should publish BEFORE and AFTER events for successful create")
+        void testCreateEventLifecycle() {
+            // Setup
+            setupCompleteOwnershipChain();
+            capturedEvents.clear(); // Clear setup events
+
+            // CREATE OPERATION
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+
+            // VERIFY EVENTS
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
+
+            ReconciliationEvent beforeEvent = capturedEvents.get(0);
+            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
+            assertThat(beforeEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
+            assertThat(beforeEvent.getApplicationService()).isEqualTo(OWNER_APP_SERVICE);
+            assertThat(beforeEvent.getResult()).isNull();
+
+            ReconciliationEvent afterEvent = capturedEvents.get(1);
+            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(afterEvent.getResourceKind()).isEqualTo("Topic");
+            assertThat(afterEvent.getResourceName()).isEqualTo("orders-events");
+            assertThat(afterEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
+            assertThat(afterEvent.getApplicationService()).isEqualTo(OWNER_APP_SERVICE);
+            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.getResourceVersion()).isNotNull();
+            assertThat(afterEvent.isSuccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("should publish BEFORE and AFTER events for successful update")
+        void testUpdateEventLifecycle() {
+            // Setup
+            setupCompleteOwnershipChain();
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            capturedEvents.clear(); // Clear setup events
+
+            // UPDATE OPERATION
+            topic.getSpec().setPartitions(6);
+            Topic updated = crdStore.update("Topic", TEST_NAMESPACE, "orders-events", topic);
+
+            // VERIFY EVENTS
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
+
+            ReconciliationEvent beforeEvent = capturedEvents.get(0);
+            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
+
+            ReconciliationEvent afterEvent = capturedEvents.get(1);
+            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.getResourceVersion()).isNotNull();
+            assertThat(afterEvent.isSuccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("should publish BEFORE and AFTER events for successful delete")
+        void testDeleteEventLifecycle() {
+            // Setup
+            setupCompleteOwnershipChain();
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            capturedEvents.clear(); // Clear setup events
+
+            // DELETE OPERATION
+            boolean deleted = crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
+
+            // VERIFY EVENTS
+            assertThat(deleted).isTrue();
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
+
+            ReconciliationEvent beforeEvent = capturedEvents.get(0);
+            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
+            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
+
+            ReconciliationEvent afterEvent = capturedEvents.get(1);
+            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
+            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.isSuccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("should publish FAILURE event when create fails")
+        void testCreateFailureEvent() {
+            // Setup - create a resource first
+            setupCompleteOwnershipChain();
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            capturedEvents.clear();
+
+            // CREATE OPERATION - should fail due to duplicate resource
+            try {
+                Topic duplicate = crdStore.create("Topic", TEST_NAMESPACE,
+                        buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            } catch (Exception e) {
+                // Expected failure
+            }
+
+            // VERIFY EVENTS
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER(FAILURE) events")
+                    .hasSize(2);
+
+            ReconciliationEvent beforeEvent = capturedEvents.get(0);
+            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+
+            ReconciliationEvent afterEvent = capturedEvents.get(1);
+            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.FAILURE);
+            assertThat(afterEvent.isFailure()).isTrue();
+            assertThat(afterEvent.getErrorDetails()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("should track complete lifecycle with multiple operations")
+        void testCompleteLifecycleEventTracking() {
+            // Setup
+            setupCompleteOwnershipChain();
+            capturedEvents.clear();
+
+            // CREATE
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            assertThat(capturedEvents).hasSize(2); // BEFORE + AFTER
+
+            // UPDATE
+            topic.getSpec().setPartitions(6);
+            crdStore.update("Topic", TEST_NAMESPACE, "orders-events", topic);
+            assertThat(capturedEvents).hasSize(4); // +2 for update
+
+            // DELETE
+            crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
+            assertThat(capturedEvents).hasSize(6); // +2 for delete
+
+            // VERIFY FULL LIFECYCLE
+            assertThat(capturedEvents.stream()
+                    .filter(e -> e.getPhase() == ReconciliationEvent.Phase.BEFORE)
+                    .count())
+                    .as("Should have 3 BEFORE events")
+                    .isEqualTo(3);
+
+            assertThat(capturedEvents.stream()
+                    .filter(e -> e.getPhase() == ReconciliationEvent.Phase.AFTER)
+                    .count())
+                    .as("Should have 3 AFTER events")
+                    .isEqualTo(3);
+
+            assertThat(capturedEvents.stream()
+                    .filter(e -> e.getResult() == ReconciliationEvent.Result.SUCCESS)
+                    .count())
+                    .as("All operations should be successful")
+                    .isEqualTo(3);
+
+            // Verify operations in order
+            assertThat(capturedEvents.get(0).getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(capturedEvents.get(2).getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(capturedEvents.get(4).getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
+        }
+
+        @Test
+        @DisplayName("should include resource version in AFTER events")
+        void testResourceVersionInEvents() {
+            // Setup
+            setupCompleteOwnershipChain();
+            capturedEvents.clear();
+
+            // CREATE
+            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
+                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+
+            ReconciliationEvent afterCreate = capturedEvents.get(1);
+            Long versionAfterCreate = afterCreate.getResourceVersion();
+            assertThat(versionAfterCreate).isNotNull().isPositive();
+
+            // UPDATE
+            topic.getSpec().setPartitions(6);
+            crdStore.update("Topic", TEST_NAMESPACE, "orders-events", topic);
+
+            ReconciliationEvent afterUpdate = capturedEvents.get(3);
+            Long versionAfterUpdate = afterUpdate.getResourceVersion();
+            assertThat(versionAfterUpdate)
+                    .as("Resource version should increment after update")
+                    .isGreaterThan(versionAfterCreate);
         }
     }
 
