@@ -9,26 +9,17 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Component integration tests for CRDStore with Kubernetes mock server.
- * Tests the synchronization between K8s API and in-memory CRDStore.
+ * Component integration tests for CRDStore with Kubernetes mock server. Tests the synchronization between K8s API and in-memory CRDStore.
  */
 public class CRDStoreIT extends ComponentITBase {
 
     @Test
     void testK8sCreateSyncsStore() {
         // Create ApplicationService in K8s
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
         // Verify resource exists in K8s
-        ApplicationService fromK8s = k8sClient
-                .resources(ApplicationService.class)
-                .inNamespace("default")
-                .withName("test-app")
-                .get();
+        ApplicationService fromK8s = k8sClient.resources(ApplicationService.class).inNamespace("default").withName("test-app").get();
         assertThat(fromK8s).isNotNull();
         assertThat(fromK8s.getSpec().getName()).isEqualTo("test-app");
 
@@ -46,11 +37,7 @@ public class CRDStoreIT extends ComponentITBase {
     @Test
     void testListResourcesFromStore() {
         // Create full ownership chain: ApplicationService -> VirtualCluster -> ServiceAccount -> Topics
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
         VirtualCluster cluster = TestDataBuilder.virtualCluster()
@@ -111,20 +98,14 @@ public class CRDStoreIT extends ComponentITBase {
 
         // Verify all topics are present
         assertThat(topics).hasSize(3);
-        assertThat(topics)
-                .extracting(t -> t.getMetadata().getName())
-                .containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
+        assertThat(topics).extracting(t -> t.getMetadata().getName()).containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
         assertThat(topics).extracting(t -> t.getSpec().getPartitions()).containsExactlyInAnyOrder(3, 6, 9);
     }
 
     @Test
     void testUpdateResourceInStore() {
         // Create ApplicationService first (required for ownership)
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
         // Create VirtualCluster in K8s
@@ -163,11 +144,7 @@ public class CRDStoreIT extends ComponentITBase {
     @Test
     void testDeleteResourceFromStore() {
         // Create full ownership chain: ApplicationService -> VirtualCluster -> ServiceAccount
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
         VirtualCluster cluster = TestDataBuilder.virtualCluster()

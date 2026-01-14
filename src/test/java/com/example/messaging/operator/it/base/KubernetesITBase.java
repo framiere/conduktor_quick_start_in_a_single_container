@@ -11,8 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 
 /**
- * Base class for Kubernetes integration tests.
- * Provides mock K8s server, client, CRDStore, and OwnershipValidator.
+ * Base class for Kubernetes integration tests. Provides mock K8s server, client, CRDStore, and OwnershipValidator.
  */
 public abstract class KubernetesITBase {
 
@@ -69,31 +68,11 @@ public abstract class KubernetesITBase {
      * Sync all resources from K8s to store
      */
     protected void syncAllToStore() {
-        k8sClient
-                .resources(ApplicationService.class)
-                .inAnyNamespace()
-                .list()
-                .getItems()
-                .forEach(this::syncToStore);
-        k8sClient
-                .resources(VirtualCluster.class)
-                .inAnyNamespace()
-                .list()
-                .getItems()
-                .forEach(this::syncToStore);
-        k8sClient
-                .resources(ServiceAccount.class)
-                .inAnyNamespace()
-                .list()
-                .getItems()
-                .forEach(this::syncToStore);
+        k8sClient.resources(ApplicationService.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
+        k8sClient.resources(VirtualCluster.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
+        k8sClient.resources(ServiceAccount.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
         k8sClient.resources(Topic.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
         k8sClient.resources(ACL.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
-        k8sClient
-                .resources(ConsumerGroup.class)
-                .inAnyNamespace()
-                .list()
-                .getItems()
-                .forEach(this::syncToStore);
+        k8sClient.resources(ConsumerGroup.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
     }
 }

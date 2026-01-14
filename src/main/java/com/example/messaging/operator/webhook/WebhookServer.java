@@ -13,8 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Kubernetes ValidatingWebhook HTTP server using Java's built-in HttpServer.
- * Exposes endpoints for K8s API server to validate admission requests for all CRD types.
+ * Kubernetes ValidatingWebhook HTTP server using Java's built-in HttpServer. Exposes endpoints for K8s API server to validate admission requests for all CRD types.
  */
 public class WebhookServer {
     private static final Logger log = LoggerFactory.getLogger(WebhookServer.class);
@@ -78,10 +77,7 @@ public class WebhookServer {
                     return;
                 }
 
-                log.info(
-                        "Validating {} operation on {} in namespace {}",
-                        review.getRequest().getOperation(),
-                        review.getRequest().getName(),
+                log.info("Validating {} operation on {} in namespace {}", review.getRequest().getOperation(), review.getRequest().getName(),
                         review.getRequest().getNamespace());
 
                 AdmissionResponse admissionResponse = validator.validate(review.getRequest(), resourceClass);

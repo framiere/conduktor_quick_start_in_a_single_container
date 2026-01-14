@@ -73,10 +73,7 @@ class WebhookIntegrationTest {
         String json = mapper.writeValueAsString(review);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
-        Request httpRequest = new Request.Builder()
-                .url("http://localhost:" + PORT + "/validate/topic")
-                .post(body)
-                .build();
+        Request httpRequest = new Request.Builder().url("http://localhost:" + PORT + "/validate/topic").post(body).build();
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);
@@ -88,8 +85,7 @@ class WebhookIntegrationTest {
             assertThat(responseReview.getResponse()).isNotNull();
             assertThat(responseReview.getResponse().getUid()).isEqualTo("integration-test-001");
             assertThat(responseReview.getResponse().isAllowed()).isFalse();
-            assertThat(responseReview.getResponse().getStatus().getMessage())
-                    .contains("Cannot change applicationServiceRef")
+            assertThat(responseReview.getResponse().getStatus().getMessage()).contains("Cannot change applicationServiceRef")
                     .contains("app-service-1")
                     .contains("hacker-service");
         }
@@ -118,10 +114,7 @@ class WebhookIntegrationTest {
         String json = mapper.writeValueAsString(review);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
-        Request httpRequest = new Request.Builder()
-                .url("http://localhost:" + PORT + "/validate/topic")
-                .post(body)
-                .build();
+        Request httpRequest = new Request.Builder().url("http://localhost:" + PORT + "/validate/topic").post(body).build();
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);
@@ -154,10 +147,7 @@ class WebhookIntegrationTest {
         String json = mapper.writeValueAsString(review);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
-        Request httpRequest = new Request.Builder()
-                .url("http://localhost:" + PORT + "/validate/acl")
-                .post(body)
-                .build();
+        Request httpRequest = new Request.Builder().url("http://localhost:" + PORT + "/validate/acl").post(body).build();
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);

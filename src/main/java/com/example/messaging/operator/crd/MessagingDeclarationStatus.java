@@ -10,8 +10,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * Status of a Messaging Declaration CR.
- * Tracks the current state, owned/referenced topics, and reconciliation metadata.
+ * Status of a Messaging Declaration CR. Tracks the current state, owned/referenced topics, and reconciliation metadata.
  */
 @Buildable(editableEnabled = false)
 @Data
@@ -49,13 +48,6 @@ public class MessagingDeclarationStatus {
      * Possible CR states during reconciliation.
      */
     public enum CRState {
-        PENDING,
-        CLAIMING,
-        CREATING,
-        READY,
-        CONFLICT,
-        ERROR,
-        WAITING,
-        DELETING
+        PENDING, CLAIMING, CREATING, READY, CONFLICT, ERROR, WAITING, DELETING
     }
 }

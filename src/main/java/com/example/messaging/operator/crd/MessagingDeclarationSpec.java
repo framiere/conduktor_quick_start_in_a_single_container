@@ -11,8 +11,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * Specification of a Messaging Declaration.
- * Defines the topics to own, ACLs to configure, and the target Virtual Cluster.
+ * Specification of a Messaging Declaration. Defines the topics to own, ACLs to configure, and the target Virtual Cluster.
  */
 @Buildable(editableEnabled = false)
 @Data

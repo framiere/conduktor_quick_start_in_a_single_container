@@ -7,8 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
- * Base class for scenario integration tests.
- * Creates a fresh WebhookServer for each test method.
+ * Base class for scenario integration tests. Creates a fresh WebhookServer for each test method.
  */
 public abstract class ScenarioITBase extends KubernetesITBase {
 

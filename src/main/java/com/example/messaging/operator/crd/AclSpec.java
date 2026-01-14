@@ -10,8 +10,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * ACL specification for a topic.
- * Defines which Kafka operations are allowed for the service account on a given topic.
+ * ACL specification for a topic. Defines which Kafka operations are allowed for the service account on a given topic.
  */
 @Buildable(editableEnabled = false)
 @Data
@@ -32,16 +31,6 @@ public class AclSpec {
      * Kafka ACL operations enum.
      */
     public enum KafkaOperation {
-        READ,
-        WRITE,
-        CREATE,
-        DELETE,
-        ALTER,
-        DESCRIBE,
-        CLUSTER_ACTION,
-        DESCRIBE_CONFIGS,
-        ALTER_CONFIGS,
-        IDEMPOTENT_WRITE,
-        ALL
+        READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION, DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE, ALL
     }
 }

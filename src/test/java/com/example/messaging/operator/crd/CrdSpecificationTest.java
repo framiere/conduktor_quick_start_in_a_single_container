@@ -15,8 +15,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive unit tests for all CRD specifications using AssertJ.
- * Tests validate field presence, types, builder patterns, and relationships.
+ * Comprehensive unit tests for all CRD specifications using AssertJ. Tests validate field presence, types, builder patterns, and relationships.
  */
 @DisplayName("CRD Specification Tests")
 class CrdSpecificationTest {
@@ -37,14 +36,9 @@ class CrdSpecificationTest {
         @Test
         @DisplayName("should build ApplicationService using builder pattern")
         void testApplicationServiceBuilder() {
-            ApplicationServiceSpec spec = new ApplicationServiceSpecBuilder()
-                    .withName("orders-service")
-                    .build();
+            ApplicationServiceSpec spec = new ApplicationServiceSpecBuilder().withName("orders-service").build();
 
-            assertThat(spec)
-                    .isNotNull()
-                    .extracting(ApplicationServiceSpec::getName)
-                    .isEqualTo("orders-service");
+            assertThat(spec).isNotNull().extracting(ApplicationServiceSpec::getName).isEqualTo("orders-service");
         }
 
         @Test
@@ -109,14 +103,9 @@ class CrdSpecificationTest {
         @Test
         @DisplayName("should build VirtualCluster using builder pattern")
         void testVirtualClusterBuilder() {
-            VirtualClusterSpec spec = new VirtualClusterSpecBuilder()
-                    .withClusterId("demo-cluster")
-                    .withApplicationServiceRef("demo-admin")
-                    .build();
+            VirtualClusterSpec spec = new VirtualClusterSpecBuilder().withClusterId("demo-cluster").withApplicationServiceRef("demo-admin").build();
 
-            assertThat(spec)
-                    .extracting(VirtualClusterSpec::getClusterId, VirtualClusterSpec::getApplicationServiceRef)
-                    .containsExactly("demo-cluster", "demo-admin");
+            assertThat(spec).extracting(VirtualClusterSpec::getClusterId, VirtualClusterSpec::getApplicationServiceRef).containsExactly("demo-cluster", "demo-admin");
         }
 
         @Test
@@ -146,19 +135,14 @@ class CrdSpecificationTest {
         void testServiceAccountWithDnList() {
             ServiceAccountSpec spec = new ServiceAccountSpec();
             spec.setName("orders-service");
-            spec.setDn(Arrays.asList(
-                    "CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US",
-                    "CN=orders-service-alt,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
+            spec.setDn(Arrays.asList("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US", "CN=orders-service-alt,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
             spec.setClusterRef("prod-cluster");
             spec.setApplicationServiceRef("orders-service");
 
-            assertThat(spec.getDn())
-                    .isNotNull()
+            assertThat(spec.getDn()).isNotNull()
                     .isInstanceOf(List.class)
                     .hasSize(2)
-                    .containsExactly(
-                            "CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US",
-                            "CN=orders-service-alt,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+                    .containsExactly("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US", "CN=orders-service-alt,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
         }
 
         @Test
@@ -174,12 +158,7 @@ class CrdSpecificationTest {
             spec.setClusterRef("demo");
             spec.setApplicationServiceRef("demo-admin");
 
-            assertThat(spec.getDn())
-                    .hasSize(1)
-                    .first()
-                    .asString()
-                    .contains("CN=demo-admin")
-                    .contains("OU=DEMO");
+            assertThat(spec.getDn()).hasSize(1).first().asString().contains("CN=demo-admin").contains("OU=DEMO");
         }
 
         @Test
@@ -187,25 +166,17 @@ class CrdSpecificationTest {
         void testServiceAccountDnDefaultValue() {
             ServiceAccountSpec spec = new ServiceAccountSpec();
 
-            assertThat(spec.getDn())
-                    .isNotNull()
-                    .isInstanceOf(java.util.ArrayList.class)
-                    .isEmpty();
+            assertThat(spec.getDn()).isNotNull().isInstanceOf(java.util.ArrayList.class).isEmpty();
         }
 
         @Test
         @DisplayName("should build ServiceAccount with all required fields")
         void testServiceAccountBuilder() {
-            ServiceAccountSpec spec = new ServiceAccountSpecBuilder()
-                    .withName("test-sa")
-                    .withDn(new ArrayList<>() {
-                        {
-                            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
-                        }
-                    })
-                    .withClusterRef("test-cluster")
-                    .withApplicationServiceRef("test-app")
-                    .build();
+            ServiceAccountSpec spec = new ServiceAccountSpecBuilder().withName("test-sa").withDn(new ArrayList<>() {
+                {
+                    add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+                }
+            }).withClusterRef("test-cluster").withApplicationServiceRef("test-app").build();
 
             assertThat(spec).isNotNull().satisfies(s -> {
                 assertThat(s.getName()).isEqualTo("test-sa");
@@ -230,12 +201,8 @@ class CrdSpecificationTest {
 
             // Verify the reference chain
             assertThat(saSpec).satisfies(s -> {
-                assertThat(s.getClusterRef())
-                        .as("ServiceAccount should reference VirtualCluster")
-                        .isEqualTo("prod-cluster");
-                assertThat(s.getApplicationServiceRef())
-                        .as("ServiceAccount should reference ApplicationService")
-                        .isEqualTo("orders-service");
+                assertThat(s.getClusterRef()).as("ServiceAccount should reference VirtualCluster").isEqualTo("prod-cluster");
+                assertThat(s.getApplicationServiceRef()).as("ServiceAccount should reference ApplicationService").isEqualTo("orders-service");
             });
         }
 
@@ -280,8 +247,7 @@ class CrdSpecificationTest {
         @Test
         @DisplayName("should build Topic using builder pattern")
         void testTopicBuilder() {
-            TopicCRSpec spec = new TopicCRSpecBuilder()
-                    .withServiceRef("demo-acl-user-sa")
+            TopicCRSpec spec = new TopicCRSpecBuilder().withServiceRef("demo-acl-user-sa")
                     .withName("click")
                     .withPartitions(6)
                     .withReplicationFactor(3)
@@ -289,11 +255,7 @@ class CrdSpecificationTest {
                     .build();
 
             assertThat(spec)
-                    .extracting(
-                            TopicCRSpec::getServiceRef,
-                            TopicCRSpec::getName,
-                            TopicCRSpec::getPartitions,
-                            TopicCRSpec::getReplicationFactor,
+                    .extracting(TopicCRSpec::getServiceRef, TopicCRSpec::getName, TopicCRSpec::getPartitions, TopicCRSpec::getReplicationFactor,
                             TopicCRSpec::getApplicationServiceRef)
                     .containsExactly("demo-acl-user-sa", "click", 6, 3, "demo-acl-user");
         }
@@ -305,13 +267,9 @@ class CrdSpecificationTest {
             spec.setServiceRef("orders-service-sa");
             spec.setApplicationServiceRef("orders-service");
 
-            assertThat(spec.getServiceRef())
-                    .as("Topic should reference ServiceAccount CR")
-                    .isEqualTo("orders-service-sa");
+            assertThat(spec.getServiceRef()).as("Topic should reference ServiceAccount CR").isEqualTo("orders-service-sa");
 
-            assertThat(spec.getApplicationServiceRef())
-                    .as("Topic should reference ApplicationService CR")
-                    .isEqualTo("orders-service");
+            assertThat(spec.getApplicationServiceRef()).as("Topic should reference ApplicationService CR").isEqualTo("orders-service");
         }
     }
 
@@ -339,18 +297,14 @@ class CrdSpecificationTest {
         @Test
         @DisplayName("should build ConsumerGroup using builder pattern")
         void testConsumerGroupBuilder() {
-            ConsumerGroupSpec spec = new ConsumerGroupSpecBuilder()
-                    .withServiceRef("test-sa")
+            ConsumerGroupSpec spec = new ConsumerGroupSpecBuilder().withServiceRef("test-sa")
                     .withName("test-consumer-")
                     .withPatternType(PREFIXED)
                     .withApplicationServiceRef("test-app")
                     .build();
 
             assertThat(spec)
-                    .extracting(
-                            ConsumerGroupSpec::getServiceRef,
-                            ConsumerGroupSpec::getName,
-                            ConsumerGroupSpec::getPatternType,
+                    .extracting(ConsumerGroupSpec::getServiceRef, ConsumerGroupSpec::getName, ConsumerGroupSpec::getPatternType,
                             ConsumerGroupSpec::getApplicationServiceRef)
                     .containsExactly("test-sa", "test-consumer-", PREFIXED, "test-app");
         }
@@ -420,18 +374,13 @@ class CrdSpecificationTest {
         @Test
         @DisplayName("should build ACL using builder pattern")
         void testAclBuilder() {
-            AclCRSpec spec = new AclCRSpecBuilder()
-                    .withServiceRef("test-sa")
-                    .withTopicRef("test-topic")
-                    .withOperations(new ArrayList<>() {
-                        {
-                            add(READ);
-                            add(WRITE);
-                            add(DESCRIBE);
-                        }
-                    })
-                    .withApplicationServiceRef("test-app")
-                    .build();
+            AclCRSpec spec = new AclCRSpecBuilder().withServiceRef("test-sa").withTopicRef("test-topic").withOperations(new ArrayList<>() {
+                {
+                    add(READ);
+                    add(WRITE);
+                    add(DESCRIBE);
+                }
+            }).withApplicationServiceRef("test-app").build();
 
             assertThat(spec).isNotNull().satisfies(s -> {
                 assertThat(s.getOperations()).hasSize(3).containsExactlyInAnyOrder(READ, WRITE, DESCRIBE);
@@ -451,10 +400,7 @@ class CrdSpecificationTest {
             });
             spec.setApplicationServiceRef("inventory-service");
 
-            assertThat(spec.getOperations())
-                    .hasSize(1)
-                    .containsOnly(READ)
-                    .as("ACL should support read-only permissions");
+            assertThat(spec.getOperations()).hasSize(1).containsOnly(READ).as("ACL should support read-only permissions");
         }
 
         @Test
@@ -468,10 +414,7 @@ class CrdSpecificationTest {
                 }
             });
 
-            assertThat(spec.getOperations())
-                    .hasSize(2)
-                    .contains(READ, WRITE)
-                    .as("ACL should support read-write permissions");
+            assertThat(spec.getOperations()).hasSize(2).contains(READ, WRITE).as("ACL should support read-write permissions");
         }
 
         @Test
@@ -525,21 +468,13 @@ class CrdSpecificationTest {
             topic.setApplicationServiceRef("orders-service");
 
             // Validate the chain
-            assertThat(vCluster.getApplicationServiceRef())
-                    .isEqualTo(appService.getName())
-                    .as("VirtualCluster should reference ApplicationService");
+            assertThat(vCluster.getApplicationServiceRef()).isEqualTo(appService.getName()).as("VirtualCluster should reference ApplicationService");
 
-            assertThat(sa.getApplicationServiceRef())
-                    .isEqualTo(appService.getName())
-                    .as("ServiceAccount should reference ApplicationService");
+            assertThat(sa.getApplicationServiceRef()).isEqualTo(appService.getName()).as("ServiceAccount should reference ApplicationService");
 
-            assertThat(sa.getClusterRef())
-                    .isEqualTo(vCluster.getClusterId())
-                    .as("ServiceAccount should reference VirtualCluster");
+            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount should reference VirtualCluster");
 
-            assertThat(topic.getApplicationServiceRef())
-                    .isEqualTo(appService.getName())
-                    .as("Topic should reference ApplicationService");
+            assertThat(topic.getApplicationServiceRef()).isEqualTo(appService.getName()).as("Topic should reference ApplicationService");
         }
 
         @Test
@@ -556,13 +491,9 @@ class CrdSpecificationTest {
             sa.setClusterRef(clusterId);
             sa.setApplicationServiceRef(appServiceName);
 
-            assertThat(sa.getClusterRef())
-                    .isEqualTo(vCluster.getClusterId())
-                    .as("ServiceAccount clusterRef should match VirtualCluster clusterId");
+            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount clusterRef should match VirtualCluster clusterId");
 
-            assertThat(sa.getApplicationServiceRef())
-                    .isEqualTo(vCluster.getApplicationServiceRef())
-                    .as("Both should reference the same ApplicationService");
+            assertThat(sa.getApplicationServiceRef()).isEqualTo(vCluster.getApplicationServiceRef()).as("Both should reference the same ApplicationService");
         }
 
         @Test
@@ -579,13 +510,9 @@ class CrdSpecificationTest {
             topic.setServiceRef(serviceAccountName);
             topic.setApplicationServiceRef(appServiceName);
 
-            assertThat(topic.getServiceRef())
-                    .contains(sa.getName())
-                    .as("Topic serviceRef should reference ServiceAccount name");
+            assertThat(topic.getServiceRef()).contains(sa.getName()).as("Topic serviceRef should reference ServiceAccount name");
 
-            assertThat(topic.getApplicationServiceRef())
-                    .isEqualTo(sa.getApplicationServiceRef())
-                    .as("Both should reference the same ApplicationService");
+            assertThat(topic.getApplicationServiceRef()).isEqualTo(sa.getApplicationServiceRef()).as("Both should reference the same ApplicationService");
         }
 
         @Test
@@ -605,13 +532,9 @@ class CrdSpecificationTest {
             acl.setTopicRef(topicName);
             acl.setApplicationServiceRef(appServiceName);
 
-            assertThat(acl.getServiceRef())
-                    .isEqualTo(topic.getServiceRef())
-                    .as("ACL and Topic should reference the same ServiceAccount");
+            assertThat(acl.getServiceRef()).isEqualTo(topic.getServiceRef()).as("ACL and Topic should reference the same ServiceAccount");
 
-            assertThat(acl.getApplicationServiceRef())
-                    .isEqualTo(topic.getApplicationServiceRef())
-                    .as("ACL and Topic should reference the same ApplicationService");
+            assertThat(acl.getApplicationServiceRef()).isEqualTo(topic.getApplicationServiceRef()).as("ACL and Topic should reference the same ApplicationService");
         }
     }
 
@@ -623,29 +546,23 @@ class CrdSpecificationTest {
         @DisplayName("should verify all CRD specs have builder support via @Buildable")
         void testAllSpecsHaveBuilders() {
             assertThatCode(() -> {
-                        new ApplicationServiceSpecBuilder().build();
-                        new VirtualClusterSpecBuilder().build();
-                        new ServiceAccountSpecBuilder().build();
-                        new TopicCRSpecBuilder().build();
-                        new ConsumerGroupSpecBuilder().build();
-                        new AclCRSpecBuilder().build();
-                    })
-                    .doesNotThrowAnyException();
+                new ApplicationServiceSpecBuilder().build();
+                new VirtualClusterSpecBuilder().build();
+                new ServiceAccountSpecBuilder().build();
+                new TopicCRSpecBuilder().build();
+                new ConsumerGroupSpecBuilder().build();
+                new AclCRSpecBuilder().build();
+            }).doesNotThrowAnyException();
         }
 
         @Test
         @DisplayName("should support fluent builder chaining")
         void testFluentBuilderChaining() {
-            ServiceAccountSpec spec = new ServiceAccountSpecBuilder()
-                    .withName("test-sa")
-                    .withDn(new ArrayList<>() {
-                        {
-                            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
-                        }
-                    })
-                    .withClusterRef("test-cluster")
-                    .withApplicationServiceRef("test-app")
-                    .build();
+            ServiceAccountSpec spec = new ServiceAccountSpecBuilder().withName("test-sa").withDn(new ArrayList<>() {
+                {
+                    add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+                }
+            }).withClusterRef("test-cluster").withApplicationServiceRef("test-app").build();
 
             assertThat(spec).isNotNull();
             assertThat(spec.getName()).isEqualTo("test-sa");
@@ -665,8 +582,7 @@ class CrdSpecificationTest {
             original.setClusterRef("original-cluster");
             original.setApplicationServiceRef("original-app");
 
-            ServiceAccountSpec modified =
-                    new ServiceAccountSpecBuilder(original).withName("modified").build();
+            ServiceAccountSpec modified = new ServiceAccountSpecBuilder(original).withName("modified").build();
 
             assertThat(modified.getName()).isEqualTo("modified");
             assertThat(modified.getClusterRef()).isEqualTo("original-cluster");
@@ -737,8 +653,7 @@ class CrdSpecificationTest {
 
             String toString = spec.toString();
 
-            assertThat(toString)
-                    .contains("ServiceAccountSpec")
+            assertThat(toString).contains("ServiceAccountSpec")
                     .contains("name=orders-service")
                     .contains("clusterRef=prod-cluster")
                     .contains("applicationServiceRef=orders-service")
@@ -787,10 +702,7 @@ class CrdSpecificationTest {
         @DisplayName("should initialize list fields with empty collections")
         void testListFieldInitialization() {
             ServiceAccountSpec saSpec = new ServiceAccountSpec();
-            assertThat(saSpec.getDn())
-                    .as("DN list should be initialized as empty ArrayList")
-                    .isNotNull()
-                    .isEmpty();
+            assertThat(saSpec.getDn()).as("DN list should be initialized as empty ArrayList").isNotNull().isEmpty();
         }
 
         @Test

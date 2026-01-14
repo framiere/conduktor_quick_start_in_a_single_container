@@ -14,24 +14,23 @@ class AdmissionReviewTest {
     @Test
     @DisplayName("should deserialize AdmissionReview with UPDATE request")
     void testDeserializeUpdateRequest() throws Exception {
-        String json =
-                """
-        {
-          "apiVersion": "admission.k8s.io/v1",
-          "kind": "AdmissionReview",
-          "request": {
-            "uid": "test-uid-123",
-            "operation": "UPDATE",
-            "namespace": "default",
-            "name": "test-resource",
-            "userInfo": {
-              "username": "test-user"
-            },
-            "object": {"key": "value"},
-            "oldObject": {"key": "oldValue"}
-          }
-        }
-        """;
+        String json = """
+                {
+                  "apiVersion": "admission.k8s.io/v1",
+                  "kind": "AdmissionReview",
+                  "request": {
+                    "uid": "test-uid-123",
+                    "operation": "UPDATE",
+                    "namespace": "default",
+                    "name": "test-resource",
+                    "userInfo": {
+                      "username": "test-user"
+                    },
+                    "object": {"key": "value"},
+                    "oldObject": {"key": "oldValue"}
+                  }
+                }
+                """;
 
         AdmissionReview review = mapper.readValue(json, AdmissionReview.class);
 

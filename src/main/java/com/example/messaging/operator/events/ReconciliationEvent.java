@@ -7,8 +7,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 /**
- * Event emitted during CRD reconciliation operations.
- * Follows Kubernetes Event best practices for operator observability.
+ * Event emitted during CRD reconciliation operations. Follows Kubernetes Event best practices for operator observability.
  */
 @Getter
 @Builder
@@ -16,22 +15,15 @@ import lombok.NonNull;
 public class ReconciliationEvent {
 
     public enum Phase {
-        BEFORE,
-        AFTER
+        BEFORE, AFTER
     }
 
     public enum Operation {
-        CREATE,
-        UPDATE,
-        DELETE
+        CREATE, UPDATE, DELETE
     }
 
     public enum Result {
-        SUCCESS,
-        FAILURE,
-        VALIDATION_ERROR,
-        CONFLICT,
-        NOT_FOUND
+        SUCCESS, FAILURE, VALIDATION_ERROR, CONFLICT, NOT_FOUND
     }
 
     @NonNull private final Phase phase;

@@ -5,20 +5,18 @@ import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.events.ReconciliationEventPublisher;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
 import lombok.Getter;
 
 /**
- * In-memory CRD store simulating etcd behavior with event publishing and ownership enforcement.
- * Provides CRUD operations for Custom Resource Definitions with:
- * - Resource versioning for optimistic concurrency control
- * - UID generation for resource identity
- * - Event publishing for observability
- * - Thread-safe concurrent access
- * - Strict ownership validation and enforcement
+ * In-memory CRD store simulating etcd behavior with event publishing and ownership enforcement. Provides CRUD operations for Custom Resource Definitions with: - Resource
+ * versioning for optimistic concurrency control - UID generation for resource identity - Event publishing for observability - Thread-safe concurrent access - Strict
+ * ownership validation and enforcement
  */
 public class CRDStore {
     private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
@@ -240,9 +238,12 @@ public class CRDStore {
     /**
      * Get a resource by name
      *
-     * @param kind      The resource kind
-     * @param namespace The namespace
-     * @param name      The resource name
+     * @param kind
+     *            The resource kind
+     * @param namespace
+     *            The namespace
+     * @param name
+     *            The resource name
      * @return The resource, or null if not found
      */
     @SuppressWarnings("unchecked")
@@ -255,12 +256,15 @@ public class CRDStore {
     /**
      * List all resources of a kind in a namespace
      *
-     * @param kind      The resource kind
-     * @param namespace The namespace
+     * @param kind
+     *            The resource kind
+     * @param namespace
+     *            The namespace
      * @return List of resources
      */
     public <T> List<T> list(String kind, String namespace) {
-        return store.entrySet().stream()
+        return store.entrySet()
+                .stream()
                 .filter(e -> e.getKey().startsWith(kind + "/" + namespace + "/"))
                 .map(e -> (T) e.getValue().get("resource"))
                 .collect(Collectors.toList());
@@ -269,9 +273,12 @@ public class CRDStore {
     /**
      * Delete a resource
      *
-     * @param kind      The resource kind
-     * @param namespace The namespace
-     * @param name      The resource name
+     * @param kind
+     *            The resource kind
+     * @param namespace
+     *            The namespace
+     * @param name
+     *            The resource name
      * @return true if deleted, false if not found
      */
     public boolean delete(String kind, String namespace, String name) {
@@ -281,17 +288,20 @@ public class CRDStore {
     /**
      * Delete a resource with requesting owner context
      *
-     * @param kind                 The resource kind
-     * @param namespace            The namespace
-     * @param name                 The resource name
-     * @param requestingAppService The requesting application service
+     * @param kind
+     *            The resource kind
+     * @param namespace
+     *            The namespace
+     * @param name
+     *            The resource name
+     * @param requestingAppService
+     *            The requesting application service
      * @return true if deleted, false if not found
      */
     public boolean delete(String kind, String namespace, String name, String requestingAppService) {
         // Get resource before deletion to extract appService
         Object existingResource = get(kind, namespace, name);
-        String appService =
-                existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
+        String appService = existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
 
         // Publish BEFORE event
         ReconciliationEvent event1 = ReconciliationEvent.builder()
@@ -307,11 +317,8 @@ public class CRDStore {
 
         try {
             // OWNERSHIP ENFORCEMENT: Validate only owner can delete
-            if (existingResource != null
-                    && requestingAppService != null
-                    && !(existingResource instanceof ApplicationService)) {
-                ValidationResult validationResult =
-                        ownershipValidator.validateDelete(existingResource, requestingAppService);
+            if (existingResource != null && requestingAppService != null && !(existingResource instanceof ApplicationService)) {
+                ValidationResult validationResult = ownershipValidator.validateDelete(existingResource, requestingAppService);
                 if (!validationResult.isValid()) {
                     String validationMessage = validationResult.getMessage();
                     ReconciliationEvent event = ReconciliationEvent.builder()
@@ -458,4 +465,5 @@ public class CRDStore {
             default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         }
     }
+
 }

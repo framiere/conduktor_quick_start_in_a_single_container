@@ -7,8 +7,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 /**
- * Base class for component integration tests.
- * Shares a single WebhookServer instance across all tests in the class.
+ * Base class for component integration tests. Shares a single WebhookServer instance across all tests in the class.
  */
 public abstract class ComponentITBase extends KubernetesITBase {
 

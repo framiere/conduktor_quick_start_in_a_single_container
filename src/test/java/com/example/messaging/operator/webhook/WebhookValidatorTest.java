@@ -108,10 +108,7 @@ class WebhookValidatorTest {
         AdmissionResponse response = validator.validate(request, Topic.class);
 
         assertThat(response.isAllowed()).isFalse();
-        assertThat(response.getStatus().getMessage())
-                .contains("Cannot change applicationServiceRef")
-                .contains("app-service-1")
-                .contains("hacker-service");
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef").contains("app-service-1").contains("hacker-service");
     }
 
     @Test

@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Validates admission requests using ownership rules.
- * Integrates with existing OwnershipValidator to enforce immutable ownership
- * and authorization for DELETE operations.
+ * Validates admission requests using ownership rules. Integrates with existing OwnershipValidator to enforce immutable ownership and authorization for DELETE operations.
  */
 @AllArgsConstructor
 public class WebhookValidator {
@@ -20,9 +18,8 @@ public class WebhookValidator {
     private final ObjectMapper objectMapper;
 
     /**
-     * Validate an admission request for a specific resource type.
-     * Returns allowed response for CREATE operations (handled by reconciler).
-     * Validates UPDATE and DELETE operations using OwnershipValidator.
+     * Validate an admission request for a specific resource type. Returns allowed response for CREATE operations (handled by reconciler). Validates UPDATE and DELETE
+     * operations using OwnershipValidator.
      */
     public <T> AdmissionResponse validate(AdmissionRequest request, Class<T> resourceClass) {
         try {
@@ -37,12 +34,7 @@ public class WebhookValidator {
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error(
-                    "Validation error for {} {}/{}: {}",
-                    request.getOperation(),
-                    request.getNamespace(),
-                    request.getName(),
-                    e.getMessage());
+            log.error("Validation error for {} {}/{}: {}", request.getOperation(), request.getNamespace(), request.getName(), e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Internal validation error: " + e.getMessage());
         }
     }
@@ -61,8 +53,7 @@ public class WebhookValidator {
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error(
-                    "Error validating UPDATE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
+            log.error("Error validating UPDATE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Failed to validate update: " + e.getMessage());
         }
     }
@@ -71,16 +62,14 @@ public class WebhookValidator {
         try {
             T resource = objectMapper.convertValue(request.getOldObject(), resourceClass);
 
-            String requestingUser =
-                    request.getUserInfo() != null ? request.getUserInfo().getUsername() : "unknown";
+            String requestingUser = request.getUserInfo() != null ? request.getUserInfo().getUsername() : "unknown";
 
             log.info("DELETE request for {}/{} by user {}", request.getNamespace(), request.getName(), requestingUser);
 
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error(
-                    "Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
+            log.error("Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Failed to validate delete: " + e.getMessage());
         }
     }

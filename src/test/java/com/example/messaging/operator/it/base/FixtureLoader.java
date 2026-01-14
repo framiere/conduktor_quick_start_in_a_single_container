@@ -27,12 +27,13 @@ public class FixtureLoader {
                 throw new IllegalArgumentException("Fixture not found: " + path);
             }
 
-            return client.load(stream).get().stream()
+            return client.load(stream)
+                    .get()
+                    .stream()
                     .filter(type::isInstance)
                     .map(type::cast)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No resource of type " + type.getSimpleName() + " found in " + path));
+                    .orElseThrow(() -> new IllegalArgumentException("No resource of type " + type.getSimpleName() + " found in " + path));
         } catch (Exception e) {
             if (e instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) e;

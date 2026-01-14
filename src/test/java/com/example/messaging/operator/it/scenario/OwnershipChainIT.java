@@ -9,27 +9,18 @@ import com.example.messaging.operator.validation.ValidationResult;
 import org.junit.jupiter.api.Test;
 
 /**
- * Integration tests for ownership chain validation.
- * Tests multi-resource ownership chains and cross-tenant rejection.
+ * Integration tests for ownership chain validation. Tests multi-resource ownership chains and cross-tenant rejection.
  */
 public class OwnershipChainIT extends ScenarioITBase {
 
     @Test
     void testCrossOwnershipRejection() {
         // Create ApplicationService 1
-        ApplicationService app1 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app1")
-                .appName("app1")
-                .createIn(k8sClient);
+        ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
         syncToStore(app1);
 
         // Create ApplicationService 2
-        ApplicationService app2 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app2")
-                .appName("app2")
-                .createIn(k8sClient);
+        ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
         syncToStore(app2);
 
         // Create VirtualCluster owned by app1
@@ -56,27 +47,17 @@ public class OwnershipChainIT extends ScenarioITBase {
         // Validate - should REJECT due to cross-tenant ownership
         ValidationResult result = ownershipValidator.validateCreate(sa, "default");
         assertFalse(result.isValid(), "Cross-tenant ServiceAccount should be rejected");
-        assertTrue(
-                result.getMessage().contains("owned by 'app1', not 'app2'"),
-                "Error message should indicate ownership mismatch");
+        assertTrue(result.getMessage().contains("owned by 'app1', not 'app2'"), "Error message should indicate ownership mismatch");
     }
 
     @Test
     void testTopicRejectsWrongServiceAccountOwner() {
         // Create ApplicationService 1
-        ApplicationService app1 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("orders-app")
-                .appName("orders-app")
-                .createIn(k8sClient);
+        ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("orders-app").appName("orders-app").createIn(k8sClient);
         syncToStore(app1);
 
         // Create ApplicationService 2
-        ApplicationService app2 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("payments-app")
-                .appName("payments-app")
-                .createIn(k8sClient);
+        ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("payments-app").appName("payments-app").createIn(k8sClient);
         syncToStore(app2);
 
         // Create VirtualCluster for app1
@@ -115,9 +96,7 @@ public class OwnershipChainIT extends ScenarioITBase {
         // Validate - should REJECT due to cross-tenant ownership
         ValidationResult result = ownershipValidator.validateCreate(topic, "default");
         assertFalse(result.isValid(), "Cross-tenant Topic should be rejected");
-        assertTrue(
-                result.getMessage().contains("owned by 'orders-app', not 'payments-app'"),
-                "Error message should indicate ownership mismatch");
+        assertTrue(result.getMessage().contains("owned by 'orders-app', not 'payments-app'"), "Error message should indicate ownership mismatch");
     }
 
     @Test
@@ -125,11 +104,7 @@ public class OwnershipChainIT extends ScenarioITBase {
         // Create complete valid ownership chain matching ownership-chain-valid.yaml fixture
 
         // Create ApplicationService
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("orders-app")
-                .appName("orders-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("orders-app").appName("orders-app").createIn(k8sClient);
         assertNotNull(app.getMetadata().getUid());
         syncToStore(app);
 

@@ -30,7 +30,6 @@ public class ConsumerGroupSpec {
     private String applicationServiceRef;
 
     public enum ResourcePatternType {
-        LITERAL,
-        PREFIXED
+        LITERAL, PREFIXED
     }
 }

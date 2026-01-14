@@ -39,10 +39,7 @@ class WebhookServerTest {
     @Test
     @DisplayName("should respond to health check")
     void testHealthCheck() throws Exception {
-        Request request = new Request.Builder()
-                .url("http://localhost:" + port + "/health")
-                .get()
-                .build();
+        Request request = new Request.Builder().url("http://localhost:" + port + "/health").get().build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             assertThat(response.code()).isEqualTo(200);
@@ -53,51 +50,47 @@ class WebhookServerTest {
     @Test
     @DisplayName("should validate Topic UPDATE and deny ownership change")
     void testValidateTopicUpdate() throws Exception {
-        String admissionReviewJson =
-                """
-        {
-          "apiVersion": "admission.k8s.io/v1",
-          "kind": "AdmissionReview",
-          "request": {
-            "uid": "test-uid-123",
-            "operation": "UPDATE",
-            "namespace": "default",
-            "name": "test-topic",
-            "kind": {"group": "example.com", "version": "v1", "kind": "Topic"},
-            "object": {
-              "apiVersion": "example.com/v1",
-              "kind": "Topic",
-              "metadata": {"name": "test-topic", "namespace": "default"},
-              "spec": {
-                "applicationServiceRef": "hacker-app",
-                "serviceRef": "sa-1",
-                "name": "test.topic",
-                "partitions": 3,
-                "replicationFactor": 3
-              }
-            },
-            "oldObject": {
-              "apiVersion": "example.com/v1",
-              "kind": "Topic",
-              "metadata": {"name": "test-topic", "namespace": "default"},
-              "spec": {
-                "applicationServiceRef": "app-1",
-                "serviceRef": "sa-1",
-                "name": "test.topic",
-                "partitions": 3,
-                "replicationFactor": 3
-              }
-            }
-          }
-        }
-        """;
+        String admissionReviewJson = """
+                {
+                  "apiVersion": "admission.k8s.io/v1",
+                  "kind": "AdmissionReview",
+                  "request": {
+                    "uid": "test-uid-123",
+                    "operation": "UPDATE",
+                    "namespace": "default",
+                    "name": "test-topic",
+                    "kind": {"group": "example.com", "version": "v1", "kind": "Topic"},
+                    "object": {
+                      "apiVersion": "example.com/v1",
+                      "kind": "Topic",
+                      "metadata": {"name": "test-topic", "namespace": "default"},
+                      "spec": {
+                        "applicationServiceRef": "hacker-app",
+                        "serviceRef": "sa-1",
+                        "name": "test.topic",
+                        "partitions": 3,
+                        "replicationFactor": 3
+                      }
+                    },
+                    "oldObject": {
+                      "apiVersion": "example.com/v1",
+                      "kind": "Topic",
+                      "metadata": {"name": "test-topic", "namespace": "default"},
+                      "spec": {
+                        "applicationServiceRef": "app-1",
+                        "serviceRef": "sa-1",
+                        "name": "test.topic",
+                        "partitions": 3,
+                        "replicationFactor": 3
+                      }
+                    }
+                  }
+                }
+                """;
 
         RequestBody body = RequestBody.create(admissionReviewJson, MediaType.parse("application/json"));
 
-        Request request = new Request.Builder()
-                .url("http://localhost:" + port + "/validate/topic")
-                .post(body)
-                .build();
+        Request request = new Request.Builder().url("http://localhost:" + port + "/validate/topic").post(body).build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             assertThat(response.code()).isEqualTo(200);

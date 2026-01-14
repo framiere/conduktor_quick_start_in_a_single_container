@@ -9,8 +9,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * ACL specification for individual ACL CR.
- * References a ServiceAccount and either a Topic or ConsumerGroup.
+ * ACL specification for individual ACL CR. References a ServiceAccount and either a Topic or ConsumerGroup.
  */
 @Buildable(editableEnabled = false)
 @Data
@@ -48,23 +47,10 @@ public class AclCRSpec {
     private String applicationServiceRef;
 
     public enum Operation {
-        ALL,
-        ALTER,
-        ALTER_CONFIGS,
-        CLUSTER_ACTION,
-        CREATE,
-        CREATE_TOKENS,
-        DELETE,
-        DESCRIBE,
-        DESCRIBE_CONFIGS,
-        DESCRIBE_TOKENS,
-        IDEMPOTENT_WRITE,
-        READ,
-        WRITE
+        ALL, ALTER, ALTER_CONFIGS, CLUSTER_ACTION, CREATE, CREATE_TOKENS, DELETE, DESCRIBE, DESCRIBE_CONFIGS, DESCRIBE_TOKENS, IDEMPOTENT_WRITE, READ, WRITE
     }
 
     public enum AclPermissionTypeForAccessControlEntry {
-        DENY,
-        ALLOW
+        DENY, ALLOW
     }
 }

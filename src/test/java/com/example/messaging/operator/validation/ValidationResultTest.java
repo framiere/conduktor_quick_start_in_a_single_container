@@ -6,8 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for ValidationResult value object.
- * Tests immutability, factory methods, and accessor behavior.
+ * Unit tests for ValidationResult value object. Tests immutability, factory methods, and accessor behavior.
  */
 @DisplayName("ValidationResult Unit Tests")
 class ValidationResultTest {
@@ -52,8 +51,7 @@ class ValidationResultTest {
     @Test
     @DisplayName("should handle multiline error messages")
     void testMultilineErrorMessage() {
-        String multilineMessage =
-                """
+        String multilineMessage = """
                 Validation failed:
                 - ApplicationService 'foo' does not exist
                 - VirtualCluster 'bar' is owned by different service
@@ -61,10 +59,7 @@ class ValidationResultTest {
         ValidationResult result = ValidationResult.invalid(multilineMessage);
 
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage())
-                .isEqualTo(multilineMessage)
-                .contains("ApplicationService")
-                .contains("VirtualCluster");
+        assertThat(result.getMessage()).isEqualTo(multilineMessage).contains("ApplicationService").contains("VirtualCluster");
     }
 
     @Test

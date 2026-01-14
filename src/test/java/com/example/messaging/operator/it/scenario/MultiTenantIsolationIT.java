@@ -11,22 +11,17 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Integration tests for multi-tenant isolation and cross-tenant protection.
- * Tests that tenants cannot interfere with each other's resources.
+ * Integration tests for multi-tenant isolation and cross-tenant protection. Tests that tenants cannot interfere with each other's resources.
  */
 public class MultiTenantIsolationIT extends ScenarioITBase {
 
     /**
-     * Helper method to setup multi-tenant environment matching multi-tenant-scenario.yaml
-     * Creates two independent application tenants (app1 and app2) with their own resources.
+     * Helper method to setup multi-tenant environment matching multi-tenant-scenario.yaml Creates two independent application tenants (app1 and app2) with their own
+     * resources.
      */
     private void setupMultiTenantEnvironment() {
         // Create ApplicationService app1
-        ApplicationService app1 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app1")
-                .appName("app1")
-                .createIn(k8sClient);
+        ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
         syncToStore(app1);
 
         // Create VirtualCluster for app1
@@ -65,11 +60,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         syncToStore(topic1);
 
         // Create ApplicationService app2
-        ApplicationService app2 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app2")
-                .appName("app2")
-                .createIn(k8sClient);
+        ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
         syncToStore(app2);
 
         // Create VirtualCluster for app2
@@ -167,11 +158,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         setupMultiTenantEnvironment();
 
         // Get app2's topic from k8s (to ensure we have the latest version)
-        Topic app2Topic = k8sClient
-                .resources(Topic.class)
-                .inNamespace("default")
-                .withName("payments-events")
-                .get();
+        Topic app2Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("payments-events").get();
         assertNotNull(app2Topic);
         assertEquals("app2", app2Topic.getSpec().getApplicationServiceRef());
 
@@ -188,9 +175,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         // Validate update - should REJECT due to ownership change attempt
         ValidationResult result = ownershipValidator.validateUpdate(updatedTopic, "default");
         assertFalse(result.isValid(), "Cross-tenant ownership change should be rejected: " + result.getMessage());
-        assertTrue(
-                result.getMessage().contains("applicationServiceRef")
-                        || result.getMessage().contains("ownership"),
+        assertTrue(result.getMessage().contains("applicationServiceRef") || result.getMessage().contains("ownership"),
                 "Error message should indicate ownership change is not allowed. Got: " + result.getMessage());
     }
 
@@ -213,9 +198,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         // Validate - should REJECT due to cross-tenant ServiceAccount reference
         ValidationResult result = ownershipValidator.validateCreate(crossTenantTopic, "default");
         assertFalse(result.isValid(), "Cross-tenant ServiceAccount reference should be rejected");
-        assertTrue(
-                result.getMessage().contains("owned by 'app2', not 'app1'"),
-                "Error message should indicate ServiceAccount ownership mismatch");
+        assertTrue(result.getMessage().contains("owned by 'app2', not 'app1'"), "Error message should indicate ServiceAccount ownership mismatch");
     }
 
     @Test
@@ -284,36 +267,22 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         assertEquals(4, allTopics.size(), "Should have 4 topics total (2 per tenant)");
 
         // Verify app1 topics
-        long app1TopicCount = allTopics.stream()
-                .map(t -> (Topic) t)
-                .filter(t -> "app1".equals(t.getSpec().getApplicationServiceRef()))
-                .count();
+        long app1TopicCount = allTopics.stream().map(t -> (Topic) t).filter(t -> "app1".equals(t.getSpec().getApplicationServiceRef())).count();
         assertEquals(2, app1TopicCount, "App1 should have 2 topics");
 
         // Verify app2 topics
-        long app2TopicCount = allTopics.stream()
-                .map(t -> (Topic) t)
-                .filter(t -> "app2".equals(t.getSpec().getApplicationServiceRef()))
-                .count();
+        long app2TopicCount = allTopics.stream().map(t -> (Topic) t).filter(t -> "app2".equals(t.getSpec().getApplicationServiceRef())).count();
         assertEquals(2, app2TopicCount, "App2 should have 2 topics");
 
         // App1 updates its own topic - should succeed
-        Topic app1Topic = k8sClient
-                .resources(Topic.class)
-                .inNamespace("default")
-                .withName("orders-events")
-                .get();
+        Topic app1Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("orders-events").get();
         app1Topic.getSpec().setPartitions(6);
         Topic updatedApp1Topic = k8sClient.resource(app1Topic).update();
         assertEquals(6, updatedApp1Topic.getSpec().getPartitions());
         store.update("Topic", "default", app1Topic.getMetadata().getName(), updatedApp1Topic);
 
         // App2 updates its own topic - should succeed
-        Topic app2Topic = k8sClient
-                .resources(Topic.class)
-                .inNamespace("default")
-                .withName("payments-events")
-                .get();
+        Topic app2Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("payments-events").get();
         app2Topic.getSpec().setPartitions(6);
         Topic updatedApp2Topic = k8sClient.resource(app2Topic).update();
         assertEquals(6, updatedApp2Topic.getSpec().getPartitions());

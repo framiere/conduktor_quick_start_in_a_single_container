@@ -1,8 +1,7 @@
 package com.example.messaging.operator.validation;
 
 /**
- * Result of a validation operation.
- * Immutable value object representing success or failure with message.
+ * Result of a validation operation. Immutable value object representing success or failure with message.
  */
 public class ValidationResult {
     private final boolean valid;

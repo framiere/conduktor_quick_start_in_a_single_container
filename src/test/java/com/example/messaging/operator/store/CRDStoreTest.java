@@ -12,8 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.*;
 
 /**
- * Unit tests for CRDStore.
- * Tests CRUD operations, resource versioning, event publishing, and ownership enforcement.
+ * Unit tests for CRDStore. Tests CRUD operations, resource versioning, event publishing, and ownership enforcement.
  */
 @DisplayName("CRDStore Unit Tests")
 class CRDStoreTest {
@@ -77,9 +76,7 @@ class CRDStoreTest {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
             store.create("ApplicationService", NAMESPACE, appService);
 
-            assertThatThrownBy(
-                            () -> store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE)))
-                    .isInstanceOf(IllegalStateException.class)
+            assertThatThrownBy(() -> store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE))).isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource already exists");
         }
 
@@ -138,8 +135,7 @@ class CRDStoreTest {
         void testCreateEnforcesOwnershipForVirtualCluster() {
             VirtualCluster vCluster = buildVirtualCluster("prod-cluster", "nonexistent-app");
 
-            assertThatThrownBy(() -> store.create("VirtualCluster", NAMESPACE, vCluster))
-                    .isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.create("VirtualCluster", NAMESPACE, vCluster)).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
@@ -179,8 +175,7 @@ class CRDStoreTest {
         void testUpdateNonExistentThrowsException() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
 
-            assertThatThrownBy(() -> store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService))
-                    .isInstanceOf(IllegalStateException.class)
+            assertThatThrownBy(() -> store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService)).isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource not found");
         }
 
@@ -220,8 +215,7 @@ class CRDStoreTest {
             // Try to change owner - create new VirtualCluster with different owner
             VirtualCluster modifiedCluster = buildVirtualCluster("prod-cluster", "other-service");
 
-            assertThatThrownBy(() -> store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster))
-                    .isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster)).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed")
                     .hasMessageContaining("Cannot change applicationServiceRef");
         }
@@ -255,8 +249,7 @@ class CRDStoreTest {
             boolean deleted = store.delete("ApplicationService", NAMESPACE, APP_SERVICE);
 
             assertThat(deleted).isTrue();
-            assertThat(store.<ApplicationService>get("ApplicationService", NAMESPACE, APP_SERVICE))
-                    .isNull();
+            assertThat(store.<ApplicationService>get("ApplicationService", NAMESPACE, APP_SERVICE)).isNull();
         }
 
         @Test
@@ -318,8 +311,7 @@ class CRDStoreTest {
             store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
             // Try to delete with wrong owner
-            assertThatThrownBy(() -> store.delete("VirtualCluster", NAMESPACE, "prod-cluster", "other-service"))
-                    .isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.delete("VirtualCluster", NAMESPACE, "prod-cluster", "other-service")).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
@@ -448,8 +440,7 @@ class CRDStoreTest {
         void testClearResetsResourceVersion() {
             store.create("ApplicationService", NAMESPACE, buildApplicationService("app1"));
             store.clear();
-            ApplicationService appService =
-                    store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
+            ApplicationService appService = store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
 
             assertThat(appService.getMetadata().getResourceVersion()).isEqualTo("1");
         }
@@ -471,24 +462,22 @@ class CRDStoreTest {
             for (int i = 0; i < threadCount; i++) {
                 final int index = i;
                 new Thread(() -> {
-                            try {
-                                store.create("ApplicationService", NAMESPACE, buildApplicationService("app" + index));
-                            } catch (Exception e) {
-                                synchronized (exceptions) {
-                                    exceptions.add(e);
-                                }
-                            } finally {
-                                latch.countDown();
-                            }
-                        })
-                        .start();
+                    try {
+                        store.create("ApplicationService", NAMESPACE, buildApplicationService("app" + index));
+                    } catch (Exception e) {
+                        synchronized (exceptions) {
+                            exceptions.add(e);
+                        }
+                    } finally {
+                        latch.countDown();
+                    }
+                }).start();
             }
 
             latch.await(5, TimeUnit.SECONDS);
 
             assertThat(exceptions).isEmpty();
-            assertThat(store.<ApplicationService>list("ApplicationService", NAMESPACE))
-                    .hasSize(threadCount);
+            assertThat(store.<ApplicationService>list("ApplicationService", NAMESPACE)).hasSize(threadCount);
         }
     }
 

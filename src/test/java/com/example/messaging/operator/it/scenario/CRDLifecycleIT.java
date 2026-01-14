@@ -10,8 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Integration tests for complete CRD lifecycle scenarios.
- * Tests creating complete ownership chains, updates, and deletions.
+ * Integration tests for complete CRD lifecycle scenarios. Tests creating complete ownership chains, updates, and deletions.
  */
 public class CRDLifecycleIT extends ScenarioITBase {
 
@@ -20,11 +19,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         // Step 1: Create complete ownership chain: app → vc → sa → topic → acl
 
         // Create ApplicationService
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("lifecycle-app")
-                .appName("lifecycle-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("lifecycle-app").appName("lifecycle-app").createIn(k8sClient);
         assertNotNull(app.getMetadata().getUid());
         syncToStore(app);
 
@@ -116,9 +111,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         store.update("Topic", "default", topic.getMetadata().getName(), updatedTopic);
 
         // Update ACL operations
-        acl.getSpec()
-                .setOperations(
-                        List.of(AclCRSpec.Operation.READ, AclCRSpec.Operation.WRITE, AclCRSpec.Operation.DESCRIBE));
+        acl.getSpec().setOperations(List.of(AclCRSpec.Operation.READ, AclCRSpec.Operation.WRITE, AclCRSpec.Operation.DESCRIBE));
         ACL updatedAcl = k8sClient.resource(acl).update();
         assertEquals(3, updatedAcl.getSpec().getOperations().size());
         assertTrue(updatedAcl.getSpec().getOperations().contains(AclCRSpec.Operation.DESCRIBE));
@@ -166,11 +159,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         // resources manually using TestDataBuilder, matching the YAML fixture exactly
 
         // Create ApplicationService (as defined in fixture)
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("orders-app")
-                .appName("orders-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("orders-app").appName("orders-app").createIn(k8sClient);
         syncToStore(app);
 
         // Create VirtualCluster (as defined in fixture)

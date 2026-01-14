@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive tests for operator event system.
- * Validates event creation, publishing, and listener notification.
+ * Comprehensive tests for operator event system. Validates event creation, publishing, and listener notification.
  */
 @DisplayName("Reconciliation Event System Tests")
 class ReconciliationEventTest {
@@ -107,14 +106,12 @@ class ReconciliationEventTest {
         @DisplayName("should fail when required fields are missing")
         void testRequiredFieldValidation() {
             assertThatThrownBy(() -> ReconciliationEvent.builder()
-                            .phase(ReconciliationEvent.Phase.BEFORE)
-                            // Missing operation
-                            .resourceKind("Topic")
-                            .resourceName(TEST_RESOURCE)
-                            .resourceNamespace(TEST_NAMESPACE)
-                            .build())
-                    .isInstanceOf(NullPointerException.class)
-                    .hasMessageContaining("operation");
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    // Missing operation
+                    .resourceKind("Topic")
+                    .resourceName(TEST_RESOURCE)
+                    .resourceNamespace(TEST_NAMESPACE)
+                    .build()).isInstanceOf(NullPointerException.class).hasMessageContaining("operation");
         }
 
         @Test
@@ -148,8 +145,7 @@ class ReconciliationEventTest {
 
             String eventString = event.toString();
 
-            assertThat(eventString)
-                    .contains("AFTER")
+            assertThat(eventString).contains("AFTER")
                     .contains("UPDATE")
                     .contains("Topic/production/orders-events")
                     .contains("(owner: orders-service)")
@@ -274,9 +270,12 @@ class ReconciliationEventTest {
         void testClearListeners() {
             ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
 
-            publisher.addListener(e -> {});
-            publisher.addListener(e -> {});
-            publisher.addListener(e -> {});
+            publisher.addListener(e -> {
+            });
+            publisher.addListener(e -> {
+            });
+            publisher.addListener(e -> {
+            });
 
             assertThat(publisher.getListenerCount()).isEqualTo(3);
 

@@ -9,19 +9,14 @@ import com.example.messaging.operator.validation.ValidationResult;
 import org.junit.jupiter.api.Test;
 
 /**
- * Component integration tests for OwnershipValidator with Kubernetes mock server.
- * Tests ownership validation with resources from K8s.
+ * Component integration tests for OwnershipValidator with Kubernetes mock server. Tests ownership validation with resources from K8s.
  */
 public class OwnershipValidatorIT extends ComponentITBase {
 
     @Test
     void testValidateOwnershipChainFromK8s() {
         // Create full ownership chain in K8s: ApplicationService -> VirtualCluster -> ServiceAccount -> Topic
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
         VirtualCluster cluster = TestDataBuilder.virtualCluster()
                 .namespace("default")
@@ -60,11 +55,7 @@ public class OwnershipValidatorIT extends ComponentITBase {
     @Test
     void testRejectMissingServiceAccount() {
         // Create ApplicationService in K8s
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
         // Sync to store
         syncAllToStore();
@@ -88,17 +79,9 @@ public class OwnershipValidatorIT extends ComponentITBase {
     @Test
     void testRejectWrongVirtualClusterOwner() {
         // Create two ApplicationServices in K8s
-        ApplicationService app1 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app1")
-                .appName("app1")
-                .createIn(k8sClient);
+        ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
 
-        ApplicationService app2 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app2")
-                .appName("app2")
-                .createIn(k8sClient);
+        ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
 
         // Create VirtualCluster owned by app1
         VirtualCluster cluster = TestDataBuilder.virtualCluster()
@@ -130,17 +113,9 @@ public class OwnershipValidatorIT extends ComponentITBase {
     @Test
     void testRejectOwnershipChange() {
         // Create two ApplicationServices in K8s
-        ApplicationService app1 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app1")
-                .appName("app1")
-                .createIn(k8sClient);
+        ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
 
-        ApplicationService app2 = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("app2")
-                .appName("app2")
-                .createIn(k8sClient);
+        ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
 
         // Create VirtualCluster owned by app1 in K8s
         VirtualCluster cluster = TestDataBuilder.virtualCluster()
@@ -169,19 +144,14 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
         // Verify validation fails
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage())
-                .contains("Cannot change applicationServiceRef from 'app1' to 'app2'")
+        assertThat(result.getMessage()).contains("Cannot change applicationServiceRef from 'app1' to 'app2'")
                 .contains("Only the original owner can modify this resource");
     }
 
     @Test
     void testAllowUpdateSameOwner() {
         // Create ApplicationService in K8s
-        ApplicationService app = TestDataBuilder.applicationService()
-                .namespace("default")
-                .name("test-app")
-                .appName("test-app")
-                .createIn(k8sClient);
+        ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
         // Create VirtualCluster in K8s
         VirtualCluster cluster = TestDataBuilder.virtualCluster()

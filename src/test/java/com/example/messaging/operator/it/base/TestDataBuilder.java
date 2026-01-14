@@ -7,8 +7,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.*;
 
 /**
- * Fluent builder for creating test data for all CRD types.
- * Provides a clean, readable API for test data setup.
+ * Fluent builder for creating test data for all CRD types. Provides a clean, readable API for test data setup.
  */
 public class TestDataBuilder {
 
@@ -329,8 +328,7 @@ public class TestDataBuilder {
         private String consumerGroupRef;
         private List<AclCRSpec.Operation> operations = new ArrayList<>();
         private String host = "*";
-        private AclCRSpec.AclPermissionTypeForAccessControlEntry permission =
-                AclCRSpec.AclPermissionTypeForAccessControlEntry.ALLOW;
+        private AclCRSpec.AclPermissionTypeForAccessControlEntry permission = AclCRSpec.AclPermissionTypeForAccessControlEntry.ALLOW;
         private String applicationServiceRef;
         private List<OwnerReference> owners = new ArrayList<>();
 

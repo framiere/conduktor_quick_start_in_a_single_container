@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.*;
 
 /**
- * Unit tests for OwnershipValidator.
- * Tests validation logic for CREATE, UPDATE, DELETE operations.
- * Validates ownership chains and authorization rules.
+ * Unit tests for OwnershipValidator. Tests validation logic for CREATE, UPDATE, DELETE operations. Validates ownership chains and authorization rules.
  */
 @DisplayName("OwnershipValidator Unit Tests")
 class OwnershipValidatorTest {
@@ -73,10 +71,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(vCluster, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ApplicationService")
-                    .contains("nonexistent-app-service")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("ApplicationService").contains("nonexistent-app-service").contains("does not exist");
         }
 
         @Test
@@ -131,11 +126,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("VirtualCluster")
-                    .contains("is owned by")
-                    .contains(OTHER_APP_SERVICE)
-                    .contains(APP_SERVICE);
+            assertThat(result.getMessage()).contains("VirtualCluster").contains("is owned by").contains(OTHER_APP_SERVICE).contains(APP_SERVICE);
         }
 
         @Test
@@ -169,18 +160,14 @@ class OwnershipValidatorTest {
             store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create("ApplicationService", NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
             store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
-            store.create(
-                    "ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create("ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create Topic referencing APP_SERVICE
             Topic topic = buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE);
             ValidationResult result = validator.validateCreate(topic, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ServiceAccount")
-                    .contains("is owned by")
-                    .contains(OTHER_APP_SERVICE);
+            assertThat(result.getMessage()).contains("ServiceAccount").contains("is owned by").contains(OTHER_APP_SERVICE);
         }
 
         @Test
@@ -236,8 +223,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateUpdate(existing, updated);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("Cannot change applicationServiceRef")
+            assertThat(result.getMessage()).contains("Cannot change applicationServiceRef")
                     .contains(APP_SERVICE)
                     .contains(OTHER_APP_SERVICE)
                     .contains("Only the original owner can modify");
@@ -288,10 +274,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateUpdate(existing, updated);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("Cannot change applicationServiceRef")
-                    .contains(APP_SERVICE)
-                    .contains(OTHER_APP_SERVICE);
+            assertThat(result.getMessage()).contains("Cannot change applicationServiceRef").contains(APP_SERVICE).contains(OTHER_APP_SERVICE);
         }
     }
 
@@ -319,11 +302,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateDelete(resource, OTHER_APP_SERVICE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ApplicationService")
-                    .contains(OTHER_APP_SERVICE)
-                    .contains("cannot delete resource owned by")
-                    .contains(APP_SERVICE);
+            assertThat(result.getMessage()).contains("ApplicationService").contains(OTHER_APP_SERVICE).contains("cannot delete resource owned by").contains(APP_SERVICE);
         }
 
         @Test
@@ -344,10 +323,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateDelete(topic, OTHER_APP_SERVICE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains(OTHER_APP_SERVICE)
-                    .contains("cannot delete")
-                    .contains(APP_SERVICE);
+            assertThat(result.getMessage()).contains(OTHER_APP_SERVICE).contains("cannot delete").contains(APP_SERVICE);
         }
 
         @Test

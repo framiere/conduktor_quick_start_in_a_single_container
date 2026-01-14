@@ -8,16 +8,14 @@ import io.fabric8.kubernetes.model.annotation.ShortNames;
 import io.fabric8.kubernetes.model.annotation.Version;
 
 /**
- * Custom Resource Definition for Messaging Declaration.
- * Represents a declarative specification for Kafka topics, ACLs, and service accounts
- * within a Conduktor Virtual Cluster.
+ * Custom Resource Definition for Messaging Declaration. Represents a declarative specification for Kafka topics, ACLs, and service accounts within a Conduktor Virtual
+ * Cluster.
  */
 @Group("messaging.example.com")
 @Version("v1")
 @ShortNames({"md", "msgdecl"})
 @Plural("messagingdeclarations")
-public class MessagingDeclaration extends CustomResource<MessagingDeclarationSpec, MessagingDeclarationStatus>
-        implements Namespaced {
+public class MessagingDeclaration extends CustomResource<MessagingDeclarationSpec, MessagingDeclarationStatus> implements Namespaced {
 
     @Override
     protected MessagingDeclarationSpec initSpec() {

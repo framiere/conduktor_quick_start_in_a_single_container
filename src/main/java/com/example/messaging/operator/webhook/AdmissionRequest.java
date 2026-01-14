@@ -6,8 +6,7 @@ import java.util.Map;
 import lombok.Data;
 
 /**
- * Kubernetes AdmissionRequest
- * https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
+ * Kubernetes AdmissionRequest https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
