@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * End-to-end integration test simulating K8s API server requests
  */
 @DisplayName("Webhook Integration Tests")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class WebhookIntegrationTest {
 
     private static WebhookServer server;
@@ -43,10 +42,13 @@ class WebhookIntegrationTest {
         if (server != null) {
             server.stop();
         }
+        if (httpClient != null) {
+            httpClient.dispatcher().executorService().shutdown();
+            httpClient.connectionPool().evictAll();
+        }
     }
 
     @Test
-    @Order(1)
     @DisplayName("Integration: Block Topic ownership transfer")
     void testBlockTopicOwnershipTransfer() throws Exception {
         // Simulate UPDATE request from K8s API server
@@ -79,8 +81,10 @@ class WebhookIntegrationTest {
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);
+            assertThat(response.body()).isNotNull();
 
-            AdmissionReview responseReview = mapper.readValue(response.body().string(), AdmissionReview.class);
+            String responseBody = response.body().string();
+            AdmissionReview responseReview = mapper.readValue(responseBody, AdmissionReview.class);
 
             assertThat(responseReview.getResponse()).isNotNull();
             assertThat(responseReview.getResponse().getUid()).isEqualTo("integration-test-001");
@@ -93,7 +97,6 @@ class WebhookIntegrationTest {
     }
 
     @Test
-    @Order(2)
     @DisplayName("Integration: Allow Topic partition change by same owner")
     void testAllowTopicPartitionChange() throws Exception {
         Topic oldTopic = createTopic("my-topic", "app-service-1");
@@ -123,15 +126,16 @@ class WebhookIntegrationTest {
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);
+            assertThat(response.body()).isNotNull();
 
-            AdmissionReview responseReview = mapper.readValue(response.body().string(), AdmissionReview.class);
+            String responseBody = response.body().string();
+            AdmissionReview responseReview = mapper.readValue(responseBody, AdmissionReview.class);
 
             assertThat(responseReview.getResponse().isAllowed()).isTrue();
         }
     }
 
     @Test
-    @Order(3)
     @DisplayName("Integration: Block ACL ownership transfer")
     void testBlockACLOwnershipTransfer() throws Exception {
         ACL oldAcl = createACL("my-acl", "app-service-1");
@@ -158,8 +162,10 @@ class WebhookIntegrationTest {
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             assertThat(response.code()).isEqualTo(200);
+            assertThat(response.body()).isNotNull();
 
-            AdmissionReview responseReview = mapper.readValue(response.body().string(), AdmissionReview.class);
+            String responseBody = response.body().string();
+            AdmissionReview responseReview = mapper.readValue(responseBody, AdmissionReview.class);
 
             assertThat(responseReview.getResponse().isAllowed()).isFalse();
         }
