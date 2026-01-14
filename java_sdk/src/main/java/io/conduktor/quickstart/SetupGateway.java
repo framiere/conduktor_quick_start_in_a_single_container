@@ -493,32 +493,7 @@ public class SetupGateway {
         return crd;
     }
 
-    private boolean vClusterExists(String vClusterName) throws ApiException {
-        try {
-            virtualClusterApi.getAVirtualCluster(vClusterName);
-            return true;
-        } catch (ApiException e) {
-            if (e.getCode() == 404) {
-                return false;
-            }
-            throw e;
-        }
-    }
-
-    private void createGatewayServiceAccount(String vClusterName, String serviceName) throws ApiException {
-        upsertServiceAccount(new External()
-            .kind("GatewayServiceAccount")
-            .apiVersion("gateway/v2")
-            .metadata(new ExternalMetadata()
-                .vCluster(vClusterName)
-                .name(serviceName))
-            .spec(new ExternalSpec()
-                .type("EXTERNAL")
-                .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        System.out.println("GatewayServiceAccount/" + serviceName + " created");
-    }
-
-    private void createVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
+    private void upsertVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
             throws IOException, org.openapitools.client.ApiException, ApiException {
         VirtualClusterSpec spec = new VirtualClusterSpec();
 
@@ -531,15 +506,16 @@ public class SetupGateway {
             spec.aclMode("KAFKA_API").superUsers(List.of(serviceName));
         }
 
+        System.out.println("Upserting VirtualCluster: " + vClusterName);
         upsertVirtualCluster(new VirtualCluster()
             .kind("VirtualCluster")
             .apiVersion("gateway/v2")
             .metadata(new VirtualClusterMetadata().name(vClusterName))
             .spec(spec));
-        System.out.println("VirtualCluster/" + vClusterName + " created");
+        System.out.println("VirtualCluster/" + vClusterName + " upserted");
 
-        // Create admin service account
-        System.out.println("Creating admin service account: " + adminUser + "...");
+        // Upsert admin service account
+        System.out.println("Upserting admin service account: " + adminUser);
         upsertServiceAccount(new External()
             .kind("GatewayServiceAccount")
             .apiVersion("gateway/v2")
@@ -549,7 +525,7 @@ public class SetupGateway {
             .spec(new ExternalSpec()
                 .type("EXTERNAL")
                 .externalNames(List.of("CN=" + adminUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        System.out.println("GatewayServiceAccount/" + adminUser + " created");
+        System.out.println("GatewayServiceAccount/" + adminUser + " upserted");
 
         generateSslProperties(adminUser);
 
@@ -606,9 +582,28 @@ public class SetupGateway {
 
         // Convert CRD ACLs to Kafka ACLs
         for (AclDef aclDef : acls) {
-            List<Operation> ops = aclDef.operations.stream()
-                .map(Operation::valueOf)
-                .toList();
+            List<Operation> ops;
+            if (aclDef.operations == null || aclDef.operations.isEmpty()) {
+                // No operations defined: grant all Kafka ACL operations
+                ops = List.of(
+                    Operation.READ,
+                    Operation.WRITE,
+                    Operation.CREATE,
+                    Operation.DELETE,
+                    Operation.ALTER,
+                    Operation.DESCRIBE,
+                    Operation.CLUSTER_ACTION,
+                    Operation.ALTER_CONFIGS,
+                    Operation.DESCRIBE_CONFIGS,
+                    Operation.IDEMPOTENT_WRITE,
+                    Operation.CREATE_TOKENS,
+                    Operation.DESCRIBE_TOKENS
+                );
+            } else {
+                ops = aclDef.operations.stream()
+                    .map(Operation::valueOf)
+                    .toList();
+            }
 
             kafkaAcls.add(new KafkaServiceAccountACL()
                 .type(AclResourceType.TOPIC)
@@ -652,18 +647,22 @@ public class SetupGateway {
         System.out.println();
         System.out.println("Processing CRD for service: " + serviceName);
 
-        // 2. Ensure vCluster exists
-        if (!vClusterExists(vClusterName)) {
-            System.out.println("VirtualCluster " + vClusterName + " not found, creating...");
-            boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
-            createVClusterFromCRD(vClusterName, hasAcls, serviceName);
-        } else {
-            System.out.println("VirtualCluster " + vClusterName + " already exists");
-        }
+        // 2. Upsert vCluster
+        boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
+        upsertVClusterFromCRD(vClusterName, hasAcls, serviceName);
 
-        // 3. Create Gateway ServiceAccount (always for mTLS)
-        System.out.println("Creating Gateway ServiceAccount: " + serviceName);
-        createGatewayServiceAccount(vClusterName, serviceName);
+        // 3. Upsert Gateway ServiceAccount for the service (mTLS)
+        System.out.println("Upserting Gateway ServiceAccount: " + serviceName);
+        upsertServiceAccount(new External()
+            .kind("GatewayServiceAccount")
+            .apiVersion("gateway/v2")
+            .metadata(new ExternalMetadata()
+                .vCluster(vClusterName)
+                .name(serviceName))
+            .spec(new ExternalSpec()
+                .type("EXTERNAL")
+                .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
+        System.out.println("GatewayServiceAccount/" + serviceName + " upserted");
 
         // 4. Create topics
         if (crd.spec.topics != null && !crd.spec.topics.isEmpty()) {

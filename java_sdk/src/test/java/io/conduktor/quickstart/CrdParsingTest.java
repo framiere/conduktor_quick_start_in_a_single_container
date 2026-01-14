@@ -313,4 +313,49 @@ class CrdParsingTest {
         assertThat(result.spec.acls.get(0).operations).containsExactly("READ", "WRITE", "CREATE", "DELETE", "ALTER");
         assertThat(result.spec.acls.get(1).operations).containsExactly("READ");
     }
+
+    @Test
+    void testParseCrdWithNoOperations() {
+        String crd = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: no-ops-service
+            spec:
+              serviceName: no-ops-service
+              virtualClusterId: test-cluster
+              acls:
+                - topic: all-access.topic
+            """;
+
+        SetupGateway.MessagingDeclaration result = setup.parseYaml(crd);
+
+        assertThat(result).isNotNull();
+        assertThat(result.spec.acls).hasSize(1);
+        assertThat(result.spec.acls.get(0).topic).isEqualTo("all-access.topic");
+        assertThat(result.spec.acls.get(0).operations).isNull();
+    }
+
+    @Test
+    void testParseCrdWithEmptyOperations() {
+        String crd = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: empty-ops-service
+            spec:
+              serviceName: empty-ops-service
+              virtualClusterId: test-cluster
+              acls:
+                - topic: all-access.topic
+                  operations: []
+            """;
+
+        SetupGateway.MessagingDeclaration result = setup.parseYaml(crd);
+
+        assertThat(result).isNotNull();
+        assertThat(result.spec.acls).hasSize(1);
+        assertThat(result.spec.acls.get(0).topic).isEqualTo("all-access.topic");
+        assertThat(result.spec.acls.get(0).operations).isEmpty();
+    }
 }
