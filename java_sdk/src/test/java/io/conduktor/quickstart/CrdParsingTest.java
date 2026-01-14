@@ -6,6 +6,7 @@ import org.openapitools.client.model.AclResourceType;
 import org.openapitools.client.model.ResourcePatternType;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.openapitools.client.model.ResourcePatternType.*;
 
 import java.util.List;
 import java.util.Map;
@@ -397,13 +398,13 @@ class CrdParsingTest {
         assertThat(result).isNotNull();
         assertThat(result.spec.acls).hasSize(3);
         assertThat(result.spec.acls.get(0).name).isEqualTo("click");
-        assertThat(result.spec.acls.get(0).patternType).isEqualTo(ResourcePatternType.PREFIXED);
+        assertThat(result.spec.acls.get(0).patternType).isEqualTo(PREFIXED);
         assertThat(result.spec.acls.get(0).operations).containsExactly("READ");
         assertThat(result.spec.acls.get(1).name).isEqualTo("exact.topic");
-        assertThat(result.spec.acls.get(1).patternType).isEqualTo(ResourcePatternType.LITERAL);
+        assertThat(result.spec.acls.get(1).patternType).isEqualTo(LITERAL);
         assertThat(result.spec.acls.get(1).operations).containsExactly("WRITE");
         assertThat(result.spec.acls.get(2).name).isEqualTo("default.topic");
-        assertThat(result.spec.acls.get(2).patternType).isEqualTo(ResourcePatternType.LITERAL);
+        assertThat(result.spec.acls.get(2).patternType).isEqualTo(LITERAL);
         assertThat(result.spec.acls.get(2).operations).containsExactly("READ");
     }
 
