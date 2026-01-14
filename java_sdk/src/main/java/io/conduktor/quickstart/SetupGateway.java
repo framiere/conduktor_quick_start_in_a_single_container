@@ -12,6 +12,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import okhttp3.*;
 import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.config.TopicConfig;
 import org.openapitools.client.ApiClient;
 import org.openapitools.client.Configuration;
@@ -219,6 +220,60 @@ public class SetupGateway {
 
         @NotNull
         public AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
+    }
+
+    // MessagingDeclaration CR - consolidated service definition
+    @Data
+    static class MessagingDeclaration {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
+
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public MessagingDeclarationSpec spec;
+    }
+
+    @Data
+    static class MessagingDeclarationSpec {
+        @NotBlank(message = "serviceName must not be empty")
+        public String serviceName;
+
+        @NotBlank(message = "virtualClusterId must not be empty")
+        public String virtualClusterId;
+
+        public List<TopicDef> topics = new ArrayList<>();
+        public List<AclDef> acls = new ArrayList<>();
+    }
+
+    @Data
+    static class TopicDef {
+        @NotBlank(message = "topic name must not be empty")
+        public String name;
+
+        public Integer partitions = 3;
+        public Integer replicationFactor = 3;
+        public Map<String, String> config = new java.util.HashMap<>();
+    }
+
+    @Data
+    static class AclDef {
+        @NotBlank(message = "ACL type must not be empty")
+        public String type;
+
+        @NotBlank(message = "ACL name must not be empty")
+        public String name;
+
+        @Size(min = 1, max = 10, message = "operations list must have between 1 and 10 items")
+        public List<String> operations;
+
+        public ResourcePatternType patternType = ResourcePatternType.LITERAL;
     }
 
     // Configuration
@@ -449,6 +504,8 @@ public class SetupGateway {
     private final java.util.Set<String> createdVClusters = new java.util.HashSet<>();
     // Track which vClusters need ACL support (determined by scanning all CRDs upfront)
     private final java.util.Set<String> vClustersRequiringAcls = new java.util.HashSet<>();
+    // Track admin users per vCluster (for ACL-enabled clusters)
+    private final java.util.Map<String, String> vClusterAdminUsers = new java.util.HashMap<>();
 
     public SetupGateway() {
         this.cdkBaseUrl = env("CDK_BASE_URL", "http://localhost:8080");
@@ -506,7 +563,7 @@ public class SetupGateway {
         log.info("Setting up vClusters with mTLS using new six-CR pattern");
 
         // Parse all CRDs
-        ParsedCRs crds = parseAllCrds(CRDS);
+        ParsedCRs crds = parseAllCrdTypes(CRDS);
 
         // Process CRs in dependency order
         processCRs(crds);
@@ -618,22 +675,34 @@ public class SetupGateway {
         log.info("Created: {}", propsFile);
     }
 
-    private void createTopic(String clusterName, String topicName,
+    private void createTopic(String clusterName, String topicName, String serviceName,
                              int partitions, int replicationFactor,
-                             Map<String, String> configs) throws org.openapitools.client.ApiException {
-        TopicResourceV2 topicResource = new TopicResourceV2()
-                .apiVersion("v2")
-                .kind(TopicKind.TOPIC)
-                .metadata(new TopicMetadata()
-                        .name(topicName)
-                        .cluster(clusterName))
-                .spec(new org.openapitools.client.model.TopicSpec()
-                        .partitions(partitions)
-                        .replicationFactor(replicationFactor)
-                        .configs(configs));
+                             Map<String, String> configs) throws Exception {
+        // Use Kafka Admin Client to create topic directly via Gateway
+        java.util.Properties adminProps = new java.util.Properties();
+        adminProps.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:6969");
+        adminProps.put("security.protocol", "SSL");
+        adminProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, certDir + "/" + serviceName + ".truststore.jks");
+        adminProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "conduktor");
+        adminProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, certDir + "/" + serviceName + ".keystore.jks");
+        adminProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "conduktor");
+        adminProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "conduktor");
+        adminProps.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "10000");
 
-        topicApi.createOrUpdateTopicV2(clusterName, topicResource, null);
-        log.info("Topic/{} created", topicName);
+        try (AdminClient adminClient = AdminClient.create(adminProps)) {
+            NewTopic newTopic = new NewTopic(topicName, partitions, (short) replicationFactor);
+            newTopic.configs(configs);
+
+            adminClient.createTopics(List.of(newTopic)).all().get(30, java.util.concurrent.TimeUnit.SECONDS);
+            log.info("Topic/{} created in vCluster {} via Gateway", topicName, clusterName);
+        } catch (Exception e) {
+            // Check if topic already exists
+            if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
+                log.info("Topic/{} already exists in vCluster {}", topicName, clusterName);
+            } else {
+                throw e;
+            }
+        }
     }
 
     // Workaround for SDK response deserialization bug
@@ -741,6 +810,7 @@ public class SetupGateway {
         public List<TopicCR> topics = new ArrayList<>();
         public List<ConsumerGroupCR> consumerGroups = new ArrayList<>();
         public List<AclCR> acls = new ArrayList<>();
+        public List<MessagingDeclaration> messagingDeclarations = new ArrayList<>();
     }
 
     /**
@@ -751,7 +821,7 @@ public class SetupGateway {
      * @return ParsedCRs object containing all parsed and validated CRs grouped by type
      * @throws IllegalArgumentException if any document fails validation or has unknown kind
      */
-    ParsedCRs parseAllCrds(String multiDocYaml) {
+    ParsedCRs parseAllCrdTypes(String multiDocYaml) {
         ParsedCRs result = new ParsedCRs();
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.LoaderOptions());
 
@@ -797,6 +867,10 @@ public class SetupGateway {
                         AclCR cr = parseAndValidate(docMap, AclCR.class, documentIndex);
                         result.acls.add(cr);
                     }
+                    case "MessagingDeclaration" -> {
+                        MessagingDeclaration cr = parseAndValidate(docMap, MessagingDeclaration.class, documentIndex);
+                        result.messagingDeclarations.add(cr);
+                    }
                     default -> throw new IllegalArgumentException(
                             "Document #" + documentIndex + " has unknown kind: " + kind
                     );
@@ -823,6 +897,26 @@ public class SetupGateway {
         String yamlStr = new org.yaml.snakeyaml.Yaml().dump(docMap);
         T cr = yaml.load(yamlStr);
 
+        // Apply defaults for MessagingDeclaration
+        if (cr instanceof MessagingDeclaration) {
+            MessagingDeclaration msgDecl = (MessagingDeclaration) cr;
+            if (msgDecl.spec != null && msgDecl.spec.acls != null) {
+                for (AclDef acl : msgDecl.spec.acls) {
+                    // If operations is explicitly set to empty, fail validation
+                    if (acl.operations != null && acl.operations.isEmpty()) {
+                        throw new IllegalArgumentException(
+                            "CRD validation failed for document #" + documentIndex + ":\n" +
+                            "  - spec.acls.operations: operations list must have between 1 and 10 items\n"
+                        );
+                    }
+                    // If operations is null (not provided), set default
+                    if (acl.operations == null) {
+                        acl.operations = List.of("READ", "WRITE", "DESCRIBE");
+                    }
+                }
+            }
+        }
+
         // Validate using bean validation
         java.util.Set<ConstraintViolation<T>> violations = validator.validate(cr);
         if (!violations.isEmpty()) {
@@ -839,6 +933,93 @@ public class SetupGateway {
         return cr;
     }
 
+    /**
+     * Parse and validate a single YAML document as a MessagingDeclaration.
+     *
+     * @param yaml YAML string containing a single MessagingDeclaration document
+     * @return Parsed and validated MessagingDeclaration
+     * @throws IllegalArgumentException if document fails validation
+     */
+    MessagingDeclaration parseYaml(String yaml) {
+        org.yaml.snakeyaml.Yaml yamlParser = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.LoaderOptions());
+        Object doc = yamlParser.load(yaml);
+
+        if (!(doc instanceof Map)) {
+            throw new IllegalArgumentException("Invalid YAML: expected a document map");
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> docMap = (Map<String, Object>) doc;
+
+        return parseAndValidate(docMap, MessagingDeclaration.class, 1);
+    }
+
+    /**
+     * Parse and validate multiple MessagingDeclaration documents from a multi-document YAML string.
+     *
+     * @param multiDocYaml Multi-document YAML string containing MessagingDeclaration definitions
+     * @return List of parsed and validated MessagingDeclarations
+     * @throws IllegalArgumentException if any document fails validation or if no valid documents found
+     */
+    List<MessagingDeclaration> parseAllCrds(String multiDocYaml) {
+        if (multiDocYaml == null || multiDocYaml.trim().isEmpty()) {
+            throw new IllegalArgumentException("No valid CRD documents found in YAML");
+        }
+
+        List<MessagingDeclaration> result = new ArrayList<>();
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.LoaderOptions());
+
+        int documentIndex = 0;
+        for (Object doc : yaml.loadAll(multiDocYaml)) {
+            documentIndex++;
+
+            if (!(doc instanceof Map)) {
+                continue;
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> docMap = (Map<String, Object>) doc;
+            String kind = (String) docMap.get("kind");
+
+            if (kind == null || kind.isEmpty()) {
+                continue;
+            }
+
+            if ("MessagingDeclaration".equals(kind)) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> metadata = (Map<String, Object>) docMap.get("metadata");
+                    String name = metadata != null ? (String) metadata.get("name") : "unknown";
+
+                    MessagingDeclaration cr = parseAndValidate(docMap, MessagingDeclaration.class, documentIndex);
+                    result.add(cr);
+                } catch (Exception e) {
+                    String name = "unknown";
+                    try {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> metadata = (Map<String, Object>) docMap.get("metadata");
+                        if (metadata != null) {
+                            name = (String) metadata.get("name");
+                        }
+                    } catch (Exception ignored) {
+                    }
+
+                    throw new IllegalArgumentException(
+                            "Failed to parse document #" + documentIndex +
+                            " (" + name + "): " + e.getMessage(),
+                            e
+                    );
+                }
+            }
+        }
+
+        if (result.isEmpty()) {
+            throw new IllegalArgumentException("No valid CRD documents found in YAML");
+        }
+
+        return result;
+    }
+
     private void upsertVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
             throws IOException, org.openapitools.client.ApiException, ApiException, InterruptedException {
         io.conduktor.gateway.client.model.VirtualClusterSpec spec = new io.conduktor.gateway.client.model.VirtualClusterSpec();
@@ -852,6 +1033,9 @@ public class SetupGateway {
             adminUser = serviceName;
             spec.aclMode("KAFKA_API").superUsers(List.of(serviceName));
         }
+
+        // Track admin user for this vCluster
+        vClusterAdminUsers.put(vClusterName, adminUser);
 
         log.info("Upserting VirtualCluster: {}", vClusterName);
         upsertVirtualCluster(new io.conduktor.gateway.client.model.VirtualCluster()
@@ -932,13 +1116,6 @@ public class SetupGateway {
         // Wait for Console to establish connection to the cluster
         log.info("Waiting for Console to connect to vCluster {}...", vClusterName);
         Thread.sleep(10000);
-    }
-
-    private void waitForConsoleReady(String vClusterName) throws InterruptedException {
-        log.info("Waiting for Console to be ready for vCluster {}...", vClusterName);
-        // Give Console additional time to establish connection and index the cluster
-        Thread.sleep(30000);  // 30 seconds
-        log.info("Proceeding with operations on vCluster {}", vClusterName);
     }
 
     /**
@@ -1023,15 +1200,32 @@ public class SetupGateway {
             );
         }
 
+        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
+        if (serviceAccount == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
+            );
+        }
+
         String vClusterName = vCluster.spec.clusterId;
+        String serviceName = serviceAccount.spec.name;
 
-        // Wait for Console to be ready
-        waitForConsoleReady(vClusterName);
+        // Determine which credentials to use for topic creation
+        // For ACL-enabled clusters, use admin credentials; otherwise use service credentials
+        String credentialsUser;
+        if (vClustersRequiringAcls.contains(vClusterName)) {
+            credentialsUser = vClusterAdminUsers.get(vClusterName);
+            log.info("Using admin credentials ({}) for topic creation on ACL-enabled vCluster {}",
+                    credentialsUser, vClusterName);
+        } else {
+            credentialsUser = serviceName;
+        }
 
-        // Create topic
+        // Create topic via Gateway using Kafka Admin Client (no Console wait needed)
         createTopic(
                 vClusterName,
                 topic.spec.name,
+                credentialsUser,
                 topic.spec.partitions,
                 topic.spec.replicationFactor,
                 topic.spec.config
@@ -1107,9 +1301,6 @@ public class SetupGateway {
                     "ACL " + aclName + " must reference either topicRef or consumerGroupRef"
             );
         }
-
-        // Wait for Console to be ready
-        waitForConsoleReady(vClusterName);
 
         // Convert operations to Kafka operations
         List<Operation> ops = acl.spec.operations.stream()
