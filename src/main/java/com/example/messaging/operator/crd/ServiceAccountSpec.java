@@ -19,4 +19,9 @@ public class ServiceAccountSpec {
     @JsonPropertyDescription("Reference to VirtualCluster CR")
     @Required
     private String clusterRef;
+
+    @JsonProperty("applicationServiceRef")
+    @JsonPropertyDescription("Reference to ApplicationService CR")
+    @Required
+    private String applicationServiceRef;
 }

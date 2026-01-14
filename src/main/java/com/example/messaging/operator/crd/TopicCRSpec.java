@@ -43,4 +43,9 @@ public class TopicCRSpec {
     @JsonProperty("config")
     @JsonPropertyDescription("Topic configuration (key-value pairs)")
     private Map<String, String> config = new HashMap<>();
+
+    @JsonProperty("applicationServiceRef")
+    @JsonPropertyDescription("Reference to ApplicationService CR")
+    @Required
+    private String applicationServiceRef;
 }

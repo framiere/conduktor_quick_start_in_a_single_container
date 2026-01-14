@@ -44,4 +44,9 @@ public class AclCRSpec {
     @JsonProperty("permission")
     @JsonPropertyDescription("Permission type (ALLOW or DENY)")
     private AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
+
+    @JsonProperty("applicationServiceRef")
+    @JsonPropertyDescription("Reference to ApplicationService CR")
+    @Required
+    private String applicationServiceRef;
 }

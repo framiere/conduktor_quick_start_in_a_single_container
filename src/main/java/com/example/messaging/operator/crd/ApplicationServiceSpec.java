@@ -8,15 +8,10 @@ import lombok.Data;
 
 @Buildable(editableEnabled = false)
 @Data
-public class VirtualClusterSpec {
+public class ApplicationServiceSpec {
 
-    @JsonProperty("clusterId")
-    @JsonPropertyDescription("Conduktor Virtual Cluster ID")
+    @JsonProperty("name")
+    @JsonPropertyDescription("Application service name")
     @Required
-    private String clusterId;
-
-    @JsonProperty("applicationServiceRef")
-    @JsonPropertyDescription("Reference to ApplicationService CR")
-    @Required
-    private String applicationServiceRef;
+    private String name;
 }

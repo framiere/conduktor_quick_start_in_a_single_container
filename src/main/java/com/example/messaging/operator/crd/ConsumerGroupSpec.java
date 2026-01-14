@@ -23,4 +23,9 @@ public class ConsumerGroupSpec {
     @JsonProperty("patternType")
     @JsonPropertyDescription("Pattern type (LITERAL or PREFIXED)")
     private String patternType = "LITERAL";
+
+    @JsonProperty("applicationServiceRef")
+    @JsonPropertyDescription("Reference to ApplicationService CR")
+    @Required
+    private String applicationServiceRef;
 }
