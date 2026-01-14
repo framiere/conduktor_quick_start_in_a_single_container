@@ -4,6 +4,7 @@ kind: VirtualCluster
 metadata:
   name: prod-cluster
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   clusterId: prod-cluster
 ---
@@ -13,6 +14,7 @@ kind: ServiceAccount
 metadata:
   name: orders-service-sa
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   name: orders-service
   clusterRef: prod-cluster
@@ -23,6 +25,7 @@ kind: Topic
 metadata:
   name: orders-events
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   name: orders.events
@@ -37,6 +40,7 @@ kind: Topic
 metadata:
   name: orders-deadletter
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   name: orders.deadletter
@@ -48,6 +52,7 @@ kind: Topic
 metadata:
   name: inventory-updates
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   name: inventory.updates
@@ -60,6 +65,7 @@ kind: ACL
 metadata:
   name: orders-events-rw
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   topicRef: orders-events
@@ -70,6 +76,7 @@ kind: ACL
 metadata:
   name: orders-deadletter-rw
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   topicRef: orders-deadletter
@@ -80,6 +87,7 @@ kind: ACL
 metadata:
   name: inventory-updates-read
   namespace: orders
+  applicationServiceName: orders-service
 spec:
   serviceRef: orders-service-sa
   topicRef: inventory-updates
@@ -91,6 +99,7 @@ apiVersion: messaging.example.com/v1
 kind: VirtualCluster
 metadata:
   name: demo
+  applicationServiceName: demo-admin
 spec:
   clusterId: demo
 ---
@@ -98,6 +107,7 @@ apiVersion: messaging.example.com/v1
 kind: VirtualCluster
 metadata:
   name: demo-acl
+  applicationServiceName: demo-acl-admin
 spec:
   clusterId: demo-acl
 ---
@@ -105,6 +115,7 @@ apiVersion: messaging.example.com/v1
 kind: ServiceAccount
 metadata:
   name: demo-admin-sa
+  applicationServiceName: demo-admin
 spec:
   name: demo-admin
   clusterRef: demo
@@ -113,6 +124,7 @@ apiVersion: messaging.example.com/v1
 kind: ServiceAccount
 metadata:
   name: demo-acl-admin-sa
+  applicationServiceName: demo-acl-admin
 spec:
   name: demo-acl-admin
   clusterRef: demo-acl
@@ -121,6 +133,7 @@ apiVersion: messaging.example.com/v1
 kind: ServiceAccount
 metadata:
   name: demo-acl-user-sa
+  applicationServiceName: demo-acl-user
 spec:
   name: demo-acl-user
   clusterRef: demo-acl
@@ -130,6 +143,7 @@ apiVersion: messaging.example.com/v1
 kind: Topic
 metadata:
   name: click-topic
+  applicationServiceName: demo-acl-user
 spec:
   serviceRef: demo-acl-user-sa
   name: click
@@ -141,6 +155,7 @@ apiVersion: messaging.example.com/v1
 kind: ConsumerGroup
 metadata:
   name: myconsumer-group
+  applicationServiceName: demo-acl-user
 spec:
   serviceRef: demo-acl-user-sa
   name: myconsumer-
@@ -151,6 +166,7 @@ apiVersion: messaging.example.com/v1
 kind: ACL
 metadata:
   name: demo-acl-user-click-read
+  applicationServiceName: demo-acl-user
 spec:
   serviceRef: demo-acl-user-sa
   topicRef: click-topic
@@ -161,6 +177,7 @@ apiVersion: messaging.example.com/v1
 kind: ACL
 metadata:
   name: demo-acl-user-consumer-read
+  applicationServiceName: demo-acl-user
 spec:
   serviceRef: demo-acl-user-sa
   consumerGroupRef: myconsumer-group
