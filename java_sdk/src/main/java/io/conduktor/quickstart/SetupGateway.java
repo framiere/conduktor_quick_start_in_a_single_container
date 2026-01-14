@@ -221,30 +221,36 @@ public class SetupGateway {
     private void waitForService(String name, String url) throws InterruptedException {
         Request request = new Request.Builder().url(url).get().build();
 
-        for (int i = 0; i < maxRetries; i++) {
+        int attempt = 0;
+        do {
             if (isServiceReady(request)) {
                 log.info("{} is ready.", name);
                 return;
             }
             Thread.sleep(1000);
-            if (i == 0) {
+            if (attempt == 0) {
                 log.info("Waiting for {} to be ready", name);
             }
-        }
+            attempt++;
+        } while (attempt < maxRetries);
+
         throw new RuntimeException(name + " did not become ready after " + maxRetries + " retries");
     }
 
     private void waitForGateway() throws InterruptedException {
-        for (int i = 0; i < maxRetries; i++) {
+        int attempt = 0;
+        do {
             if (isGatewayHealthy()) {
                 log.info("Gateway Admin API is ready.");
                 return;
             }
             Thread.sleep(1000);
-            if (i == 0) {
+            if (attempt == 0) {
                 log.info("Waiting for Gateway Admin API to be ready");
             }
-        }
+            attempt++;
+        } while (attempt < maxRetries);
+
         throw new RuntimeException("Gateway Admin API did not become ready after " + maxRetries + " retries");
     }
 
