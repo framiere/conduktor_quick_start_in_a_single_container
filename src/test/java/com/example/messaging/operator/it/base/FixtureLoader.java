@@ -11,32 +11,56 @@ import java.util.List;
  */
 public class FixtureLoader {
 
+    private FixtureLoader() {
+        throw new AssertionError("Utility class");
+    }
+
     /**
      * Load a single resource of specific type from YAML fixture
      */
     public static <T> T load(KubernetesClient client, String path, Class<T> type) {
-        InputStream stream = FixtureLoader.class.getResourceAsStream(path);
-        if (stream == null) {
-            throw new IllegalArgumentException("Fixture not found: " + path);
+        if (client == null) {
+            throw new IllegalArgumentException("Client cannot be null");
         }
 
-        return client.load(stream)
-            .get().stream()
-            .filter(type::isInstance)
-            .map(type::cast)
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("No resource of type " + type.getSimpleName() + " found in " + path));
+        try (InputStream stream = FixtureLoader.class.getResourceAsStream(path)) {
+            if (stream == null) {
+                throw new IllegalArgumentException("Fixture not found: " + path);
+            }
+
+            return client.load(stream)
+                .get().stream()
+                .filter(type::isInstance)
+                .map(type::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No resource of type " + type.getSimpleName() + " found in " + path));
+        } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) {
+                throw (IllegalArgumentException) e;
+            }
+            throw new RuntimeException("Failed to load fixture: " + path, e);
+        }
     }
 
     /**
      * Load all resources from YAML fixture
      */
     public static List<HasMetadata> loadAll(KubernetesClient client, String path) {
-        InputStream stream = FixtureLoader.class.getResourceAsStream(path);
-        if (stream == null) {
-            throw new IllegalArgumentException("Fixture not found: " + path);
+        if (client == null) {
+            throw new IllegalArgumentException("Client cannot be null");
         }
 
-        return client.load(stream).get();
+        try (InputStream stream = FixtureLoader.class.getResourceAsStream(path)) {
+            if (stream == null) {
+                throw new IllegalArgumentException("Fixture not found: " + path);
+            }
+
+            return client.load(stream).get();
+        } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) {
+                throw (IllegalArgumentException) e;
+            }
+            throw new RuntimeException("Failed to load fixture: " + path, e);
+        }
     }
 }
