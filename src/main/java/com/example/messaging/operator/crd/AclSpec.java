@@ -19,11 +19,13 @@ public class AclSpec {
     @JsonProperty("topic")
     @JsonPropertyDescription("Topic name (owned or referenced)")
     @Required
-    @Pattern("^[a-zA-Z0-9._-]+$") private String topic;
+    @Pattern("^[a-zA-Z0-9._-]+$")
+    private String topic;
 
     @JsonProperty("operations")
     @JsonPropertyDescription("Kafka operations (unique set)")
-    @Required private List<KafkaOperation> operations = new ArrayList<>();
+    @Required
+    private List<KafkaOperation> operations = new ArrayList<>();
 
     /**
      * Kafka ACL operations enum.

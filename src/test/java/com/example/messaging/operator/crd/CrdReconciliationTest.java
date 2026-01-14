@@ -7,16 +7,15 @@ import static com.example.messaging.operator.crd.AclCRSpec.Operation.WRITE;
 import static com.example.messaging.operator.events.ReconciliationEvent.Operation.*;
 import static com.example.messaging.operator.events.ReconciliationEvent.Phase.*;
 import static com.example.messaging.operator.events.ReconciliationEvent.Result.*;
+import static com.example.messaging.operator.events.ReconciliationEventPublisher.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.messaging.operator.events.ReconciliationEvent;
-import com.example.messaging.operator.events.ReconciliationEventPublisher;
 import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.*;
@@ -132,7 +131,8 @@ class CrdReconciliationTest {
             crdStore.create("VirtualCluster", TEST_NAMESPACE, buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            assertThat(crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE)).isEmpty();
+            assertThat(crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE))
+                    .isEmpty();
 
             // CREATE OPERATION
             ServiceAccount sa = buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE);
@@ -181,7 +181,8 @@ class CrdReconciliationTest {
             setupCompleteOwnershipChain();
 
             // BEFORE STATE
-            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).isEmpty();
+            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
+                    .isEmpty();
 
             // CREATE OPERATION
             Topic topic = buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE);
@@ -227,7 +228,8 @@ class CrdReconciliationTest {
             crdStore.create("Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE)).isEmpty();
+            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE))
+                    .isEmpty();
 
             // CREATE OPERATION
             ACL acl = buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE);
@@ -432,7 +434,8 @@ class CrdReconciliationTest {
             Topic topic = crdStore.create("Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).hasSize(1);
+            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
+                    .hasSize(1);
 
             // AUTHORIZED DELETE
             OwnershipValidator validator = new OwnershipValidator(crdStore);
@@ -444,7 +447,8 @@ class CrdReconciliationTest {
             assertThat(deleted).isTrue();
 
             // AFTER STATE
-            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).isEmpty();
+            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
+                    .isEmpty();
         }
 
         @Test
@@ -478,12 +482,10 @@ class CrdReconciliationTest {
             crdStore.create("ACL", TEST_NAMESPACE, buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            Map<String, Integer> beforeCounts = new HashMap<>();
-            beforeCounts.put("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size());
-            beforeCounts.put("VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size());
-            beforeCounts.put("ServiceAccount", crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size());
-            beforeCounts.put("Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
-            beforeCounts.put("ACL", crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
+            Map<String, Integer> beforeCounts = Map.of("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size(),
+                    "VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size(), "ServiceAccount",
+                    crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size(), "Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size(), "ACL",
+                    crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
 
             assertThat(beforeCounts).as("BEFORE: All resources exist")
                     .containsEntry("ApplicationService", 1)
@@ -502,12 +504,10 @@ class CrdReconciliationTest {
             crdStore.delete("ApplicationService", TEST_NAMESPACE, OWNER_APP_SERVICE);
 
             // AFTER STATE
-            Map<String, Integer> afterCounts = new HashMap<>();
-            afterCounts.put("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size());
-            afterCounts.put("VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size());
-            afterCounts.put("ServiceAccount", crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size());
-            afterCounts.put("Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
-            afterCounts.put("ACL", crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
+            Map<String, Integer> afterCounts = Map.of("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size(),
+                    "VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size(), "ServiceAccount",
+                    crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size(), "Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size(), "ACL",
+                    crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
 
             assertThat(afterCounts).as("AFTER: All resources should be deleted")
                     .containsEntry("ApplicationService", 0)
@@ -523,7 +523,7 @@ class CrdReconciliationTest {
     class EventPublishingTest {
 
         private List<ReconciliationEvent> capturedEvents;
-        private ReconciliationEventPublisher.ReconciliationEventListener eventCapture;
+        private ReconciliationEventListener eventCapture;
 
         @BeforeEach
         void setupEventCapture() {

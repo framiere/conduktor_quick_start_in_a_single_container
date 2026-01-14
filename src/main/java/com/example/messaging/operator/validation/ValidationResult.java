@@ -12,30 +12,18 @@ public class ValidationResult {
         this.message = message;
     }
 
-    /**
-     * Create a successful validation result
-     */
     public static ValidationResult valid() {
         return new ValidationResult(true, null);
     }
 
-    /**
-     * Create a failed validation result with error message
-     */
     public static ValidationResult invalid(String message) {
         return new ValidationResult(false, message);
     }
 
-    /**
-     * Check if validation passed
-     */
     public boolean isValid() {
         return valid;
     }
 
-    /**
-     * Get validation error message (null if valid)
-     */
     public String getMessage() {
         return message;
     }

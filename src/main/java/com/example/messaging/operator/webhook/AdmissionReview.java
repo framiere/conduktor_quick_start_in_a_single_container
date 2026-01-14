@@ -8,11 +8,15 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdmissionReview {
 
-    @JsonProperty("apiVersion") private String apiVersion = "admission.k8s.io/v1";
+    @JsonProperty("apiVersion")
+    private String apiVersion = "admission.k8s.io/v1";
 
-    @JsonProperty("kind") private String kind = "AdmissionReview";
+    @JsonProperty("kind")
+    private String kind = "AdmissionReview";
 
-    @JsonProperty("request") private AdmissionRequest request;
+    @JsonProperty("request")
+    private AdmissionRequest request;
 
-    @JsonProperty("response") private AdmissionResponse response;
+    @JsonProperty("response")
+    private AdmissionResponse response;
 }

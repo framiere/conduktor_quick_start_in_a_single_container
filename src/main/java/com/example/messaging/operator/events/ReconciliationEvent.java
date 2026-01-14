@@ -27,18 +27,13 @@ public class ReconciliationEvent {
     }
 
     @NonNull private final Phase phase;
-
     @NonNull private final Operation operation;
-
     @NonNull private final String resourceKind;
-
     @NonNull private final String resourceName;
-
     @NonNull private final String resourceNamespace;
-
     private final String applicationService;
-
-    @Builder.Default private final Instant timestamp = Instant.now();
+    @Builder.Default
+    private final Instant timestamp = Instant.now();
 
     private Result result;
     private String message;
@@ -56,6 +51,25 @@ public class ReconciliationEvent {
 
     public boolean isFailure() {
         return result != null && result != Result.SUCCESS;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(phase).append(" ").append(operation).append(" ").append(getResourceReference());
+        if (applicationService != null) {
+            sb.append(" (owner: ").append(applicationService).append(")");
+        }
+        if (result != null) {
+            sb.append(" - ").append(result);
+        }
+        if (resourceVersion != null) {
+            sb.append(" [v").append(resourceVersion).append("]");
+        }
+        if (message != null) {
+            sb.append(": ").append(message);
+        }
+        return sb.toString();
     }
 
 }

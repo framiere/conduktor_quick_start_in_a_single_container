@@ -9,9 +9,12 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo {
 
-    @JsonProperty("username") private String username;
+    @JsonProperty("username")
+    private String username;
 
-    @JsonProperty("uid") private String uid;
+    @JsonProperty("uid")
+    private String uid;
 
-    @JsonProperty("groups") private List<String> groups;
+    @JsonProperty("groups")
+    private List<String> groups;
 }

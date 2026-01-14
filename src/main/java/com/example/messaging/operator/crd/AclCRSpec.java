@@ -17,27 +17,34 @@ public class AclCRSpec {
 
     @JsonProperty("serviceRef")
     @JsonPropertyDescription("Reference to ServiceAccount CR")
-    @Required private String serviceRef;
+    @Required
+    private String serviceRef;
 
     @JsonProperty("topicRef")
-    @JsonPropertyDescription("Reference to Topic CR (mutually exclusive with consumerGroupRef)") private String topicRef;
+    @JsonPropertyDescription("Reference to Topic CR (mutually exclusive with consumerGroupRef)")
+    private String topicRef;
 
     @JsonProperty("consumerGroupRef")
-    @JsonPropertyDescription("Reference to ConsumerGroup CR (mutually exclusive with topicRef)") private String consumerGroupRef;
+    @JsonPropertyDescription("Reference to ConsumerGroup CR (mutually exclusive with topicRef)")
+    private String consumerGroupRef;
 
     @JsonProperty("operations")
     @JsonPropertyDescription("Kafka operations (READ, WRITE, DESCRIBE, etc.)")
-    @Required private List<Operation> operations = new ArrayList<>();
+    @Required
+    private List<Operation> operations = new ArrayList<>();
 
     @JsonProperty("host")
-    @JsonPropertyDescription("Host from which operations are allowed") private String host = "*";
+    @JsonPropertyDescription("Host from which operations are allowed")
+    private String host = "*";
 
     @JsonProperty("permission")
-    @JsonPropertyDescription("Permission type (ALLOW or DENY)") private AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
+    @JsonPropertyDescription("Permission type (ALLOW or DENY)")
+    private AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
 
     @JsonProperty("applicationServiceRef")
     @JsonPropertyDescription("Reference to ApplicationService CR")
-    @Required private String applicationServiceRef;
+    @Required
+    private String applicationServiceRef;
 
     public enum Operation {
         ALL, ALTER, ALTER_CONFIGS, CLUSTER_ACTION, CREATE, CREATE_TOKENS, DELETE, DESCRIBE, DESCRIBE_CONFIGS, DESCRIBE_TOKENS, IDEMPOTENT_WRITE, READ, WRITE

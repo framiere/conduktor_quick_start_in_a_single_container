@@ -12,17 +12,24 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AdmissionRequest {
 
-    @JsonProperty("uid") private String uid;
+    @JsonProperty("uid")
+    private String uid;
 
-    @JsonProperty("operation") private String operation; // CREATE, UPDATE, DELETE
+    @JsonProperty("operation")
+    private String operation; // CREATE, UPDATE, DELETE
 
-    @JsonProperty("namespace") private String namespace;
+    @JsonProperty("namespace")
+    private String namespace;
 
-    @JsonProperty("name") private String name;
+    @JsonProperty("name")
+    private String name;
 
-    @JsonProperty("userInfo") private UserInfo userInfo;
+    @JsonProperty("userInfo")
+    private UserInfo userInfo;
 
-    @JsonProperty("object") private Map<String, Object> object;
+    @JsonProperty("object")
+    private Map<String, Object> object;
 
-    @JsonProperty("oldObject") private Map<String, Object> oldObject;
+    @JsonProperty("oldObject")
+    private Map<String, Object> oldObject;
 }

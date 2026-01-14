@@ -22,7 +22,8 @@ public class CRDStore {
     private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
     private final AtomicLong resourceVersionCounter = new AtomicLong(1);
 
-    @Getter private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
+    @Getter
+    private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
 
     private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
@@ -234,17 +235,6 @@ public class CRDStore {
         }
     }
 
-    /**
-     * Get a resource by name
-     *
-     * @param kind
-     *            The resource kind
-     * @param namespace
-     *            The namespace
-     * @param name
-     *            The resource name
-     * @return The resource, or null if not found
-     */
     @SuppressWarnings("unchecked")
     public <T> T get(String kind, String namespace, String name) {
         String key = getKey(kind, namespace, name);
@@ -252,15 +242,6 @@ public class CRDStore {
         return entry != null ? (T) entry.get("resource") : null;
     }
 
-    /**
-     * List all resources of a kind in a namespace
-     *
-     * @param kind
-     *            The resource kind
-     * @param namespace
-     *            The namespace
-     * @return List of resources
-     */
     public <T> List<T> list(String kind, String namespace) {
         return store.entrySet()
                 .stream()
@@ -269,34 +250,10 @@ public class CRDStore {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Delete a resource
-     *
-     * @param kind
-     *            The resource kind
-     * @param namespace
-     *            The namespace
-     * @param name
-     *            The resource name
-     * @return true if deleted, false if not found
-     */
     public boolean delete(String kind, String namespace, String name) {
         return delete(kind, namespace, name, null);
     }
 
-    /**
-     * Delete a resource with requesting owner context
-     *
-     * @param kind
-     *            The resource kind
-     * @param namespace
-     *            The namespace
-     * @param name
-     *            The resource name
-     * @param requestingAppService
-     *            The requesting application service
-     * @return true if deleted, false if not found
-     */
     public boolean delete(String kind, String namespace, String name, String requestingAppService) {
         // Get resource before deletion to extract appService
         Object existingResource = get(kind, namespace, name);
@@ -395,23 +352,14 @@ public class CRDStore {
         }
     }
 
-    /**
-     * Add a listener for reconciliation events
-     */
     public void addReconciliationListener(ReconciliationEventPublisher.ReconciliationEventListener listener) {
         eventPublisher.addListener(listener);
     }
 
-    /**
-     * Remove a reconciliation event listener
-     */
     public void removeReconciliationListener(ReconciliationEventPublisher.ReconciliationEventListener listener) {
         eventPublisher.removeListener(listener);
     }
 
-    /**
-     * Clear all resources from the store
-     */
     public void clear() {
         store.clear();
         resourceVersionCounter.set(1);

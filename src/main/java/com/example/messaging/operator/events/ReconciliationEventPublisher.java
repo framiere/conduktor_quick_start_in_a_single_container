@@ -23,25 +23,16 @@ public class ReconciliationEventPublisher {
         this.auditLoggingEnabled = auditLoggingEnabled;
     }
 
-    /**
-     * Register a listener for reconciliation events
-     */
     public void addListener(ReconciliationEventListener listener) {
         listeners.add(listener);
         logger.info("Registered reconciliation event listener: {}", listener.getClass().getSimpleName());
     }
 
-    /**
-     * Remove a listener
-     */
     public void removeListener(ReconciliationEventListener listener) {
         listeners.remove(listener);
         logger.info("Removed reconciliation event listener: {}", listener.getClass().getSimpleName());
     }
 
-    /**
-     * Publish a reconciliation event to all registered listeners
-     */
     public void publish(ReconciliationEvent event) {
         if (auditLoggingEnabled) {
             if (event.getPhase() == ReconciliationEvent.Phase.BEFORE) {
@@ -71,9 +62,6 @@ public class ReconciliationEventPublisher {
         logger.info("Cleared all reconciliation event listeners");
     }
 
-    /**
-     * Functional interface for event listeners
-     */
     @FunctionalInterface
     public interface ReconciliationEventListener {
         void onEvent(ReconciliationEvent event);
