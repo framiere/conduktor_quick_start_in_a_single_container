@@ -5,6 +5,7 @@ import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.events.ReconciliationEventPublisher;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,21 +24,10 @@ import java.util.stream.Collectors;
 public class CRDStore {
     private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
     private final AtomicLong resourceVersionCounter = new AtomicLong(1);
-    private final ReconciliationEventPublisher eventPublisher;
-    private final OwnershipValidator ownershipValidator;
+    @Getter
+    private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
+    private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
-    public CRDStore() {
-        this(new ReconciliationEventPublisher(false));
-    }
-
-    public CRDStore(ReconciliationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
-        this.ownershipValidator = new OwnershipValidator(this);
-    }
-
-    public ReconciliationEventPublisher getEventPublisher() {
-        return eventPublisher;
-    }
 
     private String getKey(String kind, String namespace, String name) {
         return String.format("%s/%s/%s", kind, namespace, name);
@@ -45,9 +35,10 @@ public class CRDStore {
 
     /**
      * Create a new resource
-     * @param kind The resource kind (e.g., "Topic", "ServiceAccount")
+     *
+     * @param kind      The resource kind (e.g., "Topic", "ServiceAccount")
      * @param namespace The namespace
-     * @param resource The resource to create
+     * @param resource  The resource to create
      * @return The created resource with server-assigned metadata
      * @throws IllegalStateException if resource already exists
      */
@@ -134,10 +125,11 @@ public class CRDStore {
 
     /**
      * Update an existing resource
-     * @param kind The resource kind
+     *
+     * @param kind      The resource kind
      * @param namespace The namespace
-     * @param name The resource name
-     * @param resource The updated resource
+     * @param name      The resource name
+     * @param resource  The updated resource
      * @return The updated resource with incremented version
      * @throws IllegalStateException if resource not found
      */
@@ -223,9 +215,10 @@ public class CRDStore {
 
     /**
      * Get a resource by name
-     * @param kind The resource kind
+     *
+     * @param kind      The resource kind
      * @param namespace The namespace
-     * @param name The resource name
+     * @param name      The resource name
      * @return The resource, or null if not found
      */
     @SuppressWarnings("unchecked")
@@ -237,7 +230,8 @@ public class CRDStore {
 
     /**
      * List all resources of a kind in a namespace
-     * @param kind The resource kind
+     *
+     * @param kind      The resource kind
      * @param namespace The namespace
      * @return List of resources
      */
@@ -250,9 +244,10 @@ public class CRDStore {
 
     /**
      * Delete a resource
-     * @param kind The resource kind
+     *
+     * @param kind      The resource kind
      * @param namespace The namespace
-     * @param name The resource name
+     * @param name      The resource name
      * @return true if deleted, false if not found
      */
     public boolean delete(String kind, String namespace, String name) {
@@ -261,9 +256,10 @@ public class CRDStore {
 
     /**
      * Delete a resource with requesting owner context
-     * @param kind The resource kind
-     * @param namespace The namespace
-     * @param name The resource name
+     *
+     * @param kind                 The resource kind
+     * @param namespace            The namespace
+     * @param name                 The resource name
      * @param requestingAppService The requesting application service
      * @return true if deleted, false if not found
      */

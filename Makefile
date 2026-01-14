@@ -80,5 +80,4 @@ help:
 	@echo "  clean       - Remove container, image, Java SDK target, and local certs"
 	@echo "  logs        - Follow container logs"
 	@echo "  setup-logs  - View setup script logs"
-	@echo "  setup       - Run setup_gateway.sh"
 	@echo "  help        - Show this help"

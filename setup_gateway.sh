@@ -16,8 +16,6 @@ VCLUSTER_ADMIN="${VCLUSTER}-admin"
 VCLUSTER_ACL_ADMIN="${VCLUSTER_ACL}-admin"
 VCLUSTER_ACL_USER="${VCLUSTER_ACL}-user"
 
-# Run Java SDK setup
-mvn -f java_sdk/pom.xml exec:java -q
 
 # =============================================================================
 # ACL Demo with mTLS

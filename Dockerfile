@@ -36,9 +36,8 @@ COPY redpanda.yaml /etc/redpanda/redpanda.yaml
 RUN mkdir -p /var/lib/conduktor/pg1 /var/lib/conduktor/pg2 /var/lib/conduktor/redpanda /var/lib/conduktor/certs /var/log/conduktor
 
 COPY entrypoint.sh /entrypoint.sh
-COPY setup_gateway.sh /opt/conduktor/setup_gateway.sh
 COPY certs.sh /opt/conduktor/certs.sh
-RUN chmod +x /entrypoint.sh /opt/conduktor/setup_gateway.sh /opt/conduktor/certs.sh
+RUN chmod +x /entrypoint.sh /opt/conduktor/certs.sh
 
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="$JAVA_HOME/bin:$PATH"

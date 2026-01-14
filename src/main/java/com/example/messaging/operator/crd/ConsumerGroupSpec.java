@@ -22,10 +22,15 @@ public class ConsumerGroupSpec {
 
     @JsonProperty("patternType")
     @JsonPropertyDescription("Pattern type (LITERAL or PREFIXED)")
-    private String patternType = "LITERAL";
+    private ResourcePatternType patternType = ResourcePatternType.LITERAL;
 
     @JsonProperty("applicationServiceRef")
     @JsonPropertyDescription("Reference to ApplicationService CR")
     @Required
     private String applicationServiceRef;
+
+    public enum ResourcePatternType {
+        LITERAL,
+        PREFIXED
+    }
 }

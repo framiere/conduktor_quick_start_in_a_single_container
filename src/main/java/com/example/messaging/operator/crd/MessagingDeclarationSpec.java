@@ -5,11 +5,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Pattern;
 import io.fabric8.generator.annotation.Required;
-import io.fabric8.crd.generator.annotation.SchemaSwap;
 import io.sundr.builder.annotations.Buildable;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,10 +33,10 @@ public class MessagingDeclarationSpec {
 
     @JsonProperty("topics")
     @JsonPropertyDescription("Topics OWNED by this CR")
-    private List<TopicSpec> topics = new ArrayList<>();
+    private List<TopicSpec> topics = List.of();
 
     @JsonProperty("acls")
     @JsonPropertyDescription("ACL declarations")
-    private List<AclSpec> acls = new ArrayList<>();
+    private List<AclSpec> acls = List.of();
 
 }

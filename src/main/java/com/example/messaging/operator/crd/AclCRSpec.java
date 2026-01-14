@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.openapitools.client.model.AclPermissionTypeForAccessControlEntry;
-import org.openapitools.client.model.Operation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,4 +48,27 @@ public class AclCRSpec {
     @JsonPropertyDescription("Reference to ApplicationService CR")
     @Required
     private String applicationServiceRef;
+
+    @AllArgsConstructor
+    public enum Operation {
+        ALL,
+        ALTER,
+        ALTER_CONFIGS,
+        CLUSTER_ACTION,
+        CREATE,
+        CREATE_TOKENS,
+        DELETE,
+        DESCRIBE,
+        DESCRIBE_CONFIGS,
+        DESCRIBE_TOKENS,
+        IDEMPOTENT_WRITE,
+        READ,
+        WRITE
+    }
+
+    @AllArgsConstructor
+    public enum AclPermissionTypeForAccessControlEntry {
+        DENY,
+        ALLOW
+    }
 }

@@ -32,12 +32,6 @@ docker run -d --name conduktor_quick_start_in_a_single_container \
   conduktor_quick_start_in_a_single_container
 ```
 
-### Setup Gateway
-
-```sh
-./setup_gateway.sh
-```
-
 ## Architecture
 
 ### Step 1: Container Startup
@@ -107,43 +101,6 @@ Certificates are generated at container startup by `certs.sh`:
                                   │demo-acl-user. │
                                   │truststore.jks │
                                   └───────────────┘
-```
-
-### Step 3: Gateway Setup (setup_gateway.sh)
-
-The setup script creates Virtual Clusters and Service Accounts:
-
-```
-  Host Machine                           Container
- ┌─────────────────────────────────┐    ┌─────────────────────────────┐
- │                                 │    │                             │
- │  ./setup_gateway.sh             │    │  Gateway Admin API :8888    │
- │         │                       │    │         │                   │
- │         │ 1. Wait for ready     │    │         │                   │
- │         ├──────────────────────────▶ │         │                   │
- │         │                       │    │         │                   │
- │         │ 2. Create vCluster    │    │         ▼                   │
- │         │    "demo"             │    │  ┌─────────────────────┐    │
- │         ├──────────────────────────▶ │  │  demo vCluster      │    │
- │         │                       │    │  │  - ACL: disabled    │    │
- │         │ 3. Create vCluster    │    │  │  - superUser:       │    │
- │         │    "demo-acl"         │    │  │    demo-admin       │    │
- │         ├──────────────────────────▶ │  └─────────────────────┘    │
- │         │                       │    │                             │
- │         │ 4. Create Service     │    │  ┌─────────────────────┐    │
- │         │    Accounts           │    │  │  demo-acl vCluster  │    │
- │         ├──────────────────────────▶ │  │  - ACL: enabled     │    │
- │         │                       │    │  │  - superUser:       │    │
- │         │ 5. Register in        │    │  │    demo-acl-admin   │    │
- │         │    Console :8080      │    │  └─────────────────────┘    │
- │         ├──────────────────────────▶ │                             │
- │         │                       │    │                             │
- │         ▼                       │    │                             │
- │  demo-admin.properties          │    │                             │
- │  demo-acl-admin.properties      │    │                             │
- │  demo-acl-user.properties       │    │                             │
- │                                 │    │                             │
- └─────────────────────────────────┘    └─────────────────────────────┘
 ```
 
 ### Step 4: mTLS Authentication Flow
@@ -310,18 +267,7 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 | `make clean` | Remove container, image, and local certs |
 | `make logs` | Follow container logs |
 | `make setup-logs` | View setup script logs |
-| `make setup` | Run setup_gateway.sh |
 | `make help` | Show help |
-
-## Automatic Setup
-
-The `setup_gateway.sh` script:
-1. Waits for Console and Gateway to be ready
-2. Creates two Virtual Clusters in Gateway with mTLS authentication
-3. Creates service accounts mapped to certificate CNs
-4. Registers the vClusters in Console
-5. Generates properties files for Kafka CLI
-6. Runs an ACL demonstration with mTLS
 
 ### Check Setup Progress
 
@@ -396,11 +342,11 @@ The setup script demonstrates ACL enforcement with mTLS on the `demo-acl` vClust
 
 ## Using mTLS Certificates
 
-Certificates are mounted via volume to `./certs/` and properties files are generated automatically by `setup_gateway.sh`.
+Certificates are mounted via volume to `./certs/` and properties files are generated automatically
 
 ### Generated Properties Files
 
-After running `make all` or `./setup_gateway.sh`, these files are created:
+After running `make all` these files are created:
 
 | File | User | vCluster |
 |------|------|----------|
