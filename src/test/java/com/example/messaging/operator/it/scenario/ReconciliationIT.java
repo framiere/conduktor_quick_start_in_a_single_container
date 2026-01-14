@@ -8,6 +8,7 @@ import com.example.messaging.operator.crd.VirtualCluster;
 import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ public class ReconciliationIT extends ScenarioITBase {
         // Action: Create ApplicationService
         ApplicationService app = TestDataBuilder.applicationService().name("test-app").appName("test-app").createIn(k8sClient);
 
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         // Verify: Two events fired (START → END)
         assertThat(receivedEvents)
@@ -42,7 +43,7 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(startEvent.getOperation())
                 .isEqualTo(ReconciliationEvent.Operation.CREATE);
         assertThat(startEvent.getResourceKind())
-                .isEqualTo("ApplicationService");
+                .isEqualTo(CRDKind.APPLICATION_SERVICE);
         assertThat(startEvent.getResourceName())
                 .isEqualTo("test-app");
         assertThat(startEvent.getResourceNamespace())
@@ -57,7 +58,7 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(endEvent.getOperation())
                 .isEqualTo(ReconciliationEvent.Operation.CREATE);
         assertThat(endEvent.getResourceKind())
-                .isEqualTo("ApplicationService");
+                .isEqualTo(CRDKind.APPLICATION_SERVICE);
         assertThat(endEvent.getResourceName())
                 .isEqualTo("test-app");
         assertThat(endEvent.getResourceNamespace())
@@ -73,7 +74,7 @@ public class ReconciliationIT extends ScenarioITBase {
     void testUpdateTriggersReconciliationEvents() {
         // Setup: Create resource first
         ApplicationService app = TestDataBuilder.applicationService().name("test-app").appName("test-app").createIn(k8sClient);
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         // Setup: Event listener after initial create
         List<ReconciliationEvent> receivedEvents = new CopyOnWriteArrayList<>();
@@ -81,7 +82,7 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Update the resource
         app.getSpec().setName("test-app-updated");
-        store.update("ApplicationService", "default", "test-app", app);
+        store.update(CRDKind.APPLICATION_SERVICE, "default", "test-app", app);
 
         // Verify: Two events fired (START → END)
         assertThat(receivedEvents)
@@ -93,7 +94,7 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(startEvent.getOperation())
                 .isEqualTo(ReconciliationEvent.Operation.UPDATE);
         assertThat(startEvent.getResourceKind())
-                .isEqualTo("ApplicationService");
+                .isEqualTo(CRDKind.APPLICATION_SERVICE);
 
         ReconciliationEvent endEvent = receivedEvents.get(1);
         assertThat(endEvent.getPhase())
@@ -111,14 +112,14 @@ public class ReconciliationIT extends ScenarioITBase {
     void testDeleteTriggersReconciliationEvents() {
         // Setup: Create resource first
         ApplicationService app = TestDataBuilder.applicationService().name("test-app").appName("test-app").createIn(k8sClient);
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         // Setup: Event listener after initial create
         List<ReconciliationEvent> receivedEvents = new CopyOnWriteArrayList<>();
         store.addReconciliationListener(receivedEvents::add);
 
         // Action: Delete the resource
-        store.delete("ApplicationService", "default", "test-app");
+        store.delete(CRDKind.APPLICATION_SERVICE, "default", "test-app");
 
         // Verify: Two events fired (START → END)
         assertThat(receivedEvents)
@@ -130,7 +131,7 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(startEvent.getOperation())
                 .isEqualTo(ReconciliationEvent.Operation.DELETE);
         assertThat(startEvent.getResourceKind())
-                .isEqualTo("ApplicationService");
+                .isEqualTo(CRDKind.APPLICATION_SERVICE);
 
         ReconciliationEvent endEvent = receivedEvents.get(1);
         assertThat(endEvent.getPhase())
@@ -152,7 +153,7 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Setup: Create an ApplicationService but NOT the ServiceAccount it references
         ApplicationService app = TestDataBuilder.applicationService().name("test-app").appName("test-app").createIn(k8sClient);
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         // Clear events from setup
         receivedEvents.clear();
@@ -168,7 +169,7 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // This should trigger validation failure
         try {
-            store.create("Topic", "default", topic);
+            store.create(CRDKind.TOPIC, "default", topic);
         } catch (Exception e) {
             // Expected to fail
         }
@@ -191,7 +192,7 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(afterEvent.getOperation())
                 .isEqualTo(ReconciliationEvent.Operation.CREATE);
         assertThat(afterEvent.getResourceKind())
-                .isEqualTo("Topic");
+                .isEqualTo(CRDKind.TOPIC);
         assertThat(afterEvent.isSuccess())
                 .isFalse();
         assertThat(afterEvent.getResult()).isIn(ReconciliationEvent.Result.FAILURE, ReconciliationEvent.Result.VALIDATION_ERROR);
@@ -214,12 +215,12 @@ public class ReconciliationIT extends ScenarioITBase {
         // Action: Create, update, and delete a resource
         ApplicationService app = TestDataBuilder.applicationService().name("multi-listener-app").appName("multi-listener-app").createIn(k8sClient);
 
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         app.getSpec().setName("multi-listener-app-updated");
-        store.update("ApplicationService", "default", "multi-listener-app", app);
+        store.update(CRDKind.APPLICATION_SERVICE, "default", "multi-listener-app", app);
 
-        store.delete("ApplicationService", "default", "multi-listener-app");
+        store.delete(CRDKind.APPLICATION_SERVICE, "default", "multi-listener-app");
 
         // Verify: All listeners received all 6 events (2 per operation × 3 operations)
         assertThat(listener1Events)
@@ -283,7 +284,7 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Create complete ownership chain
         ApplicationService app = TestDataBuilder.applicationService().name("metadata-app").appName("metadata-app").createIn(k8sClient);
-        store.create("ApplicationService", "default", app);
+        store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
         VirtualCluster vc = TestDataBuilder.virtualCluster()
                 .name("metadata-vc")
@@ -291,13 +292,13 @@ public class ReconciliationIT extends ScenarioITBase {
                 .applicationServiceRef("metadata-app")
                 .ownedBy(app)
                 .createIn(k8sClient);
-        store.create("VirtualCluster", "default", vc);
+        store.create(CRDKind.VIRTUAL_CLUSTER, "default", vc);
 
         // Verify: Each resource type triggers correct events
         assertThat(receivedEvents).hasSizeGreaterThanOrEqualTo(4); // At least 2 per resource
 
         // Find ApplicationService events
-        List<ReconciliationEvent> appEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals("ApplicationService")).toList();
+        List<ReconciliationEvent> appEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals(CRDKind.APPLICATION_SERVICE)).toList();
 
         assertThat(appEvents)
                 .hasSize(2);
@@ -307,7 +308,7 @@ public class ReconciliationIT extends ScenarioITBase {
                 .isEqualTo("default");
 
         // Find VirtualCluster events
-        List<ReconciliationEvent> vcEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals("VirtualCluster")).toList();
+        List<ReconciliationEvent> vcEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals(CRDKind.VIRTUAL_CLUSTER)).toList();
 
         assertThat(vcEvents)
                 .hasSize(2);

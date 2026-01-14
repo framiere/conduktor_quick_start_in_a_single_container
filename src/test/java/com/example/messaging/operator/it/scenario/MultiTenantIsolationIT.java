@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.validation.ValidationResult;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import java.util.List;
@@ -105,71 +106,71 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         setupMultiTenantEnvironment();
 
         // Verify both tenants exist in store
-        List<HasMetadata> apps = store.list("ApplicationService", "default");
+        List<HasMetadata> apps = store.list(CRDKind.APPLICATION_SERVICE, "default");
         assertThat(apps)
                 .as("Should have 2 ApplicationServices")
                 .hasSize(2);
 
-        List<HasMetadata> vcs = store.list("VirtualCluster", "default");
+        List<HasMetadata> vcs = store.list(CRDKind.VIRTUAL_CLUSTER, "default");
         assertThat(vcs)
                 .as("Should have 2 VirtualClusters")
                 .hasSize(2);
 
-        List<HasMetadata> sas = store.list("ServiceAccount", "default");
+        List<HasMetadata> sas = store.list(CRDKind.SERVICE_ACCOUNT, "default");
         assertThat(sas)
                 .as("Should have 2 ServiceAccounts")
                 .hasSize(2);
 
-        List<HasMetadata> topics = store.list("Topic", "default");
+        List<HasMetadata> topics = store.list(CRDKind.TOPIC, "default");
         assertThat(topics)
                 .as("Should have 2 Topics")
                 .hasSize(2);
 
         // Verify app1 resources
-        ApplicationService app1 = (ApplicationService) store.get("ApplicationService", "default", "app1");
+        ApplicationService app1 = store.get(CRDKind.APPLICATION_SERVICE, "default", "app1");
         assertThat(app1)
                 .isNotNull();
         assertThat(app1.getSpec().getName())
                 .isEqualTo("app1");
 
-        VirtualCluster vc1 = (VirtualCluster) store.get("VirtualCluster", "default", "vc1");
+        VirtualCluster vc1 = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "vc1");
         assertThat(vc1)
                 .isNotNull();
         assertThat(vc1.getSpec().getApplicationServiceRef())
                 .isEqualTo("app1");
 
-        ServiceAccount sa1 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app1");
+        ServiceAccount sa1 = store.get(CRDKind.SERVICE_ACCOUNT, "default", "sa-app1");
         assertThat(sa1)
                 .isNotNull();
         assertThat(sa1.getSpec().getApplicationServiceRef())
                 .isEqualTo("app1");
 
-        Topic topic1 = (Topic) store.get("Topic", "default", "orders-events");
+        Topic topic1 = store.get(CRDKind.TOPIC, "default", "orders-events");
         assertThat(topic1)
                 .isNotNull();
         assertThat(topic1.getSpec().getApplicationServiceRef())
                 .isEqualTo("app1");
 
         // Verify app2 resources
-        ApplicationService app2 = (ApplicationService) store.get("ApplicationService", "default", "app2");
+        ApplicationService app2 = store.get(CRDKind.APPLICATION_SERVICE, "default", "app2");
         assertThat(app2)
                 .isNotNull();
         assertThat(app2.getSpec().getName())
                 .isEqualTo("app2");
 
-        VirtualCluster vc2 = (VirtualCluster) store.get("VirtualCluster", "default", "vc2");
+        VirtualCluster vc2 = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "vc2");
         assertThat(vc2)
                 .isNotNull();
         assertThat(vc2.getSpec().getApplicationServiceRef())
                 .isEqualTo("app2");
 
-        ServiceAccount sa2 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app2");
+        ServiceAccount sa2 = store.get(CRDKind.SERVICE_ACCOUNT, "default", "sa-app2");
         assertThat(sa2)
                 .isNotNull();
         assertThat(sa2.getSpec().getApplicationServiceRef())
                 .isEqualTo("app2");
 
-        Topic topic2 = (Topic) store.get("Topic", "default", "payments-events");
+        Topic topic2 = store.get(CRDKind.TOPIC, "default", "payments-events");
         assertThat(topic2)
                 .isNotNull();
         assertThat(topic2.getSpec().getApplicationServiceRef())
@@ -256,7 +257,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
                 .isTrue();
 
         // Create the topic in k8s and store
-        ServiceAccount sa1 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app1");
+        ServiceAccount sa1 = store.get(CRDKind.SERVICE_ACCOUNT, "default", "sa-app1");
         Topic createdApp1Topic = TestDataBuilder.topic()
                 .namespace("default")
                 .name("orders-dlq")
@@ -286,7 +287,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
                 .isTrue();
 
         // Create the topic in k8s and store
-        ServiceAccount sa2 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app2");
+        ServiceAccount sa2 = store.get(CRDKind.SERVICE_ACCOUNT, "default", "sa-app2");
         Topic createdApp2Topic = TestDataBuilder.topic()
                 .namespace("default")
                 .name("payments-dlq")
@@ -300,7 +301,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         syncToStore(createdApp2Topic);
 
         // Verify both tenants have 2 topics each
-        List<HasMetadata> allTopics = store.list("Topic", "default");
+        List<HasMetadata> allTopics = store.list(CRDKind.TOPIC, "default");
         assertThat(allTopics)
                 .as("Should have 4 topics total (2 per tenant)")
                 .hasSize(4);
@@ -323,7 +324,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         Topic updatedApp1Topic = k8sClient.resource(app1Topic).update();
         assertThat(updatedApp1Topic.getSpec().getPartitions())
                 .isEqualTo(6);
-        store.update("Topic", "default", app1Topic.getMetadata().getName(), updatedApp1Topic);
+        store.update(CRDKind.TOPIC, "default", app1Topic.getMetadata().getName(), updatedApp1Topic);
 
         // App2 updates its own topic - should succeed
         Topic app2Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("payments-events").get();
@@ -331,14 +332,14 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         Topic updatedApp2Topic = k8sClient.resource(app2Topic).update();
         assertThat(updatedApp2Topic.getSpec().getPartitions())
                 .isEqualTo(6);
-        store.update("Topic", "default", app2Topic.getMetadata().getName(), updatedApp2Topic);
+        store.update(CRDKind.TOPIC, "default", app2Topic.getMetadata().getName(), updatedApp2Topic);
 
         // Verify both updates succeeded independently
-        Topic verifyApp1 = (Topic) store.get("Topic", "default", "orders-events");
+        Topic verifyApp1 = store.get(CRDKind.TOPIC, "default", "orders-events");
         assertThat(verifyApp1.getSpec().getPartitions())
                 .isEqualTo(6);
 
-        Topic verifyApp2 = (Topic) store.get("Topic", "default", "payments-events");
+        Topic verifyApp2 = store.get(CRDKind.TOPIC, "default", "payments-events");
         assertThat(verifyApp2.getSpec().getPartitions())
                 .isEqualTo(6);
     }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ComponentITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.validation.ValidationResult;
 import org.junit.jupiter.api.Test;
 
@@ -134,7 +135,7 @@ public class OwnershipValidatorIT extends ComponentITBase {
         syncAllToStore();
 
         // Get existing cluster from store
-        VirtualCluster existingCluster = store.get("VirtualCluster", "default", "test-cluster");
+        VirtualCluster existingCluster = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
         assertThat(existingCluster)
                 .isNotNull();
 
@@ -172,7 +173,7 @@ public class OwnershipValidatorIT extends ComponentITBase {
         syncAllToStore();
 
         // Get existing cluster from store
-        VirtualCluster existingCluster = store.get("VirtualCluster", "default", "test-cluster");
+        VirtualCluster existingCluster = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
         assertThat(existingCluster)
                 .isNotNull();
         assertThat(existingCluster.getSpec().getClusterId())

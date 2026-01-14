@@ -2,6 +2,7 @@ package com.example.messaging.operator.events;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.example.messaging.operator.store.CRDKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +30,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .applicationService(TEST_APP_SERVICE)
@@ -41,7 +42,7 @@ class ReconciliationEventTest {
                 assertThat(e.getOperation())
                         .isEqualTo(ReconciliationEvent.Operation.CREATE);
                 assertThat(e.getResourceKind())
-                        .isEqualTo("Topic");
+                        .isEqualTo(CRDKind.TOPIC);
                 assertThat(e.getResourceName())
                         .isEqualTo(TEST_RESOURCE);
                 assertThat(e.getResourceNamespace())
@@ -64,7 +65,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .applicationService(TEST_APP_SERVICE)
@@ -98,7 +99,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("VirtualCluster")
+                    .resourceKind(CRDKind.VIRTUAL_CLUSTER)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .applicationService(TEST_APP_SERVICE)
@@ -127,7 +128,7 @@ class ReconciliationEventTest {
             assertThatThrownBy(() -> ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     // Missing operation
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .build()).isInstanceOf(NullPointerException.class).hasMessageContaining("operation");
@@ -139,7 +140,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.UPDATE)
-                    .resourceKind("ServiceAccount")
+                    .resourceKind(CRDKind.SERVICE_ACCOUNT)
                     .resourceName("orders-sa")
                     .resourceNamespace("production")
                     .build();
@@ -154,7 +155,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.UPDATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -190,7 +191,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .build();
@@ -219,7 +220,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .build();
@@ -254,7 +255,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .build();
@@ -287,7 +288,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName(TEST_RESOURCE)
                     .resourceNamespace(TEST_NAMESPACE)
                     .build();
@@ -334,7 +335,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -345,7 +346,7 @@ class ReconciliationEventTest {
             assertThat(events).hasSize(1).first().satisfies(e -> {
                 assertThat(e.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
                 assertThat(e.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-                assertThat(e.getResourceKind()).isEqualTo("Topic");
+                assertThat(e.getResourceKind()).isEqualTo(CRDKind.TOPIC);
                 assertThat(e.getResourceName()).isEqualTo("orders-events");
                 assertThat(e.getResourceNamespace()).isEqualTo("production");
                 assertThat(e.getApplicationService()).isEqualTo("orders-service");
@@ -362,7 +363,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.UPDATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -391,7 +392,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.DELETE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -419,7 +420,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("VirtualCluster")
+                    .resourceKind(CRDKind.VIRTUAL_CLUSTER)
                     .resourceName("prod-cluster")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -452,7 +453,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event1 = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -466,7 +467,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -500,7 +501,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event1 = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -514,7 +515,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.CREATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -544,7 +545,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event1 = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.UPDATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -557,7 +558,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.UPDATE)
-                    .resourceKind("Topic")
+                    .resourceKind(CRDKind.TOPIC)
                     .resourceName("orders-events")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -589,7 +590,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event1 = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
                     .operation(ReconciliationEvent.Operation.DELETE)
-                    .resourceKind("ACL")
+                    .resourceKind(CRDKind.ACL)
                     .resourceName("orders-events-rw")
                     .resourceNamespace("production")
                     .applicationService("orders-service")
@@ -602,7 +603,7 @@ class ReconciliationEventTest {
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.AFTER)
                     .operation(ReconciliationEvent.Operation.DELETE)
-                    .resourceKind("ACL")
+                    .resourceKind(CRDKind.ACL)
                     .resourceName("orders-events-rw")
                     .resourceNamespace("production")
                     .applicationService("orders-service")

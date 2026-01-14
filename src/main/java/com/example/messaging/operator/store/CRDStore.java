@@ -27,11 +27,11 @@ public class CRDStore {
 
     private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
-    private String getKey(String kind, String namespace, String name) {
-        return String.format("%s/%s/%s", kind, namespace, name);
+    private String getKey(CRDKind kind, String namespace, String name) {
+        return kind.getValue() + "/" + namespace + "/" + name;
     }
 
-    public <T> T create(String kind, String namespace, T resource) {
+    public <T> T create(CRDKind kind, String namespace, T resource) {
         String name = getName(resource);
         String appService = getApplicationServiceRef(resource);
 
@@ -93,7 +93,9 @@ public class CRDStore {
             setResourceVersion(resource, String.valueOf(version));
             setUid(resource, UUID.randomUUID().toString());
 
-            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of(
+                    "resource", resource,
+                    "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()
@@ -134,7 +136,7 @@ public class CRDStore {
         }
     }
 
-    public <T> T update(String kind, String namespace, String name, T resource) {
+    public <T> T update(CRDKind kind, String namespace, String name, T resource) {
         String appService = getApplicationServiceRef(resource);
 
         ReconciliationEvent event1 = ReconciliationEvent.builder()
@@ -194,7 +196,9 @@ public class CRDStore {
             long version = resourceVersionCounter.getAndIncrement();
             setResourceVersion(resource, String.valueOf(version));
 
-            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of(
+                    "resource", resource,
+                    "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()
@@ -236,25 +240,25 @@ public class CRDStore {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(String kind, String namespace, String name) {
+    public <T> T get(CRDKind kind, String namespace, String name) {
         String key = getKey(kind, namespace, name);
         Map<String, Object> entry = store.get(key);
         return entry != null ? (T) entry.get("resource") : null;
     }
 
-    public <T> List<T> list(String kind, String namespace) {
+    public <T> List<T> list(CRDKind kind, String namespace) {
         return store.entrySet()
                 .stream()
-                .filter(e -> e.getKey().startsWith(kind + "/" + namespace + "/"))
+                .filter(e -> e.getKey().startsWith(kind.getValue() + "/" + namespace + "/"))
                 .map(e -> (T) e.getValue().get("resource"))
                 .collect(Collectors.toList());
     }
 
-    public boolean delete(String kind, String namespace, String name) {
+    public boolean delete(CRDKind kind, String namespace, String name) {
         return delete(kind, namespace, name, null);
     }
 
-    public boolean delete(String kind, String namespace, String name, String requestingAppService) {
+    public boolean delete(CRDKind kind, String namespace, String name, String requestingAppService) {
         // Get resource before deletion to extract appService
         Object existingResource = get(kind, namespace, name);
         String appService = existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;

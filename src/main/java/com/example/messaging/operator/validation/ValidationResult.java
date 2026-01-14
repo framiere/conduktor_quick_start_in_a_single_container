@@ -16,8 +16,8 @@ public class ValidationResult {
         return new ValidationResult(true, null);
     }
 
-    public static ValidationResult invalid(String message) {
-        return new ValidationResult(false, message);
+    public static ValidationResult invalid(String message, Object... args) {
+        return new ValidationResult(false, String.format(message == null ? "" : message, args));
     }
 
     public boolean isValid() {

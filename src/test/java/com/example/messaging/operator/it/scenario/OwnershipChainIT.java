@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.validation.ValidationResult;
 import org.junit.jupiter.api.Test;
 
@@ -214,43 +215,43 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .isTrue();
 
         // Verify all resources exist in store
-        assertThat(store.list("ApplicationService", "default"))
+        assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default"))
                 .hasSize(1);
-        assertThat(store.list("VirtualCluster", "default"))
+        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default"))
                 .hasSize(1);
-        assertThat(store.list("ServiceAccount", "default"))
+        assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default"))
                 .hasSize(1);
-        assertThat(store.list("Topic", "default"))
+        assertThat(store.list(CRDKind.TOPIC, "default"))
                 .hasSize(2);
-        assertThat(store.list("ACL", "default"))
+        assertThat(store.list(CRDKind.ACL, "default"))
                 .hasSize(1);
 
         // Verify ownership chain integrity
-        ApplicationService appFromStore = (ApplicationService) store.get("ApplicationService", "default", "orders-app");
+        ApplicationService appFromStore = store.get(CRDKind.APPLICATION_SERVICE, "default", "orders-app");
         assertThat(appFromStore)
                 .isNotNull();
         assertThat(appFromStore.getSpec().getName())
                 .isEqualTo("orders-app");
 
-        VirtualCluster vcFromStore = (VirtualCluster) store.get("VirtualCluster", "default", "prod-cluster");
+        VirtualCluster vcFromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "prod-cluster");
         assertThat(vcFromStore)
                 .isNotNull();
         assertThat(vcFromStore.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        ServiceAccount saFromStore = (ServiceAccount) store.get("ServiceAccount", "default", "orders-sa");
+        ServiceAccount saFromStore = store.get(CRDKind.SERVICE_ACCOUNT, "default", "orders-sa");
         assertThat(saFromStore)
                 .isNotNull();
         assertThat(saFromStore.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        Topic topic1FromStore = (Topic) store.get("Topic", "default", "orders-events");
+        Topic topic1FromStore = store.get(CRDKind.TOPIC, "default", "orders-events");
         assertThat(topic1FromStore)
                 .isNotNull();
         assertThat(topic1FromStore.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        ACL aclFromStore = (ACL) store.get("ACL", "default", "orders-read");
+        ACL aclFromStore = store.get(CRDKind.ACL, "default", "orders-read");
         assertThat(aclFromStore)
                 .isNotNull();
         assertThat(aclFromStore.getSpec().getApplicationServiceRef())

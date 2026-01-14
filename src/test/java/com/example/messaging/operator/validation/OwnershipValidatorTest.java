@@ -3,6 +3,7 @@ package com.example.messaging.operator.validation;
 import static org.assertj.core.api.Assertions.*;
 
 import com.example.messaging.operator.crd.*;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.store.CRDStore;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ class OwnershipValidatorTest {
         @DisplayName("should allow VirtualCluster when ApplicationService exists")
         void testVirtualClusterCreateWithExistingAppService() {
             // Setup
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             // Test
             VirtualCluster vCluster = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
@@ -86,8 +87,8 @@ class OwnershipValidatorTest {
         @DisplayName("should allow ServiceAccount when ApplicationService and VirtualCluster exist")
         void testServiceAccountCreateWithValidChain() {
             // Setup ownership chain
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
 
             // Test
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
@@ -115,7 +116,7 @@ class OwnershipValidatorTest {
         @DisplayName("should reject ServiceAccount when VirtualCluster does not exist")
         void testServiceAccountCreateWithMissingVirtualCluster() {
             // Setup only ApplicationService
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             // Test
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, "nonexistent-cluster", APP_SERVICE);
@@ -132,9 +133,9 @@ class OwnershipValidatorTest {
         @DisplayName("should reject ServiceAccount when VirtualCluster is owned by different ApplicationService")
         void testServiceAccountCreateWithWrongOwner() {
             // Setup: VirtualCluster owned by OTHER_APP_SERVICE
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create ServiceAccount referencing APP_SERVICE
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
@@ -181,10 +182,10 @@ class OwnershipValidatorTest {
         @DisplayName("should reject Topic when ServiceAccount is owned by different ApplicationService")
         void testTopicCreateWithWrongServiceAccountOwner() {
             // Setup: ServiceAccount owned by OTHER_APP_SERVICE
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
-            store.create("ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(CRDKind.SERVICE_ACCOUNT, NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create Topic referencing APP_SERVICE
             Topic topic = buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE);
@@ -203,7 +204,7 @@ class OwnershipValidatorTest {
         void testACLCreateWithValidChain() {
             // Setup complete ownership chain
             setupCompleteOwnershipChain();
-            store.create("Topic", NAMESPACE, buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE));
+            store.create(CRDKind.TOPIC, NAMESPACE, buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE));
 
             // Test
             ACL acl = buildACL("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
@@ -406,9 +407,9 @@ class OwnershipValidatorTest {
     // ==================== HELPER METHODS ====================
 
     private void setupCompleteOwnershipChain() {
-        store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-        store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
-        store.create("ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE));
+        store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+        store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
+        store.create(CRDKind.SERVICE_ACCOUNT, NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE));
     }
 
     private ApplicationService buildApplicationService(String name) {

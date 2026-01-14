@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ComponentITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,7 @@ public class CRDStoreIT extends ComponentITBase {
         syncToStore(app);
 
         // Verify resource exists in store
-        ApplicationService fromStore = store.get("ApplicationService", "default", "test-app");
+        ApplicationService fromStore = store.get(CRDKind.APPLICATION_SERVICE, "default", "test-app");
         assertThat(fromStore)
                 .isNotNull();
         assertThat(fromStore.getMetadata().getName())
@@ -100,7 +101,7 @@ public class CRDStoreIT extends ComponentITBase {
         syncToStore(topic3);
 
         // List all topics from store
-        List<Topic> topics = store.list("Topic", "default");
+        List<Topic> topics = store.list(CRDKind.TOPIC, "default");
 
         // Verify all topics are present
         assertThat(topics)
@@ -129,7 +130,7 @@ public class CRDStoreIT extends ComponentITBase {
         syncToStore(cluster);
 
         // Verify initial state
-        VirtualCluster fromStore = store.get("VirtualCluster", "default", "test-cluster");
+        VirtualCluster fromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
         assertThat(fromStore)
                 .isNotNull();
         assertThat(fromStore.getSpec().getClusterId())
@@ -140,7 +141,7 @@ public class CRDStoreIT extends ComponentITBase {
         fromStore.getSpec().setClusterId("updated-cluster-id");
 
         // Update in store
-        VirtualCluster updated = store.update("VirtualCluster", "default", "test-cluster", fromStore);
+        VirtualCluster updated = store.update(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster", fromStore);
 
         // Verify update
         assertThat(updated)
@@ -151,7 +152,7 @@ public class CRDStoreIT extends ComponentITBase {
                 .isNotEqualTo(originalVersion);
 
         // Verify persisted in store
-        VirtualCluster fromStoreAfterUpdate = store.get("VirtualCluster", "default", "test-cluster");
+        VirtualCluster fromStoreAfterUpdate = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
         assertThat(fromStoreAfterUpdate.getSpec().getClusterId())
                 .isEqualTo("updated-cluster-id");
     }
@@ -184,21 +185,21 @@ public class CRDStoreIT extends ComponentITBase {
         syncToStore(sa);
 
         // Verify resource exists
-        ServiceAccount fromStore = store.get("ServiceAccount", "default", "test-sa");
+        ServiceAccount fromStore = store.get(CRDKind.SERVICE_ACCOUNT, "default", "test-sa");
         assertThat(fromStore).isNotNull();
 
         // Delete from store
-        boolean deleted = store.delete("ServiceAccount", "default", "test-sa");
+        boolean deleted = store.delete(CRDKind.SERVICE_ACCOUNT, "default", "test-sa");
         assertThat(deleted)
                 .isTrue();
 
         // Verify resource no longer exists
-        ServiceAccount afterDelete = store.get("ServiceAccount", "default", "test-sa");
+        ServiceAccount afterDelete = store.get(CRDKind.SERVICE_ACCOUNT, "default", "test-sa");
         assertThat(afterDelete)
                 .isNull();
 
         // Verify delete of non-existent resource returns false
-        boolean deletedAgain = store.delete("ServiceAccount", "default", "test-sa");
+        boolean deletedAgain = store.delete(CRDKind.SERVICE_ACCOUNT, "default", "test-sa");
         assertThat(deletedAgain)
                 .isFalse();
     }

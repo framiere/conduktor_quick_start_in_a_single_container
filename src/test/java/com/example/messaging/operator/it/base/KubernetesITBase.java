@@ -1,6 +1,7 @@
 package com.example.messaging.operator.it.base;
 
 import com.example.messaging.operator.crd.*;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -59,7 +60,7 @@ public abstract class KubernetesITBase {
      * Sync a resource to CRDStore (simulates watch event)
      */
     protected void syncToStore(HasMetadata resource) {
-        String kind = resource.getKind();
+        CRDKind kind = CRDKind.fromValue(resource.getKind());
         String namespace = resource.getMetadata().getNamespace();
         store.create(kind, namespace, resource);
     }

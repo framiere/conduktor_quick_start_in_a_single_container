@@ -42,7 +42,7 @@ class CRDStoreTest {
         void testCreateAssignsResourceVersion() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
 
-            ApplicationService created = store.create("ApplicationService", NAMESPACE, appService);
+            ApplicationService created = store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
             assertThat(created.getMetadata().getResourceVersion())
                     .isNotNull()
@@ -54,7 +54,7 @@ class CRDStoreTest {
         void testCreateAssignsUID() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
 
-            ApplicationService created = store.create("ApplicationService", NAMESPACE, appService);
+            ApplicationService created = store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
             assertThat(created.getMetadata().getUid())
                     .isNotNull()
@@ -67,8 +67,8 @@ class CRDStoreTest {
             ApplicationService app1 = buildApplicationService("app1");
             ApplicationService app2 = buildApplicationService("app2");
 
-            ApplicationService created1 = store.create("ApplicationService", NAMESPACE, app1);
-            ApplicationService created2 = store.create("ApplicationService", NAMESPACE, app2);
+            ApplicationService created1 = store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, app1);
+            ApplicationService created2 = store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, app2);
 
             assertThat(created1.getMetadata().getResourceVersion())
                     .isEqualTo("1");
@@ -80,9 +80,9 @@ class CRDStoreTest {
         @DisplayName("should throw exception when creating duplicate resource")
         void testCreateDuplicateThrowsException() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
-            store.create("ApplicationService", NAMESPACE, appService);
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
-            assertThatThrownBy(() -> store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE)))
+            assertThatThrownBy(() -> store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE)))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource already exists");
         }
@@ -99,7 +99,7 @@ class CRDStoreTest {
             });
 
             ApplicationService appService = buildApplicationService(APP_SERVICE);
-            store.create("ApplicationService", NAMESPACE, appService);
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
             latch.await(1, TimeUnit.SECONDS);
 
@@ -125,10 +125,10 @@ class CRDStoreTest {
             });
 
             ApplicationService appService = buildApplicationService(APP_SERVICE);
-            store.create("ApplicationService", NAMESPACE, appService);
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
             try {
-                store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+                store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
             } catch (IllegalStateException e) {
                 // Expected
             }
@@ -149,7 +149,7 @@ class CRDStoreTest {
         void testCreateEnforcesOwnershipForVirtualCluster() {
             VirtualCluster vCluster = buildVirtualCluster("prod-cluster", "nonexistent-app");
 
-            assertThatThrownBy(() -> store.create("VirtualCluster", NAMESPACE, vCluster))
+            assertThatThrownBy(() -> store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, vCluster))
                     .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
@@ -157,10 +157,10 @@ class CRDStoreTest {
         @Test
         @DisplayName("should allow VirtualCluster create when ApplicationService exists")
         void testCreateAllowsVirtualClusterWithValidOwnership() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             VirtualCluster vCluster = buildVirtualCluster("prod-cluster", APP_SERVICE);
-            VirtualCluster created = store.create("VirtualCluster", NAMESPACE, vCluster);
+            VirtualCluster created = store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, vCluster);
 
             assertThat(created)
                     .isNotNull();
@@ -179,10 +179,10 @@ class CRDStoreTest {
         @DisplayName("should update resource and increment resource version")
         void testUpdateIncrementsResourceVersion() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
-            store.create("ApplicationService", NAMESPACE, appService);
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
             appService.getSpec().setName("updated-name");
-            ApplicationService updated = store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService);
+            ApplicationService updated = store.update(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE, appService);
 
             assertThat(updated.getMetadata().getResourceVersion())
                     .isEqualTo("2");
@@ -193,7 +193,7 @@ class CRDStoreTest {
         void testUpdateNonExistentThrowsException() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
 
-            assertThatThrownBy(() -> store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService))
+            assertThatThrownBy(() -> store.update(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE, appService))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource not found");
         }
@@ -201,7 +201,7 @@ class CRDStoreTest {
         @Test
         @DisplayName("should publish BEFORE and AFTER events on successful update")
         void testUpdatePublishesEvents() throws InterruptedException {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             List<ReconciliationEvent> events = new ArrayList<>();
             CountDownLatch latch = new CountDownLatch(2); // BEFORE + AFTER
@@ -211,9 +211,9 @@ class CRDStoreTest {
                 latch.countDown();
             });
 
-            ApplicationService appService = store.get("ApplicationService", NAMESPACE, APP_SERVICE);
+            ApplicationService appService = store.get(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE);
             appService.getSpec().setName("updated");
-            store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService);
+            store.update(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE, appService);
 
             latch.await(1, TimeUnit.SECONDS);
 
@@ -231,14 +231,14 @@ class CRDStoreTest {
         @DisplayName("should enforce ownership immutability on update")
         void testUpdateEnforcesOwnershipImmutability() {
             // Setup ownership chain
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("other-service"));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("other-service"));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
             // Try to change owner - create new VirtualCluster with different owner
             VirtualCluster modifiedCluster = buildVirtualCluster("prod-cluster", "other-service");
 
-            assertThatThrownBy(() -> store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster))
+            assertThatThrownBy(() -> store.update(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", modifiedCluster))
                     .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed")
                     .hasMessageContaining("Cannot change applicationServiceRef");
@@ -247,13 +247,13 @@ class CRDStoreTest {
         @Test
         @DisplayName("should allow update when ownership unchanged")
         void testUpdateAllowsWhenOwnershipUnchanged() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
-            VirtualCluster vCluster = store.get("VirtualCluster", NAMESPACE, "prod-cluster");
+            VirtualCluster vCluster = store.get(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster");
             vCluster.getSpec().setClusterId("prod-cluster-updated");
 
-            VirtualCluster updated = store.update("VirtualCluster", NAMESPACE, "prod-cluster", vCluster);
+            VirtualCluster updated = store.update(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", vCluster);
 
             assertThat(updated.getSpec().getClusterId())
                     .isEqualTo("prod-cluster-updated");
@@ -269,20 +269,20 @@ class CRDStoreTest {
         @Test
         @DisplayName("should delete existing resource")
         void testDeleteExistingResource() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
-            boolean deleted = store.delete("ApplicationService", NAMESPACE, APP_SERVICE);
+            boolean deleted = store.delete(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE);
 
             assertThat(deleted)
                     .isTrue();
-            assertThat(store.<ApplicationService>get("ApplicationService", NAMESPACE, APP_SERVICE))
+            assertThat(store.<ApplicationService>get(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE))
                     .isNull();
         }
 
         @Test
         @DisplayName("should return false when deleting non-existent resource")
         void testDeleteNonExistentResource() {
-            boolean deleted = store.delete("ApplicationService", NAMESPACE, "nonexistent");
+            boolean deleted = store.delete(CRDKind.APPLICATION_SERVICE, NAMESPACE, "nonexistent");
 
             assertThat(deleted)
                     .isFalse();
@@ -291,7 +291,7 @@ class CRDStoreTest {
         @Test
         @DisplayName("should publish BEFORE and AFTER events on successful delete")
         void testDeletePublishesEvents() throws InterruptedException {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             List<ReconciliationEvent> events = new ArrayList<>();
             CountDownLatch latch = new CountDownLatch(2); // BEFORE + AFTER
@@ -301,7 +301,7 @@ class CRDStoreTest {
                 latch.countDown();
             });
 
-            store.delete("ApplicationService", NAMESPACE, APP_SERVICE);
+            store.delete(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE);
 
             latch.await(1, TimeUnit.SECONDS);
 
@@ -326,7 +326,7 @@ class CRDStoreTest {
                 latch.countDown();
             });
 
-            store.delete("ApplicationService", NAMESPACE, "nonexistent");
+            store.delete(CRDKind.APPLICATION_SERVICE, NAMESPACE, "nonexistent");
 
             latch.await(1, TimeUnit.SECONDS);
 
@@ -339,12 +339,12 @@ class CRDStoreTest {
         @DisplayName("should enforce ownership on delete")
         void testDeleteEnforcesOwnership() {
             // Setup
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("other-service"));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("other-service"));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
             // Try to delete with wrong owner
-            assertThatThrownBy(() -> store.delete("VirtualCluster", NAMESPACE, "prod-cluster", "other-service"))
+            assertThatThrownBy(() -> store.delete(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", "other-service"))
                     .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
@@ -352,10 +352,10 @@ class CRDStoreTest {
         @Test
         @DisplayName("should allow delete by owner")
         void testDeleteAllowsByOwner() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
-            boolean deleted = store.delete("VirtualCluster", NAMESPACE, "prod-cluster", APP_SERVICE);
+            boolean deleted = store.delete(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", APP_SERVICE);
 
             assertThat(deleted)
                     .isTrue();
@@ -371,9 +371,9 @@ class CRDStoreTest {
         @Test
         @DisplayName("should get existing resource")
         void testGetExistingResource() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
-            ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, APP_SERVICE);
+            ApplicationService retrieved = store.get(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE);
 
             assertThat(retrieved)
                     .isNotNull();
@@ -384,7 +384,7 @@ class CRDStoreTest {
         @Test
         @DisplayName("should return null for non-existent resource")
         void testGetNonExistentResource() {
-            ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, "nonexistent");
+            ApplicationService retrieved = store.get(CRDKind.APPLICATION_SERVICE, NAMESPACE, "nonexistent");
 
             assertThat(retrieved)
                     .isNull();
@@ -394,9 +394,9 @@ class CRDStoreTest {
         @DisplayName("should get resource with correct metadata")
         void testGetResourceWithMetadata() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
-            store.create("ApplicationService", NAMESPACE, appService);
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, appService);
 
-            ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, APP_SERVICE);
+            ApplicationService retrieved = store.get(CRDKind.APPLICATION_SERVICE, NAMESPACE, APP_SERVICE);
 
             assertThat(retrieved.getMetadata().getResourceVersion())
                     .isEqualTo("1");
@@ -414,11 +414,11 @@ class CRDStoreTest {
         @Test
         @DisplayName("should list all resources of a kind in namespace")
         void testListAllResources() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app1"));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app3"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app1"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app2"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app3"));
 
-            List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
+            List<ApplicationService> list = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
 
             assertThat(list)
                     .hasSize(3);
@@ -427,7 +427,7 @@ class CRDStoreTest {
         @Test
         @DisplayName("should return empty list when no resources exist")
         void testListEmptyNamespace() {
-            List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
+            List<ApplicationService> list = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
 
             assertThat(list)
                     .isEmpty();
@@ -436,10 +436,10 @@ class CRDStoreTest {
         @Test
         @DisplayName("should not list resources from different namespace")
         void testListIsolatesNamespaces() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app1"));
-            store.create("ApplicationService", "other-namespace", buildApplicationService("app2"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app1"));
+            store.create(CRDKind.APPLICATION_SERVICE, "other-namespace", buildApplicationService("app2"));
 
-            List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
+            List<ApplicationService> list = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
 
             assertThat(list)
                     .hasSize(1);
@@ -450,11 +450,11 @@ class CRDStoreTest {
         @Test
         @DisplayName("should not list different resource kinds")
         void testListIsolatesResourceKinds() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("cluster1", APP_SERVICE));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
+            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("cluster1", APP_SERVICE));
 
-            List<ApplicationService> apps = store.list("ApplicationService", NAMESPACE);
-            List<VirtualCluster> clusters = store.list("VirtualCluster", NAMESPACE);
+            List<ApplicationService> apps = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
+            List<VirtualCluster> clusters = store.list(CRDKind.VIRTUAL_CLUSTER, NAMESPACE);
 
             assertThat(apps)
                     .hasSize(1);
@@ -472,12 +472,12 @@ class CRDStoreTest {
         @Test
         @DisplayName("should clear all resources")
         void testClearAllResources() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app1"));
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app1"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app2"));
 
             store.clear();
 
-            List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
+            List<ApplicationService> list = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
             assertThat(list)
                     .isEmpty();
         }
@@ -485,9 +485,9 @@ class CRDStoreTest {
         @Test
         @DisplayName("should reset resource version counter")
         void testClearResetsResourceVersion() {
-            store.create("ApplicationService", NAMESPACE, buildApplicationService("app1"));
+            store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app1"));
             store.clear();
-            ApplicationService appService = store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
+            ApplicationService appService = store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app2"));
 
             assertThat(appService.getMetadata().getResourceVersion())
                     .isEqualTo("1");
@@ -511,7 +511,7 @@ class CRDStoreTest {
                 final int index = i;
                 new Thread(() -> {
                     try {
-                        store.create("ApplicationService", NAMESPACE, buildApplicationService("app" + index));
+                        store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("app" + index));
                     } catch (Exception e) {
                         synchronized (exceptions) {
                             exceptions.add(e);
@@ -526,7 +526,7 @@ class CRDStoreTest {
 
             assertThat(exceptions)
                     .isEmpty();
-            assertThat(store.<ApplicationService>list("ApplicationService", NAMESPACE))
+            assertThat(store.<ApplicationService>list(CRDKind.APPLICATION_SERVICE, NAMESPACE))
                     .hasSize(threadCount);
         }
     }

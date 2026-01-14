@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
+import com.example.messaging.operator.store.CRDKind;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(vcOwners)
                 .first()
                 .extracting(OwnerReference::getKind)
-                .isEqualTo("ApplicationService");
+                .isEqualTo(CRDKind.APPLICATION_SERVICE.getValue());
 
         // Create ServiceAccount owned by vc
         ServiceAccount sa = TestDataBuilder.serviceAccount()
@@ -76,7 +77,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(saOwners)
                 .first()
                 .extracting(OwnerReference::getKind)
-                .isEqualTo("VirtualCluster");
+                .isEqualTo(CRDKind.VIRTUAL_CLUSTER.getValue());
 
         // Create Topic owned by sa
         Topic topic = TestDataBuilder.topic()
@@ -105,7 +106,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(topicOwners)
                 .first()
                 .extracting(OwnerReference::getKind)
-                .isEqualTo("ServiceAccount");
+                .isEqualTo(CRDKind.SERVICE_ACCOUNT.getValue());
 
         // Create ACL owned by sa
         ACL acl = TestDataBuilder.acl()
@@ -133,7 +134,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(aclOwners)
                 .first()
                 .extracting(OwnerReference::getKind)
-                .isEqualTo("ServiceAccount");
+                .isEqualTo(CRDKind.SERVICE_ACCOUNT.getValue());
 
         // Step 2: Update resources
 
@@ -142,7 +143,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         Topic updatedTopic = k8sClient.resource(topic).update();
         assertThat(updatedTopic.getSpec().getPartitions())
                 .isEqualTo(12);
-        store.update("Topic", "default", topic.getMetadata().getName(), updatedTopic);
+        store.update(CRDKind.TOPIC, "default", topic.getMetadata().getName(), updatedTopic);
 
         // Update ACL operations
         acl.getSpec().setOperations(List.of(AclCRSpec.Operation.READ, AclCRSpec.Operation.WRITE, AclCRSpec.Operation.DESCRIBE));
@@ -151,50 +152,50 @@ public class CRDLifecycleIT extends ScenarioITBase {
                 .hasSize(3);
         assertThat(updatedAcl.getSpec().getOperations())
                 .contains(AclCRSpec.Operation.DESCRIBE);
-        store.update("ACL", "default", acl.getMetadata().getName(), updatedAcl);
+        store.update(CRDKind.ACL, "default", acl.getMetadata().getName(), updatedAcl);
 
         // Step 3: Verify all resources exist in store
-        assertThat(store.list("ApplicationService", "default"))
+        assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default"))
                 .hasSize(1);
-        assertThat(store.list("VirtualCluster", "default"))
+        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default"))
                 .hasSize(1);
-        assertThat(store.list("ServiceAccount", "default"))
+        assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default"))
                 .hasSize(1);
-        assertThat(store.list("Topic", "default"))
+        assertThat(store.list(CRDKind.TOPIC, "default"))
                 .hasSize(1);
-        assertThat(store.list("ACL", "default"))
+        assertThat(store.list(CRDKind.ACL, "default"))
                 .hasSize(1);
 
         // Step 4: Delete in reverse order (leaf to root)
 
         // Delete ACL
         k8sClient.resource(updatedAcl).delete();
-        store.delete("ACL", "default", updatedAcl.getMetadata().getName());
-        assertThat(store.list("ACL", "default"))
+        store.delete(CRDKind.ACL, "default", updatedAcl.getMetadata().getName());
+        assertThat(store.list(CRDKind.ACL, "default"))
                 .hasSize(0);
 
         // Delete Topic
         k8sClient.resource(updatedTopic).delete();
-        store.delete("Topic", "default", updatedTopic.getMetadata().getName());
-        assertThat(store.list("Topic", "default"))
+        store.delete(CRDKind.TOPIC, "default", updatedTopic.getMetadata().getName());
+        assertThat(store.list(CRDKind.TOPIC, "default"))
                 .hasSize(0);
 
         // Delete ServiceAccount
         k8sClient.resource(sa).delete();
-        store.delete("ServiceAccount", "default", sa.getMetadata().getName());
-        assertThat(store.list("ServiceAccount", "default"))
+        store.delete(CRDKind.SERVICE_ACCOUNT, "default", sa.getMetadata().getName());
+        assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default"))
                 .hasSize(0);
 
         // Delete VirtualCluster
         k8sClient.resource(vc).delete();
-        store.delete("VirtualCluster", "default", vc.getMetadata().getName());
-        assertThat(store.list("VirtualCluster", "default"))
+        store.delete(CRDKind.VIRTUAL_CLUSTER, "default", vc.getMetadata().getName());
+        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default"))
                 .hasSize(0);
 
         // Delete ApplicationService
         k8sClient.resource(app).delete();
-        store.delete("ApplicationService", "default", app.getMetadata().getName());
-        assertThat(store.list("ApplicationService", "default"))
+        store.delete(CRDKind.APPLICATION_SERVICE, "default", app.getMetadata().getName());
+        assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default"))
                 .hasSize(0);
     }
 
@@ -264,25 +265,25 @@ public class CRDLifecycleIT extends ScenarioITBase {
         syncToStore(acl);
 
         // Verify all resources created successfully
-        assertThat(store.list("ApplicationService", "default"))
+        assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default"))
                 .hasSize(1);
-        assertThat(store.list("VirtualCluster", "default"))
+        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default"))
                 .hasSize(1);
-        assertThat(store.list("ServiceAccount", "default"))
+        assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default"))
                 .hasSize(1);
-        assertThat(store.list("Topic", "default"))
+        assertThat(store.list(CRDKind.TOPIC, "default"))
                 .hasSize(2);
-        assertThat(store.list("ACL", "default"))
+        assertThat(store.list(CRDKind.ACL, "default"))
                 .hasSize(1);
 
         // Verify specific resources by name
-        ApplicationService appFromStore = (ApplicationService) store.get("ApplicationService", "default", "orders-app");
+        ApplicationService appFromStore = store.get(CRDKind.APPLICATION_SERVICE, "default", "orders-app");
         assertThat(appFromStore)
                 .isNotNull();
         assertThat(appFromStore.getSpec().getName())
                 .isEqualTo("orders-app");
 
-        VirtualCluster vcFromStore = (VirtualCluster) store.get("VirtualCluster", "default", "prod-cluster");
+        VirtualCluster vcFromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "prod-cluster");
         assertThat(vcFromStore)
                 .isNotNull();
         assertThat(vcFromStore.getSpec().getClusterId())
@@ -290,7 +291,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(vcFromStore.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        ServiceAccount saFromStore = (ServiceAccount) store.get("ServiceAccount", "default", "orders-sa");
+        ServiceAccount saFromStore = store.get(CRDKind.SERVICE_ACCOUNT, "default", "orders-sa");
         assertThat(saFromStore)
                 .isNotNull();
         assertThat(saFromStore.getSpec().getName())
@@ -300,7 +301,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(saFromStore.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        Topic topic1 = (Topic) store.get("Topic", "default", "orders-events");
+        Topic topic1 = store.get(CRDKind.TOPIC, "default", "orders-events");
         assertThat(topic1)
                 .isNotNull();
         assertThat(topic1.getSpec().getName())
@@ -314,7 +315,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(topic1.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        Topic topic2 = (Topic) store.get("Topic", "default", "orders-dlq");
+        Topic topic2 = store.get(CRDKind.TOPIC, "default", "orders-dlq");
         assertThat(topic2)
                 .isNotNull();
         assertThat(topic2.getSpec().getName())
@@ -328,7 +329,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(topic2.getSpec().getApplicationServiceRef())
                 .isEqualTo("orders-app");
 
-        ACL aclFromStore = (ACL) store.get("ACL", "default", "orders-read");
+        ACL aclFromStore = store.get(CRDKind.ACL, "default", "orders-read");
         assertThat(aclFromStore)
                 .isNotNull();
         assertThat(aclFromStore.getSpec().getServiceRef())

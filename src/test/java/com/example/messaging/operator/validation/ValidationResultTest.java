@@ -40,7 +40,7 @@ class ValidationResultTest {
         ValidationResult result = ValidationResult.invalid(null);
 
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isNull();
+        assertThat(result.getMessage()).isEmpty();
     }
 
     @Test

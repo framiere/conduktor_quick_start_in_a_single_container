@@ -1,5 +1,6 @@
 package com.example.messaging.operator.events;
 
+import com.example.messaging.operator.store.CRDKind;
 import java.time.Instant;
 
 import lombok.*;
@@ -26,7 +27,7 @@ public class ReconciliationEvent {
 
     @NonNull private final Phase phase;
     @NonNull private final Operation operation;
-    @NonNull private final String resourceKind;
+    @NonNull private final CRDKind resourceKind;
     @NonNull private final String resourceName;
     @NonNull private final String resourceNamespace;
     private final String applicationService;
@@ -40,7 +41,7 @@ public class ReconciliationEvent {
     private String errorDetails;
 
     public String getResourceReference() {
-        return String.format("%s/%s/%s", resourceKind, resourceNamespace, resourceName);
+        return resourceKind.getValue() + "/" + resourceNamespace + "/" + resourceName;
     }
 
     public boolean isSuccess() {

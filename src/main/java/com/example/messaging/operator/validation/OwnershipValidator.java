@@ -1,8 +1,10 @@
 package com.example.messaging.operator.validation;
 
 import com.example.messaging.operator.crd.*;
+import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.store.CRDStore;
 
+import static com.example.messaging.operator.store.CRDKind.*;
 import static com.example.messaging.operator.validation.ValidationResult.*;
 import static java.lang.String.format;
 
@@ -47,8 +49,7 @@ public class OwnershipValidator {
         }
 
         if (!existingOwner.equals(newOwner)) {
-            return invalid(
-                    format("Cannot change applicationServiceRef from '%s' to '%s'. " + "Only the original owner can modify this resource.", existingOwner, newOwner));
+            return invalid("Cannot change applicationServiceRef from '%s' to '%s'. " + "Only the original owner can modify this resource.", existingOwner, newOwner);
         }
 
         return valid();
@@ -60,15 +61,15 @@ public class OwnershipValidator {
     public ValidationResult validateDelete(Object resource, String requestingOwner) {
         String resourceOwner = getApplicationServiceRef(resource);
 
-        if (!resourceOwner.equals(requestingOwner)) {
-            return invalid(format("ApplicationService '%s' cannot delete resource owned by '%s'", requestingOwner, resourceOwner));
+        if (!requestingOwner.equals(resourceOwner)) {
+            return invalid("ApplicationService '%s' cannot delete resource owned by '%s'", requestingOwner, resourceOwner);
         }
 
         return valid();
     }
 
     private ValidationResult validateApplicationServiceExists(String appServiceName, String namespace) {
-        ApplicationService appService = store.get("ApplicationService", namespace, appServiceName);
+        ApplicationService appService = store.get(APPLICATION_SERVICE, namespace, appServiceName);
         if (appService == null) {
             return invalid("Referenced ApplicationService '" + appServiceName + "' does not exist");
         }
@@ -76,23 +77,23 @@ public class OwnershipValidator {
     }
 
     private ValidationResult validateVirtualClusterExists(String clusterRef, String namespace, String expectedAppService) {
-        VirtualCluster vc = store.get("VirtualCluster", namespace, clusterRef);
+        VirtualCluster vc = store.get(VIRTUAL_CLUSTER, namespace, clusterRef);
         if (vc == null) {
             return invalid("Referenced VirtualCluster '" + clusterRef + "' does not exist");
         }
         if (!vc.getSpec().getApplicationServiceRef().equals(expectedAppService)) {
-            return invalid(format("VirtualCluster '%s' is owned by '%s', not '%s'", clusterRef, vc.getSpec().getApplicationServiceRef(), expectedAppService));
+            return invalid("VirtualCluster '%s' is owned by '%s', not '%s'", clusterRef, vc.getSpec().getApplicationServiceRef(), expectedAppService);
         }
         return valid();
     }
 
     private ValidationResult validateServiceAccountExists(String saRef, String namespace, String expectedAppService) {
-        ServiceAccount sa = store.get("ServiceAccount", namespace, saRef);
+        ServiceAccount sa = store.get(SERVICE_ACCOUNT, namespace, saRef);
         if (sa == null) {
             return invalid("Referenced ServiceAccount '" + saRef + "' does not exist");
         }
         if (!sa.getSpec().getApplicationServiceRef().equals(expectedAppService)) {
-            return invalid(format("ServiceAccount '%s' is owned by '%s', not '%s'", saRef, sa.getSpec().getApplicationServiceRef(), expectedAppService));
+            return invalid("ServiceAccount '%s' is owned by '%s', not '%s'", saRef, sa.getSpec().getApplicationServiceRef(), expectedAppService);
         }
         return valid();
     }
