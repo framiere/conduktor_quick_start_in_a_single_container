@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.example.messaging.operator.webhook.AdmissionResponse.*;
+
 /**
  * Validates admission requests using ownership rules. Integrates with existing OwnershipValidator to enforce immutable ownership and authorization for DELETE operations.
  */
@@ -31,11 +33,11 @@ public class WebhookValidator {
                 return validateDelete(request, resourceClass);
             }
 
-            return AdmissionResponse.allowed(request.getUid());
+            return allowed(request.getUid());
 
         } catch (Exception e) {
             log.error("Validation error for {} {}/{}: {}", request.getOperation(), request.getNamespace(), request.getName(), e.getMessage());
-            return AdmissionResponse.denied(request.getUid(), "Internal validation error: " + e.getMessage());
+            return denied(request.getUid(), "Internal validation error: " + e.getMessage());
         }
     }
 
@@ -47,14 +49,14 @@ public class WebhookValidator {
             ValidationResult result = ownershipValidator.validateUpdate(oldResource, newResource);
 
             if (!result.isValid()) {
-                return AdmissionResponse.denied(request.getUid(), result.getMessage());
+                return denied(request.getUid(), result.getMessage());
             }
 
-            return AdmissionResponse.allowed(request.getUid());
+            return allowed(request.getUid());
 
         } catch (Exception e) {
             log.error("Error validating UPDATE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
-            return AdmissionResponse.denied(request.getUid(), "Failed to validate update: " + e.getMessage());
+            return denied(request.getUid(), "Failed to validate update: " + e.getMessage());
         }
     }
 
@@ -66,11 +68,11 @@ public class WebhookValidator {
 
             log.info("DELETE request for {}/{} by user {}", request.getNamespace(), request.getName(), requestingUser);
 
-            return AdmissionResponse.allowed(request.getUid());
+            return allowed(request.getUid());
 
         } catch (Exception e) {
             log.error("Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
-            return AdmissionResponse.denied(request.getUid(), "Failed to validate delete: " + e.getMessage());
+            return denied(request.getUid(), "Failed to validate delete: " + e.getMessage());
         }
     }
 }

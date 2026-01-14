@@ -40,7 +40,7 @@ public class AdmissionResponse {
         response.setAllowed(false);
         Status status = new Status();
         status.setMessage(message);
-        status.setCode(403);
+        status.setCode(HttpStatus.FORBIDDEN.getCode());
         response.setStatus(status);
         return response;
     }

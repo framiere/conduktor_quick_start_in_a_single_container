@@ -6,6 +6,7 @@ import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.store.CRDStore;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.*;
 
 /**
@@ -390,11 +391,7 @@ class OwnershipValidatorTest {
 
         ServiceAccountSpec spec = new ServiceAccountSpec();
         spec.setName(name.replace("-sa", ""));
-        spec.setDn(new ArrayList<>() {
-            {
-                add("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US");
-            }
-        });
+        spec.setDn(List.of("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US"));
         spec.setClusterRef(clusterRef);
         spec.setApplicationServiceRef(appServiceRef);
         sa.setSpec(spec);

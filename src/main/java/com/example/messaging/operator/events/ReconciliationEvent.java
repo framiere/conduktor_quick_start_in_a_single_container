@@ -1,10 +1,8 @@
 package com.example.messaging.operator.events;
 
 import java.time.Instant;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
+
+import lombok.*;
 
 /**
  * Event emitted during CRD reconciliation operations. Follows Kubernetes Event best practices for operator observability.
@@ -55,21 +53,20 @@ public class ReconciliationEvent {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(phase).append(" ").append(operation).append(" ").append(getResourceReference());
+        String base = phase + " " + operation + " " + getResourceReference();
         if (applicationService != null) {
-            sb.append(" (owner: ").append(applicationService).append(")");
+            base += " (owner: " + applicationService + ")";
         }
         if (result != null) {
-            sb.append(" - ").append(result);
+            base += " - " + result;
         }
         if (resourceVersion != null) {
-            sb.append(" [v").append(resourceVersion).append("]");
+            base += " [v" + resourceVersion + "]";
         }
         if (message != null) {
-            sb.append(": ").append(message);
+            base += ": " + message;
         }
-        return sb.toString();
+        return base;
     }
 
 }

@@ -44,7 +44,9 @@ class CRDStoreTest {
 
             ApplicationService created = store.create("ApplicationService", NAMESPACE, appService);
 
-            assertThat(created.getMetadata().getResourceVersion()).isNotNull().isEqualTo("1");
+            assertThat(created.getMetadata().getResourceVersion())
+                    .isNotNull()
+                    .isEqualTo("1");
         }
 
         @Test
@@ -54,7 +56,9 @@ class CRDStoreTest {
 
             ApplicationService created = store.create("ApplicationService", NAMESPACE, appService);
 
-            assertThat(created.getMetadata().getUid()).isNotNull().isNotEmpty();
+            assertThat(created.getMetadata().getUid())
+                    .isNotNull()
+                    .isNotEmpty();
         }
 
         @Test
@@ -66,8 +70,10 @@ class CRDStoreTest {
             ApplicationService created1 = store.create("ApplicationService", NAMESPACE, app1);
             ApplicationService created2 = store.create("ApplicationService", NAMESPACE, app2);
 
-            assertThat(created1.getMetadata().getResourceVersion()).isEqualTo("1");
-            assertThat(created2.getMetadata().getResourceVersion()).isEqualTo("2");
+            assertThat(created1.getMetadata().getResourceVersion())
+                    .isEqualTo("1");
+            assertThat(created2.getMetadata().getResourceVersion())
+                    .isEqualTo("2");
         }
 
         @Test
@@ -76,7 +82,8 @@ class CRDStoreTest {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
             store.create("ApplicationService", NAMESPACE, appService);
 
-            assertThatThrownBy(() -> store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE))).isInstanceOf(IllegalStateException.class)
+            assertThatThrownBy(() -> store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE)))
+                    .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource already exists");
         }
 
@@ -96,10 +103,14 @@ class CRDStoreTest {
 
             latch.await(1, TimeUnit.SECONDS);
 
-            assertThat(events).hasSize(2);
-            assertThat(events.get(0).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(events.get(1).getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(events.get(1).getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(events)
+                    .hasSize(2);
+            assertThat(events.get(0).getPhase())
+                    .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(events.get(1).getPhase())
+                    .isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(events.get(1).getResult())
+                    .isEqualTo(ReconciliationEvent.Result.SUCCESS);
         }
 
         @Test
@@ -124,10 +135,13 @@ class CRDStoreTest {
 
             latch.await(1, TimeUnit.SECONDS);
 
-            assertThat(events).hasSizeGreaterThanOrEqualTo(3);
+            assertThat(events)
+                    .hasSizeGreaterThanOrEqualTo(3);
             ReconciliationEvent failureEvent = events.get(events.size() - 1);
-            assertThat(failureEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(failureEvent.getResult()).isEqualTo(ReconciliationEvent.Result.FAILURE);
+            assertThat(failureEvent.getPhase())
+                    .isEqualTo(ReconciliationEvent.Phase.AFTER);
+            assertThat(failureEvent.getResult())
+                    .isEqualTo(ReconciliationEvent.Result.FAILURE);
         }
 
         @Test
@@ -135,7 +149,8 @@ class CRDStoreTest {
         void testCreateEnforcesOwnershipForVirtualCluster() {
             VirtualCluster vCluster = buildVirtualCluster("prod-cluster", "nonexistent-app");
 
-            assertThatThrownBy(() -> store.create("VirtualCluster", NAMESPACE, vCluster)).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.create("VirtualCluster", NAMESPACE, vCluster))
+                    .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
@@ -147,8 +162,10 @@ class CRDStoreTest {
             VirtualCluster vCluster = buildVirtualCluster("prod-cluster", APP_SERVICE);
             VirtualCluster created = store.create("VirtualCluster", NAMESPACE, vCluster);
 
-            assertThat(created).isNotNull();
-            assertThat(created.getMetadata().getResourceVersion()).isEqualTo("2");
+            assertThat(created)
+                    .isNotNull();
+            assertThat(created.getMetadata().getResourceVersion())
+                    .isEqualTo("2");
         }
     }
 
@@ -167,7 +184,8 @@ class CRDStoreTest {
             appService.getSpec().setName("updated-name");
             ApplicationService updated = store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService);
 
-            assertThat(updated.getMetadata().getResourceVersion()).isEqualTo("2");
+            assertThat(updated.getMetadata().getResourceVersion())
+                    .isEqualTo("2");
         }
 
         @Test
@@ -175,7 +193,8 @@ class CRDStoreTest {
         void testUpdateNonExistentThrowsException() {
             ApplicationService appService = buildApplicationService(APP_SERVICE);
 
-            assertThatThrownBy(() -> store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService)).isInstanceOf(IllegalStateException.class)
+            assertThatThrownBy(() -> store.update("ApplicationService", NAMESPACE, APP_SERVICE, appService))
+                    .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Resource not found");
         }
 
@@ -198,10 +217,14 @@ class CRDStoreTest {
 
             latch.await(1, TimeUnit.SECONDS);
 
-            assertThat(events).hasSize(2);
-            assertThat(events.get(0).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(events.get(0).getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-            assertThat(events.get(1).getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(events)
+                    .hasSize(2);
+            assertThat(events.get(0).getPhase())
+                    .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(events.get(0).getOperation())
+                    .isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(events.get(1).getResult())
+                    .isEqualTo(ReconciliationEvent.Result.SUCCESS);
         }
 
         @Test
@@ -215,7 +238,8 @@ class CRDStoreTest {
             // Try to change owner - create new VirtualCluster with different owner
             VirtualCluster modifiedCluster = buildVirtualCluster("prod-cluster", "other-service");
 
-            assertThatThrownBy(() -> store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster)).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster))
+                    .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed")
                     .hasMessageContaining("Cannot change applicationServiceRef");
         }
@@ -231,7 +255,8 @@ class CRDStoreTest {
 
             VirtualCluster updated = store.update("VirtualCluster", NAMESPACE, "prod-cluster", vCluster);
 
-            assertThat(updated.getSpec().getClusterId()).isEqualTo("prod-cluster-updated");
+            assertThat(updated.getSpec().getClusterId())
+                    .isEqualTo("prod-cluster-updated");
         }
     }
 
@@ -248,8 +273,10 @@ class CRDStoreTest {
 
             boolean deleted = store.delete("ApplicationService", NAMESPACE, APP_SERVICE);
 
-            assertThat(deleted).isTrue();
-            assertThat(store.<ApplicationService>get("ApplicationService", NAMESPACE, APP_SERVICE)).isNull();
+            assertThat(deleted)
+                    .isTrue();
+            assertThat(store.<ApplicationService>get("ApplicationService", NAMESPACE, APP_SERVICE))
+                    .isNull();
         }
 
         @Test
@@ -257,7 +284,8 @@ class CRDStoreTest {
         void testDeleteNonExistentResource() {
             boolean deleted = store.delete("ApplicationService", NAMESPACE, "nonexistent");
 
-            assertThat(deleted).isFalse();
+            assertThat(deleted)
+                    .isFalse();
         }
 
         @Test
@@ -277,10 +305,14 @@ class CRDStoreTest {
 
             latch.await(1, TimeUnit.SECONDS);
 
-            assertThat(events).hasSize(2);
-            assertThat(events.get(0).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(events.get(0).getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-            assertThat(events.get(1).getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(events)
+                    .hasSize(2);
+            assertThat(events.get(0).getPhase())
+                    .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+            assertThat(events.get(0).getOperation())
+                    .isEqualTo(ReconciliationEvent.Operation.DELETE);
+            assertThat(events.get(1).getResult())
+                    .isEqualTo(ReconciliationEvent.Result.SUCCESS);
         }
 
         @Test
@@ -299,7 +331,8 @@ class CRDStoreTest {
             latch.await(1, TimeUnit.SECONDS);
 
             ReconciliationEvent afterEvent = events.get(1);
-            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.NOT_FOUND);
+            assertThat(afterEvent.getResult())
+                    .isEqualTo(ReconciliationEvent.Result.NOT_FOUND);
         }
 
         @Test
@@ -311,7 +344,8 @@ class CRDStoreTest {
             store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
             // Try to delete with wrong owner
-            assertThatThrownBy(() -> store.delete("VirtualCluster", NAMESPACE, "prod-cluster", "other-service")).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.delete("VirtualCluster", NAMESPACE, "prod-cluster", "other-service"))
+                    .isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
@@ -340,8 +374,10 @@ class CRDStoreTest {
 
             ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, APP_SERVICE);
 
-            assertThat(retrieved).isNotNull();
-            assertThat(retrieved.getSpec().getName()).isEqualTo(APP_SERVICE);
+            assertThat(retrieved)
+                    .isNotNull();
+            assertThat(retrieved.getSpec().getName())
+                    .isEqualTo(APP_SERVICE);
         }
 
         @Test
@@ -349,7 +385,8 @@ class CRDStoreTest {
         void testGetNonExistentResource() {
             ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, "nonexistent");
 
-            assertThat(retrieved).isNull();
+            assertThat(retrieved)
+                    .isNull();
         }
 
         @Test
@@ -360,8 +397,10 @@ class CRDStoreTest {
 
             ApplicationService retrieved = store.get("ApplicationService", NAMESPACE, APP_SERVICE);
 
-            assertThat(retrieved.getMetadata().getResourceVersion()).isEqualTo("1");
-            assertThat(retrieved.getMetadata().getUid()).isNotNull();
+            assertThat(retrieved.getMetadata().getResourceVersion())
+                    .isEqualTo("1");
+            assertThat(retrieved.getMetadata().getUid())
+                    .isNotNull();
         }
     }
 
@@ -380,7 +419,8 @@ class CRDStoreTest {
 
             List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
 
-            assertThat(list).hasSize(3);
+            assertThat(list)
+                    .hasSize(3);
         }
 
         @Test
@@ -388,7 +428,8 @@ class CRDStoreTest {
         void testListEmptyNamespace() {
             List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
 
-            assertThat(list).isEmpty();
+            assertThat(list)
+                    .isEmpty();
         }
 
         @Test
@@ -399,8 +440,10 @@ class CRDStoreTest {
 
             List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
 
-            assertThat(list).hasSize(1);
-            assertThat(list.get(0).getSpec().getName()).isEqualTo("app1");
+            assertThat(list)
+                    .hasSize(1);
+            assertThat(list.get(0).getSpec().getName())
+                    .isEqualTo("app1");
         }
 
         @Test
@@ -412,8 +455,10 @@ class CRDStoreTest {
             List<ApplicationService> apps = store.list("ApplicationService", NAMESPACE);
             List<VirtualCluster> clusters = store.list("VirtualCluster", NAMESPACE);
 
-            assertThat(apps).hasSize(1);
-            assertThat(clusters).hasSize(1);
+            assertThat(apps)
+                    .hasSize(1);
+            assertThat(clusters)
+                    .hasSize(1);
         }
     }
 
@@ -432,7 +477,8 @@ class CRDStoreTest {
             store.clear();
 
             List<ApplicationService> list = store.list("ApplicationService", NAMESPACE);
-            assertThat(list).isEmpty();
+            assertThat(list)
+                    .isEmpty();
         }
 
         @Test
@@ -442,7 +488,8 @@ class CRDStoreTest {
             store.clear();
             ApplicationService appService = store.create("ApplicationService", NAMESPACE, buildApplicationService("app2"));
 
-            assertThat(appService.getMetadata().getResourceVersion()).isEqualTo("1");
+            assertThat(appService.getMetadata().getResourceVersion())
+                    .isEqualTo("1");
         }
     }
 
@@ -476,8 +523,10 @@ class CRDStoreTest {
 
             latch.await(5, TimeUnit.SECONDS);
 
-            assertThat(exceptions).isEmpty();
-            assertThat(store.<ApplicationService>list("ApplicationService", NAMESPACE)).hasSize(threadCount);
+            assertThat(exceptions)
+                    .isEmpty();
+            assertThat(store.<ApplicationService>list("ApplicationService", NAMESPACE))
+                    .hasSize(threadCount);
         }
     }
 

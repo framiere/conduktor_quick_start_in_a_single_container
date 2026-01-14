@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +50,7 @@ public class WebhookServer {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String response = "OK";
-            exchange.sendResponseHeaders(200, response.length());
+            exchange.sendResponseHeaders(HttpStatus.OK.getCode(), response.length());
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(response.getBytes(StandardCharsets.UTF_8));
             }
@@ -65,33 +67,33 @@ public class WebhookServer {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if (!"POST".equals(exchange.getRequestMethod())) {
-                sendResponse(exchange, 405, "{\"error\": \"Method not allowed\"}");
+                sendResponse(exchange, HttpStatus.METHOD_NOT_ALLOWED.getCode(), "{\"error\": \"Method not allowed\"}");
                 return;
             }
 
             try (var requestBody = exchange.getRequestBody()) {
                 AdmissionReview review = objectMapper.readValue(requestBody, AdmissionReview.class);
 
-                if (review.getRequest() == null) {
-                    sendResponse(exchange, 400, "{\"error\": \"Missing request\"}");
+                AdmissionRequest request = review.getRequest();
+                if (request == null) {
+                    sendResponse(exchange, HttpStatus.BAD_REQUEST.getCode(), "{\"error\": \"Missing request\"}");
                     return;
                 }
 
-                log.info("Validating {} operation on {} in namespace {}", review.getRequest().getOperation(), review.getRequest().getName(),
-                        review.getRequest().getNamespace());
+                log.info("Validating {} operation on {} in namespace {}", request.getOperation(), request.getName(), request.getNamespace());
 
-                AdmissionResponse admissionResponse = validator.validate(review.getRequest(), resourceClass);
+                AdmissionResponse admissionResponse = validator.validate(request, resourceClass);
                 review.setResponse(admissionResponse);
 
                 String responseJson = objectMapper.writeValueAsString(review);
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
-                sendResponse(exchange, 200, responseJson);
+                sendResponse(exchange, HttpStatus.OK.getCode(), responseJson);
 
                 log.info("Validation result: {}", admissionResponse.isAllowed() ? "ALLOWED" : "DENIED");
 
             } catch (Exception e) {
                 log.error("Error processing webhook request", e);
-                sendResponse(exchange, 500, "{\"error\": \"Internal server error\"}");
+                sendResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR.getCode(), "{\"error\": \"Internal server error\"}");
             }
         }
 
