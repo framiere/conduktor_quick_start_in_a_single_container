@@ -33,9 +33,26 @@
         <assertj.version>3.26.3</assertj.version>
         <jakarta-validation.version>3.0.2</jakarta-validation.version>
         <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
+        <kafka.version>3.6.1</kafka.version>
+        <lombok.version>1.18.34</lombok.version>
     </properties>
 
     <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Kafka Client -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+
         <!-- HTTP Client -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

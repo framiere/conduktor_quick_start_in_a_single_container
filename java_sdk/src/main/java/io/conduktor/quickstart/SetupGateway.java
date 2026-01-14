@@ -9,6 +9,7 @@ import io.conduktor.gateway.client.api.CliVirtualClusterGatewayV27Api;
 import io.conduktor.gateway.client.model.*;
 import jakarta.validation.*;
 import jakarta.validation.constraints.*;
+import lombok.Data;
 import okhttp3.*;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.config.TopicConfig;
@@ -33,12 +34,14 @@ public class SetupGateway {
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     // CRD Data Model POJOs - Base Classes
+    @Data
     static class Metadata {
         public String name;
         public String namespace;
     }
 
     // VirtualCluster CR
+    @Data
     static class VirtualClusterCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -55,12 +58,14 @@ public class SetupGateway {
         public VirtualClusterSpec spec;
     }
 
+    @Data
     static class VirtualClusterSpec {
         @NotBlank(message = "clusterId must not be empty")
         public String clusterId;
     }
 
     // ServiceAccount CR
+    @Data
     static class ServiceAccountCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -77,12 +82,14 @@ public class SetupGateway {
         public ServiceAccountSpec spec;
     }
 
+    @Data
     static class ServiceAccountSpec {
         @NotBlank(message = "service account name must not be empty")
         public String name;
     }
 
     // MessagingService CR
+    @Data
     static class MessagingServiceCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -99,6 +106,7 @@ public class SetupGateway {
         public MessagingServiceSpec spec;
     }
 
+    @Data
     static class MessagingServiceSpec {
         @NotBlank(message = "serviceAccountRef must not be empty")
         public String serviceAccountRef;
@@ -108,6 +116,7 @@ public class SetupGateway {
     }
 
     // Topic CR
+    @Data
     static class TopicCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -124,6 +133,7 @@ public class SetupGateway {
         public TopicSpec spec;
     }
 
+    @Data
     static class TopicSpec {
         @NotBlank(message = "serviceRef must not be empty")
         public String serviceRef;
@@ -145,6 +155,7 @@ public class SetupGateway {
     }
 
     // ConsumerGroup CR
+    @Data
     static class ConsumerGroupCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -161,6 +172,7 @@ public class SetupGateway {
         public ConsumerGroupSpec spec;
     }
 
+    @Data
     static class ConsumerGroupSpec {
         @NotBlank(message = "serviceRef must not be empty")
         public String serviceRef;
@@ -173,6 +185,7 @@ public class SetupGateway {
     }
 
     // ACL CR
+    @Data
     static class AclCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
@@ -189,6 +202,7 @@ public class SetupGateway {
         public AclSpec spec;
     }
 
+    @Data
     static class AclSpec {
         @NotBlank(message = "serviceRef must not be empty")
         public String serviceRef;
