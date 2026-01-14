@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SetupGateway {
-
     // CRD Data Model POJOs
     static class MessagingDeclaration {
         public String apiVersion;
@@ -52,8 +51,12 @@ public class SetupGateway {
     }
 
     static class AclDef {
-        public String topic;
-        public List<String> operations;
+        public String type;  // TOPIC or CONSUMER_GROUP. Defaults to TOPIC
+        public String name;
+        public List<String> operations;  // If empty/null, grants ALL operations
+        public String patternType;  // LITERAL, PREFIXED. Defaults to LITERAL
+        public String host;  // Defaults to "*"
+        public String permission;  // ALLOW, DENY. Defaults to ALLOW
     }
 
     // Configuration
@@ -79,7 +82,46 @@ public class SetupGateway {
     private CliServiceAccountSelfServeV111Api serviceAccountApi;
     private CliTopicKafkaV212Api topicApi;
 
-    private static final String CRD = """
+    private static final String CRD_DEMO = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: demo-admin
+            spec:
+              serviceName: demo-admin
+              virtualClusterId: demo
+            """;
+
+    private static final String CRD_DEMO_ACL_ADMIN = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: demo-acl-admin
+            spec:
+              serviceName: demo-acl-admin
+              virtualClusterId: demo-acl
+            """;
+
+    private static final String CRD_DEMO_ACL_USER = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: demo-acl-user
+            spec:
+              serviceName: demo-acl-user
+              virtualClusterId: demo-acl
+              acls:
+                - type: TOPIC
+                  name: click
+                  patternType: PREFIXED
+                  operations: [READ]
+                - type: CONSUMER_GROUP
+                  name: myconsumer-
+                  patternType: PREFIXED
+                  operations: [READ]
+            """;
+
+    private static final String CRD_ORDERS_SERVICE = """
             apiVersion: messaging.example.com/v1
             kind: MessagingDeclaration
             metadata:
@@ -98,11 +140,14 @@ public class SetupGateway {
                 - name: orders.deadletter
                   partitions: 3
               acls:
-                - topic: orders.events
+                - type: TOPIC
+                  name: orders.events
                   operations: [READ, WRITE]
-                - topic: orders.deadletter
+                - type: TOPIC
+                  name: orders.deadletter
                   operations: [READ, WRITE]
-                - topic: inventory.updates
+                - type: TOPIC
+                  name: inventory.updates
                   operations: [READ]
             """;
 
@@ -170,13 +215,16 @@ public class SetupGateway {
         System.out.println("Setting up vClusters with mTLS: " + vCluster + ", " + vClusterAcl);
 
         // vCluster 1: demo (ACL disabled)
-        setupDemoVCluster();
+        processCRD(CRD_DEMO);
 
-        // vCluster 2: demo-acl (ACL enabled)
-        setupDemoAclVCluster();
+        // vCluster 2: demo-acl (ACL enabled) - admin account
+        processCRD(CRD_DEMO_ACL_ADMIN);
 
-        // Process CRD
-        processCRD(CRD);
+        // vCluster 2: demo-acl (ACL enabled) - user account with ACLs
+        processCRD(CRD_DEMO_ACL_USER);
+
+        // orders-service on prod-cluster
+        processCRD(CRD_ORDERS_SERVICE);
 
         System.out.println();
         System.out.println("Setup complete!");
@@ -320,157 +368,6 @@ public class SetupGateway {
         }
     }
 
-    private void setupDemoVCluster() throws IOException, org.openapitools.client.ApiException, ApiException {
-        System.out.println();
-        System.out.println("Creating vCluster: " + vCluster + "...");
-
-        upsertVirtualCluster(new VirtualCluster()
-                .kind("VirtualCluster")
-                .apiVersion("gateway/v2")
-                .metadata(new VirtualClusterMetadata().name(vCluster))
-                .spec(new VirtualClusterSpec()
-                        .aclMode("KAFKA_API")
-                        .superUsers(List.of(vClusterAdmin))));
-        System.out.println("VirtualCluster/" + vCluster + " created");
-
-        System.out.println("Creating service account: " + vClusterAdmin + "...");
-        upsertServiceAccount(new External()
-                .kind("GatewayServiceAccount")
-                .apiVersion("gateway/v2")
-                .metadata(new ExternalMetadata()
-                        .vCluster(vCluster)
-                        .name(vClusterAdmin))
-                .spec(new ExternalSpec()
-                        .type("EXTERNAL")
-                        .externalNames(List.of("CN=" + vClusterAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        System.out.println("GatewayServiceAccount/" + vClusterAdmin + " created");
-
-        generateSslProperties(vClusterAdmin);
-
-        System.out.println();
-        System.out.println("Adding vCluster " + vCluster + " to Console...");
-
-        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
-                .apiVersion("v2")
-                .kind(KafkaClusterKind.KAFKA_CLUSTER)
-                .metadata(new KafkaClusterMetadata().name(vCluster))
-                .spec(new KafkaClusterSpec()
-                        .displayName(vCluster + " (mTLS)")
-                        .bootstrapServers("localhost:6969")
-                        .properties(Map.of(
-                                "security.protocol", "SSL",
-                                "ssl.truststore.location",  "/var/lib/conduktor/certs/" + vClusterAdmin + ".truststore.jks",
-                                "ssl.truststore.password", "conduktor",
-                                "ssl.keystore.location", "/var/lib/conduktor/certs/"  + vClusterAdmin + ".keystore.jks",
-                                "ssl.keystore.password", "conduktor",
-                                "ssl.key.password", "conduktor"
-                        ))
-                        .kafkaFlavor(new KafkaFlavor(new Gateway()
-                                .type(Gateway.TypeEnum.GATEWAY)
-                                .url(cdkGatewayBaseUrl)
-                                .user(cdkGatewayUser)
-                                .password(cdkGatewayPassword)
-                                .virtualCluster(vCluster)))), null);
-        System.out.println("KafkaCluster/" + vCluster + " created in Console");
-    }
-
-    private void setupDemoAclVCluster() throws IOException, org.openapitools.client.ApiException, ApiException {
-        System.out.println();
-        System.out.println("Creating vCluster: " + vClusterAcl + " (ACL enabled)...");
-
-        upsertVirtualCluster(new VirtualCluster()
-                .kind("VirtualCluster")
-                .apiVersion("gateway/v2")
-                .metadata(new VirtualClusterMetadata().name(vClusterAcl))
-                .spec(new VirtualClusterSpec()
-                        .aclEnabled(true)
-                        .superUsers(List.of(vClusterAclAdmin))));
-        System.out.println("VirtualCluster/" + vClusterAcl + " created");
-
-        System.out.println("Creating service account: " + vClusterAclAdmin + "...");
-        upsertServiceAccount(new External()
-                .kind("GatewayServiceAccount")
-                .apiVersion("gateway/v2")
-                .metadata(new ExternalMetadata()
-                        .vCluster(vClusterAcl)
-                        .name(vClusterAclAdmin))
-                .spec(new ExternalSpec()
-                        .type("EXTERNAL")
-                        .externalNames(List.of("CN=" + vClusterAclAdmin + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        System.out.println("GatewayServiceAccount/" + vClusterAclAdmin + " created");
-
-        System.out.println("Creating service account: " + vClusterAclUser + "...");
-        upsertServiceAccount(new External()
-                .kind("GatewayServiceAccount")
-                .apiVersion("gateway/v2")
-                .metadata(new ExternalMetadata()
-                        .vCluster(vClusterAcl)
-                        .name(vClusterAclUser))
-                .spec(new ExternalSpec()
-                        .type("EXTERNAL")
-                        .externalNames(List.of("CN=" + vClusterAclUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        System.out.println("GatewayServiceAccount/" + vClusterAclUser + " created");
-
-        generateSslProperties(vClusterAclAdmin);
-        generateSslProperties(vClusterAclUser);
-
-        System.out.println();
-        System.out.println("Adding vCluster " + vClusterAcl + " to Console...");
-
-        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
-                .apiVersion("v2")
-                .kind(KafkaClusterKind.KAFKA_CLUSTER)
-                .metadata(new KafkaClusterMetadata().name(vClusterAcl))
-                .spec(new KafkaClusterSpec()
-                        .displayName(vClusterAcl + " (mTLS + ACL)")
-                        .bootstrapServers("localhost:6969")
-                        .properties(Map.of(
-                                "security.protocol", "SSL",
-                                "ssl.truststore.location", "/var/lib/conduktor/certs/" + vClusterAclAdmin + ".truststore.jks",
-                                "ssl.truststore.password", "conduktor",
-                                "ssl.keystore.location", "/var/lib/conduktor/certs/" + vClusterAclAdmin + ".keystore.jks",
-                                "ssl.keystore.password", "conduktor",
-                                "ssl.key.password", "conduktor"
-                        ))
-                        .kafkaFlavor(new KafkaFlavor(new Gateway()
-                                .type(Gateway.TypeEnum.GATEWAY)
-                                .url(cdkGatewayBaseUrl)
-                                .user(cdkGatewayUser)
-                                .password(cdkGatewayPassword)
-                                .virtualCluster(vClusterAcl)))), null);
-        System.out.println("KafkaCluster/" + vClusterAcl + " created in Console");
-
-        System.out.println();
-        System.out.println("Creating Console ServiceAccount with ACLs for " + vClusterAclUser + "...");
-
-        serviceAccountApi.createOrUpdateServiceAccountV1(vClusterAcl, new ServiceAccountResourceV1()
-                .apiVersion("v1")
-                .kind(ServiceAccountKind.SERVICE_ACCOUNT)
-                .metadata(new ServiceAccountMetadata()
-                        .name(vClusterAclUser)
-                        .cluster(vClusterAcl))
-                .spec(new ServiceAccountSpec()
-                        .authorization(new ServiceAccountAuthorization(new KAFKAACL()
-                                .type(KAFKAACL.TypeEnum.KAFKA_ACL)
-                                .acls(List.of(
-                                        new KafkaServiceAccountACL()
-                                                .type(AclResourceType.TOPIC)
-                                                .name("click")
-                                                .patternType(ResourcePatternType.PREFIXED)
-                                                .operations(List.of(Operation.READ))
-                                                .host("*")
-                                                .permission(AclPermissionTypeForAccessControlEntry.ALLOW),
-                                        new KafkaServiceAccountACL()
-                                                .type(AclResourceType.CONSUMER_GROUP)
-                                                .name("myconsumer-")
-                                                .patternType(ResourcePatternType.PREFIXED)
-                                                .operations(List.of(Operation.READ))
-                                                .host("*")
-                                                .permission(AclPermissionTypeForAccessControlEntry.ALLOW)
-                                ))))), null);
-        System.out.println("ServiceAccount/" + vClusterAclUser + " created in Console");
-    }
-
     // CRD Processing Methods
 
     MessagingDeclaration parseYaml(String crdYaml) {
@@ -605,23 +502,24 @@ public class SetupGateway {
                     .toList();
             }
 
+            // Determine pattern type (default to LITERAL if not specified)
+            ResourcePatternType patternType = (aclDef.patternType != null && !aclDef.patternType.isBlank())
+                ? ResourcePatternType.fromValue(aclDef.patternType)
+                : ResourcePatternType.LITERAL;
+
+            // Determine resource type (default to TOPIC if not specified)
+            AclResourceType resourceType = (aclDef.type != null && !aclDef.type.isBlank())
+                ? AclResourceType.valueOf(aclDef.type.toUpperCase().replace('-', '_'))
+                : AclResourceType.TOPIC;
+
             kafkaAcls.add(new KafkaServiceAccountACL()
-                .type(AclResourceType.TOPIC)
-                .name(aclDef.topic)
-                .patternType(ResourcePatternType.LITERAL)
+                .type(resourceType)
+                .name(aclDef.name)
+                .patternType(patternType)
                 .operations(ops)
                 .host("*")
                 .permission(AclPermissionTypeForAccessControlEntry.ALLOW));
         }
-
-        // Add consumer group ACL
-        kafkaAcls.add(new KafkaServiceAccountACL()
-            .type(AclResourceType.CONSUMER_GROUP)
-            .name(serviceName + "-")
-            .patternType(ResourcePatternType.PREFIXED)
-            .operations(List.of(Operation.READ))
-            .host("*")
-            .permission(AclPermissionTypeForAccessControlEntry.ALLOW));
 
         // Create Console ServiceAccount
         serviceAccountApi.createOrUpdateServiceAccountV1(vClusterName,

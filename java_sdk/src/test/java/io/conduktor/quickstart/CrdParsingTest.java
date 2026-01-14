@@ -31,11 +31,14 @@ class CrdParsingTest {
                 - name: orders.deadletter
                   partitions: 3
               acls:
-                - topic: orders.events
+                - type: TOPIC
+                  name: orders.events
                   operations: [READ, WRITE]
-                - topic: orders.deadletter
+                - type: TOPIC
+                  name: orders.deadletter
                   operations: [READ, WRITE]
-                - topic: inventory.updates
+                - type: TOPIC
+                  name: inventory.updates
                   operations: [READ]
             """;
 
@@ -63,11 +66,11 @@ class CrdParsingTest {
         assertThat(result.spec.topics.get(1).config).isNull();
 
         assertThat(result.spec.acls).hasSize(3);
-        assertThat(result.spec.acls.get(0).topic).isEqualTo("orders.events");
+        assertThat(result.spec.acls.get(0).name).isEqualTo("orders.events");
         assertThat(result.spec.acls.get(0).operations).containsExactly("READ", "WRITE");
-        assertThat(result.spec.acls.get(1).topic).isEqualTo("orders.deadletter");
+        assertThat(result.spec.acls.get(1).name).isEqualTo("orders.deadletter");
         assertThat(result.spec.acls.get(1).operations).containsExactly("READ", "WRITE");
-        assertThat(result.spec.acls.get(2).topic).isEqualTo("inventory.updates");
+        assertThat(result.spec.acls.get(2).name).isEqualTo("inventory.updates");
         assertThat(result.spec.acls.get(2).operations).containsExactly("READ");
     }
 
@@ -128,7 +131,8 @@ class CrdParsingTest {
               serviceName: acl-only-service
               virtualClusterId: test-cluster
               acls:
-                - topic: external.topic
+                - type: TOPIC
+                  name: external.topic
                   operations: [READ]
             """;
 
@@ -138,7 +142,7 @@ class CrdParsingTest {
         assertThat(result.spec.serviceName).isEqualTo("acl-only-service");
         assertThat(result.spec.topics).isNull();
         assertThat(result.spec.acls).hasSize(1);
-        assertThat(result.spec.acls.get(0).topic).isEqualTo("external.topic");
+        assertThat(result.spec.acls.get(0).name).isEqualTo("external.topic");
         assertThat(result.spec.acls.get(0).operations).containsExactly("READ");
     }
 
@@ -300,9 +304,11 @@ class CrdParsingTest {
               serviceName: multi-op-service
               virtualClusterId: test-cluster
               acls:
-                - topic: full-access.topic
+                - type: TOPIC
+                  name: full-access.topic
                   operations: [READ, WRITE, CREATE, DELETE, ALTER]
-                - topic: read-only.topic
+                - type: TOPIC
+                  name: read-only.topic
                   operations: [READ]
             """;
 
@@ -325,14 +331,15 @@ class CrdParsingTest {
               serviceName: no-ops-service
               virtualClusterId: test-cluster
               acls:
-                - topic: all-access.topic
+                - type: TOPIC
+                  name: all-access.topic
             """;
 
         SetupGateway.MessagingDeclaration result = setup.parseYaml(crd);
 
         assertThat(result).isNotNull();
         assertThat(result.spec.acls).hasSize(1);
-        assertThat(result.spec.acls.get(0).topic).isEqualTo("all-access.topic");
+        assertThat(result.spec.acls.get(0).name).isEqualTo("all-access.topic");
         assertThat(result.spec.acls.get(0).operations).isNull();
     }
 
@@ -347,7 +354,8 @@ class CrdParsingTest {
               serviceName: empty-ops-service
               virtualClusterId: test-cluster
               acls:
-                - topic: all-access.topic
+                - type: TOPIC
+                  name: all-access.topic
                   operations: []
             """;
 
@@ -355,7 +363,46 @@ class CrdParsingTest {
 
         assertThat(result).isNotNull();
         assertThat(result.spec.acls).hasSize(1);
-        assertThat(result.spec.acls.get(0).topic).isEqualTo("all-access.topic");
+        assertThat(result.spec.acls.get(0).name).isEqualTo("all-access.topic");
         assertThat(result.spec.acls.get(0).operations).isEmpty();
+    }
+
+    @Test
+    void testParseCrdWithPatternType() {
+        String crd = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: pattern-service
+            spec:
+              serviceName: pattern-service
+              virtualClusterId: test-cluster
+              acls:
+                - type: TOPIC
+                  name: click
+                  patternType: PREFIXED
+                  operations: [READ]
+                - type: TOPIC
+                  name: exact.topic
+                  patternType: LITERAL
+                  operations: [WRITE]
+                - type: TOPIC
+                  name: default.topic
+                  operations: [READ]
+            """;
+
+        SetupGateway.MessagingDeclaration result = setup.parseYaml(crd);
+
+        assertThat(result).isNotNull();
+        assertThat(result.spec.acls).hasSize(3);
+        assertThat(result.spec.acls.get(0).name).isEqualTo("click");
+        assertThat(result.spec.acls.get(0).patternType).isEqualTo("PREFIXED");
+        assertThat(result.spec.acls.get(0).operations).containsExactly("READ");
+        assertThat(result.spec.acls.get(1).name).isEqualTo("exact.topic");
+        assertThat(result.spec.acls.get(1).patternType).isEqualTo("LITERAL");
+        assertThat(result.spec.acls.get(1).operations).containsExactly("WRITE");
+        assertThat(result.spec.acls.get(2).name).isEqualTo("default.topic");
+        assertThat(result.spec.acls.get(2).patternType).isNull();
+        assertThat(result.spec.acls.get(2).operations).containsExactly("READ");
     }
 }
