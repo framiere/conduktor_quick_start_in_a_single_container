@@ -5,15 +5,10 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Plural;
 import io.fabric8.kubernetes.model.annotation.Version;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 
 @Group("messaging.example.com")
 @Version("v1")
 @Plural("topics")
-@Builder
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class Topic extends CustomResource<TopicCRSpec, Void> implements Namespaced {
 
     @Override
