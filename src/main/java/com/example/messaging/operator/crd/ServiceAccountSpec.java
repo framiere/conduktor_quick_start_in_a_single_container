@@ -6,6 +6,7 @@ import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Buildable(editableEnabled = false)
@@ -20,7 +21,7 @@ public class ServiceAccountSpec {
     @JsonProperty("dn")
     @JsonPropertyDescription("Distinguished Names (DN) for certificates")
     @Required
-    private List<String> dn = List.of();
+    private List<String> dn = new ArrayList<>();
 
     @JsonProperty("clusterRef")
     @JsonPropertyDescription("Reference to VirtualCluster CR")

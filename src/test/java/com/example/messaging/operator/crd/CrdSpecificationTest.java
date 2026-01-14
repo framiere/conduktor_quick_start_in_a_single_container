@@ -10,6 +10,7 @@ import static com.example.messaging.operator.crd.AclCRSpec.Operation.ALTER;
 import static com.example.messaging.operator.crd.AclCRSpec.Operation.CREATE;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -186,7 +187,9 @@ class CrdSpecificationTest {
         void testServiceAccountWithSingleDn() {
             ServiceAccountSpec spec = new ServiceAccountSpec();
             spec.setName("demo-admin");
-            spec.setDn(List.of("CN=demo-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US"));
+            spec.setDn(new ArrayList<>() {{
+                add("CN=demo-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US");
+            }});
             spec.setClusterRef("demo");
             spec.setApplicationServiceRef("demo-admin");
 
@@ -214,7 +217,9 @@ class CrdSpecificationTest {
         void testServiceAccountBuilder() {
             ServiceAccountSpec spec = new ServiceAccountSpecBuilder()
                     .withName("test-sa")
-                    .withDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"))
+                    .withDn(new ArrayList<>() {{
+                        add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+                    }})
                     .withClusterRef("test-cluster")
                     .withApplicationServiceRef("test-app")
                     .build();
@@ -234,7 +239,9 @@ class CrdSpecificationTest {
         void testServiceAccountRelationships() {
             ServiceAccountSpec saSpec = new ServiceAccountSpec();
             saSpec.setName("orders-service");
-            saSpec.setDn(List.of("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
+            saSpec.setDn(new ArrayList<>() {{
+            add("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+        }});
             saSpec.setClusterRef("prod-cluster");
             saSpec.setApplicationServiceRef("orders-service");
 
@@ -399,7 +406,10 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("orders-service-sa");
             spec.setTopicRef("orders-events");
-            spec.setOperations(List.of(READ, WRITE));
+            spec.setOperations(new ArrayList<>() {{
+            add(READ);
+            add(WRITE);
+        }});
             spec.setApplicationServiceRef("orders-service");
 
             assertThat(spec)
@@ -421,7 +431,9 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("demo-acl-user-sa");
             spec.setConsumerGroupRef("myconsumer-group");
-            spec.setOperations(List.of(READ));
+            spec.setOperations(new ArrayList<>() {{
+            add(READ);
+        }});
             spec.setApplicationServiceRef("demo-acl-user");
 
             assertThat(spec)
@@ -443,7 +455,11 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpecBuilder()
                     .withServiceRef("test-sa")
                     .withTopicRef("test-topic")
-                    .withOperations(List.of(READ, WRITE, DESCRIBE))
+                    .withOperations(new ArrayList<>() {{
+                        add(READ);
+                        add(WRITE);
+                        add(DESCRIBE);
+                    }})
                     .withApplicationServiceRef("test-app")
                     .build();
 
@@ -462,7 +478,9 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("inventory-service-sa");
             spec.setTopicRef("inventory-updates");
-            spec.setOperations(List.of(READ));
+            spec.setOperations(new ArrayList<>() {{
+            add(READ);
+        }});
             spec.setApplicationServiceRef("inventory-service");
 
             assertThat(spec.getOperations())
@@ -475,7 +493,10 @@ class CrdSpecificationTest {
         @DisplayName("should support read-write operations")
         void testAclReadWrite() {
             AclCRSpec spec = new AclCRSpec();
-            spec.setOperations(List.of(READ, WRITE));
+            spec.setOperations(new ArrayList<>() {{
+            add(READ);
+            add(WRITE);
+        }});
 
             assertThat(spec.getOperations())
                     .hasSize(2)
@@ -519,7 +540,9 @@ class CrdSpecificationTest {
             // ServiceAccount references both VirtualCluster and ApplicationService
             ServiceAccountSpec sa = new ServiceAccountSpec();
             sa.setName("orders-service");
-            sa.setDn(List.of("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
+            sa.setDn(new ArrayList<>() {{
+            add("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+        }});
             sa.setClusterRef("prod-cluster");
             sa.setApplicationServiceRef("orders-service");
 
@@ -642,7 +665,9 @@ class CrdSpecificationTest {
         void testFluentBuilderChaining() {
             ServiceAccountSpec spec = new ServiceAccountSpecBuilder()
                     .withName("test-sa")
-                    .withDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"))
+                    .withDn(new ArrayList<>() {{
+            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }})
                     .withClusterRef("test-cluster")
                     .withApplicationServiceRef("test-app")
                     .build();
@@ -657,7 +682,9 @@ class CrdSpecificationTest {
         void testBuilderFromExistingSpec() {
             ServiceAccountSpec original = new ServiceAccountSpec();
             original.setName("original");
-            original.setDn(List.of("CN=original,OU=TEST,O=EXAMPLE,L=CITY,C=US"));
+            original.setDn(new ArrayList<>() {{
+                add("CN=original,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+            }});
             original.setClusterRef("original-cluster");
             original.setApplicationServiceRef("original-app");
 
@@ -680,11 +707,15 @@ class CrdSpecificationTest {
         void testLombokEquals() {
             ServiceAccountSpec spec1 = new ServiceAccountSpec();
             spec1.setName("test");
-            spec1.setDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"));
+            spec1.setDn(new ArrayList<>() {{
+            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }});
 
             ServiceAccountSpec spec2 = new ServiceAccountSpec();
             spec2.setName("test");
-            spec2.setDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"));
+            spec2.setDn(new ArrayList<>() {{
+            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }});
 
             assertThat(spec1).isEqualTo(spec2);
         }
@@ -694,11 +725,15 @@ class CrdSpecificationTest {
         void testLombokHashCode() {
             ServiceAccountSpec spec1 = new ServiceAccountSpec();
             spec1.setName("test");
-            spec1.setDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"));
+            spec1.setDn(new ArrayList<>() {{
+            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }});
 
             ServiceAccountSpec spec2 = new ServiceAccountSpec();
             spec2.setName("test");
-            spec2.setDn(List.of("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US"));
+            spec2.setDn(new ArrayList<>() {{
+            add("CN=test,OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }});
 
             assertThat(spec1).hasSameHashCodeAs(spec2);
         }
@@ -708,7 +743,9 @@ class CrdSpecificationTest {
         void testLombokToString() {
             ServiceAccountSpec spec = new ServiceAccountSpec();
             spec.setName("orders-service");
-            spec.setDn(List.of("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
+            spec.setDn(new ArrayList<>() {{
+            add("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+        }});
             spec.setClusterRef("prod-cluster");
             spec.setApplicationServiceRef("orders-service");
 
@@ -781,7 +818,7 @@ class CrdSpecificationTest {
             assertThat(spec2.getDn()).isNull();
 
             ServiceAccountSpec spec3 = new ServiceAccountSpec();
-            spec3.setDn(List.of());
+            spec3.setDn(new ArrayList<>());
             assertThat(spec3.getDn()).isNotNull().isEmpty();
         }
     }

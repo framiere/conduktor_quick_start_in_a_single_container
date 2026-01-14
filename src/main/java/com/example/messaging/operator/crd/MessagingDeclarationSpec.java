@@ -8,6 +8,7 @@ import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,10 +34,10 @@ public class MessagingDeclarationSpec {
 
     @JsonProperty("topics")
     @JsonPropertyDescription("Topics OWNED by this CR")
-    private List<TopicSpec> topics = List.of();
+    private List<TopicSpec> topics = new ArrayList<>();
 
     @JsonProperty("acls")
     @JsonPropertyDescription("ACL declarations")
-    private List<AclSpec> acls = List.of();
+    private List<AclSpec> acls = new ArrayList<>();
 
 }

@@ -7,6 +7,7 @@ import io.sundr.builder.annotations.Buildable;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,11 +28,11 @@ public class MessagingDeclarationStatus {
 
     @JsonProperty("ownedTopics")
     @JsonPropertyDescription("Topics successfully claimed (unique set)")
-    private List<String> ownedTopics = List.of();
+    private List<String> ownedTopics = new ArrayList<>();
 
     @JsonProperty("referencedTopics")
     @JsonPropertyDescription("External topics referenced (unique set)")
-    private List<String> referencedTopics = List.of();
+    private List<String> referencedTopics = new ArrayList<>();
 
     @JsonProperty("lastReconcileTime")
     @JsonPropertyDescription("Last reconciliation timestamp")
@@ -43,7 +44,7 @@ public class MessagingDeclarationStatus {
 
     @JsonProperty("conditions")
     @JsonPropertyDescription("Kubernetes conditions")
-    private List<Condition> conditions = List.of();
+    private List<Condition> conditions = new ArrayList<>();
 
 
     /**

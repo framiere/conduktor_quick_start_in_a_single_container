@@ -906,10 +906,10 @@ class CrdReconciliationTest {
 
         ServiceAccountSpec spec = new ServiceAccountSpec();
         spec.setName(name.replace("-sa", ""));
-        spec.setDn(new ArrayList<>(List.of(
-                "CN=" + name + ",OU=ORDERS,O=EXAMPLE,L=CITY,C=US",
-                "CN=" + name + "-backup,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"
-        )));
+        spec.setDn(new ArrayList<>() {{
+            add("CN=" + name + ",OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+            add("CN=" + name + "-backup,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+        }});
         spec.setClusterRef(clusterRef);
         spec.setApplicationServiceRef(appServiceRef);
         sa.setSpec(spec);
@@ -943,7 +943,10 @@ class CrdReconciliationTest {
         AclCRSpec spec = new AclCRSpec();
         spec.setServiceRef(serviceRef);
         spec.setTopicRef(topicRef);
-        spec.setOperations(new ArrayList<>(List.of(READ, WRITE)));
+        spec.setOperations(new ArrayList<>() {{
+            add(READ);
+            add(WRITE);
+        }});
         spec.setApplicationServiceRef(appServiceRef);
         acl.setSpec(spec);
 

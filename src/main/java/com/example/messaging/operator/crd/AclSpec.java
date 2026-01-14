@@ -7,6 +7,7 @@ import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +27,7 @@ public class AclSpec {
     @JsonProperty("operations")
     @JsonPropertyDescription("Kafka operations (unique set)")
     @Required
-    private List<KafkaOperation> operations = List.of();
+    private List<KafkaOperation> operations = new ArrayList<>();
 
     /**
      * Kafka ACL operations enum.

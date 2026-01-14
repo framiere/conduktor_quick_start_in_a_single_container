@@ -425,7 +425,9 @@ class OwnershipValidatorTest {
 
         ServiceAccountSpec spec = new ServiceAccountSpec();
         spec.setName(name.replace("-sa", ""));
-        spec.setDn(new ArrayList<>(List.of("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US")));
+        spec.setDn(new ArrayList<>() {{
+            add("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US");
+        }});
         spec.setClusterRef(clusterRef);
         spec.setApplicationServiceRef(appServiceRef);
         sa.setSpec(spec);
