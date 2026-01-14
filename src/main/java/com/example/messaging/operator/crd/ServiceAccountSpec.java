@@ -15,6 +15,11 @@ public class ServiceAccountSpec {
     @Required
     private String name;
 
+    @JsonProperty("cn")
+    @JsonPropertyDescription("Common Name (CN) for certificate")
+    @Required
+    private String cn;
+
     @JsonProperty("clusterRef")
     @JsonPropertyDescription("Reference to VirtualCluster CR")
     @Required
