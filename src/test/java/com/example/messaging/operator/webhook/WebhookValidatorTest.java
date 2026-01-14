@@ -114,4 +114,101 @@ class WebhookValidatorTest {
                 .contains("app-service-1")
                 .contains("hacker-service");
     }
+
+    @Test
+    @DisplayName("should deny VirtualCluster UPDATE when applicationServiceRef changed")
+    void testDenyVirtualClusterUpdate() {
+        VirtualCluster oldVc = new VirtualCluster();
+        oldVc.setMetadata(new ObjectMeta());
+        oldVc.getMetadata().setName("vc-1");
+        VirtualClusterSpec oldSpec = new VirtualClusterSpec();
+        oldSpec.setClusterId("cluster-1");
+        oldSpec.setApplicationServiceRef("app-1");
+        oldVc.setSpec(oldSpec);
+
+        VirtualCluster newVc = new VirtualCluster();
+        newVc.setMetadata(new ObjectMeta());
+        newVc.getMetadata().setName("vc-1");
+        VirtualClusterSpec newSpec = new VirtualClusterSpec();
+        newSpec.setClusterId("cluster-1");
+        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newVc.setSpec(newSpec);
+
+        AdmissionRequest request = new AdmissionRequest();
+        request.setUid("test-uid-vc");
+        request.setOperation("UPDATE");
+        request.setObject(mapper.convertValue(newVc, Map.class));
+        request.setOldObject(mapper.convertValue(oldVc, Map.class));
+
+        AdmissionResponse response = validator.validate(request, VirtualCluster.class);
+
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+    }
+
+    @Test
+    @DisplayName("should deny ServiceAccount UPDATE when applicationServiceRef changed")
+    void testDenyServiceAccountUpdate() {
+        ServiceAccount oldSa = new ServiceAccount();
+        oldSa.setMetadata(new ObjectMeta());
+        oldSa.getMetadata().setName("sa-1");
+        ServiceAccountSpec oldSpec = new ServiceAccountSpec();
+        oldSpec.setName("service-1");
+        oldSpec.setApplicationServiceRef("app-1");
+        oldSpec.setClusterRef("cluster-1");
+        oldSa.setSpec(oldSpec);
+
+        ServiceAccount newSa = new ServiceAccount();
+        newSa.setMetadata(new ObjectMeta());
+        newSa.getMetadata().setName("sa-1");
+        ServiceAccountSpec newSpec = new ServiceAccountSpec();
+        newSpec.setName("service-1");
+        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newSpec.setClusterRef("cluster-1");
+        newSa.setSpec(newSpec);
+
+        AdmissionRequest request = new AdmissionRequest();
+        request.setUid("test-uid-sa");
+        request.setOperation("UPDATE");
+        request.setObject(mapper.convertValue(newSa, Map.class));
+        request.setOldObject(mapper.convertValue(oldSa, Map.class));
+
+        AdmissionResponse response = validator.validate(request, ServiceAccount.class);
+
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+    }
+
+    @Test
+    @DisplayName("should deny ACL UPDATE when applicationServiceRef changed")
+    void testDenyACLUpdate() {
+        ACL oldAcl = new ACL();
+        oldAcl.setMetadata(new ObjectMeta());
+        oldAcl.getMetadata().setName("acl-1");
+        AclCRSpec oldSpec = new AclCRSpec();
+        oldSpec.setApplicationServiceRef("app-1");
+        oldSpec.setServiceRef("sa-1");
+        oldSpec.setTopicRef("topic-1");
+        oldAcl.setSpec(oldSpec);
+
+        ACL newAcl = new ACL();
+        newAcl.setMetadata(new ObjectMeta());
+        newAcl.getMetadata().setName("acl-1");
+        AclCRSpec newSpec = new AclCRSpec();
+        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newSpec.setServiceRef("sa-1");
+        newSpec.setTopicRef("topic-1");
+        newAcl.setSpec(newSpec);
+
+        AdmissionRequest request = new AdmissionRequest();
+        request.setUid("test-uid-acl");
+        request.setOperation("UPDATE");
+        request.setObject(mapper.convertValue(newAcl, Map.class));
+        request.setOldObject(mapper.convertValue(oldAcl, Map.class));
+
+        AdmissionResponse response = validator.validate(request, ACL.class);
+
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+    }
 }
