@@ -111,7 +111,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         // Verify validation fails
         assertThat(result.isValid())
                 .isFalse();
-        assertThat(result.getMessage()).contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
+        assertThat(result.getMessage())
+                .contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
     }
 
     @Test

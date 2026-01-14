@@ -1,6 +1,6 @@
 package com.example.messaging.operator.it.scenario;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
@@ -20,7 +20,8 @@ public class CRDLifecycleIT extends ScenarioITBase {
 
         // Create ApplicationService
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("lifecycle-app").appName("lifecycle-app").createIn(k8sClient);
-        assertNotNull(app.getMetadata().getUid());
+        assertThat(app.getMetadata().getUid())
+                .isNotNull();
         syncToStore(app);
 
         // Create VirtualCluster owned by app
@@ -31,15 +32,23 @@ public class CRDLifecycleIT extends ScenarioITBase {
                 .applicationServiceRef("lifecycle-app")
                 .ownedBy(app)
                 .createIn(k8sClient);
-        assertNotNull(vc.getMetadata().getUid());
+        assertThat(vc.getMetadata().getUid())
+                .isNotNull();
         syncToStore(vc);
 
         // Verify ownership
         List<OwnerReference> vcOwners = vc.getMetadata().getOwnerReferences();
-        assertNotNull(vcOwners);
-        assertEquals(1, vcOwners.size());
-        assertEquals("lifecycle-app", vcOwners.get(0).getName());
-        assertEquals("ApplicationService", vcOwners.get(0).getKind());
+        assertThat(vcOwners)
+                .isNotNull()
+                .hasSize(1);
+        assertThat(vcOwners)
+                .first()
+                .extracting(OwnerReference::getName)
+                .isEqualTo("lifecycle-app");
+        assertThat(vcOwners)
+                .first()
+                .extracting(OwnerReference::getKind)
+                .isEqualTo("ApplicationService");
 
         // Create ServiceAccount owned by vc
         ServiceAccount sa = TestDataBuilder.serviceAccount()
@@ -51,15 +60,23 @@ public class CRDLifecycleIT extends ScenarioITBase {
                 .applicationServiceRef("lifecycle-app")
                 .ownedBy(vc)
                 .createIn(k8sClient);
-        assertNotNull(sa.getMetadata().getUid());
+        assertThat(sa.getMetadata().getUid())
+                .isNotNull();
         syncToStore(sa);
 
         // Verify ownership
         List<OwnerReference> saOwners = sa.getMetadata().getOwnerReferences();
-        assertNotNull(saOwners);
-        assertEquals(1, saOwners.size());
-        assertEquals("lifecycle-cluster", saOwners.get(0).getName());
-        assertEquals("VirtualCluster", saOwners.get(0).getKind());
+        assertThat(saOwners)
+                .isNotNull()
+                .hasSize(1);
+        assertThat(saOwners)
+                .first()
+                .extracting(OwnerReference::getName)
+                .isEqualTo("lifecycle-cluster");
+        assertThat(saOwners)
+                .first()
+                .extracting(OwnerReference::getKind)
+                .isEqualTo("VirtualCluster");
 
         // Create Topic owned by sa
         Topic topic = TestDataBuilder.topic()
@@ -72,15 +89,23 @@ public class CRDLifecycleIT extends ScenarioITBase {
                 .applicationServiceRef("lifecycle-app")
                 .ownedBy(sa)
                 .createIn(k8sClient);
-        assertNotNull(topic.getMetadata().getUid());
+        assertThat(topic.getMetadata().getUid())
+                .isNotNull();
         syncToStore(topic);
 
         // Verify ownership
         List<OwnerReference> topicOwners = topic.getMetadata().getOwnerReferences();
-        assertNotNull(topicOwners);
-        assertEquals(1, topicOwners.size());
-        assertEquals("lifecycle-sa", topicOwners.get(0).getName());
-        assertEquals("ServiceAccount", topicOwners.get(0).getKind());
+        assertThat(topicOwners)
+                .isNotNull()
+                .hasSize(1);
+        assertThat(topicOwners)
+                .first()
+                .extracting(OwnerReference::getName)
+                .isEqualTo("lifecycle-sa");
+        assertThat(topicOwners)
+                .first()
+                .extracting(OwnerReference::getKind)
+                .isEqualTo("ServiceAccount");
 
         // Create ACL owned by sa
         ACL acl = TestDataBuilder.acl()
@@ -92,64 +117,85 @@ public class CRDLifecycleIT extends ScenarioITBase {
                 .applicationServiceRef("lifecycle-app")
                 .ownedBy(sa)
                 .createIn(k8sClient);
-        assertNotNull(acl.getMetadata().getUid());
+        assertThat(acl.getMetadata().getUid())
+                .isNotNull();
         syncToStore(acl);
 
         // Verify ownership
         List<OwnerReference> aclOwners = acl.getMetadata().getOwnerReferences();
-        assertNotNull(aclOwners);
-        assertEquals(1, aclOwners.size());
-        assertEquals("lifecycle-sa", aclOwners.get(0).getName());
-        assertEquals("ServiceAccount", aclOwners.get(0).getKind());
+        assertThat(aclOwners)
+                .isNotNull()
+                .hasSize(1);
+        assertThat(aclOwners)
+                .first()
+                .extracting(OwnerReference::getName)
+                .isEqualTo("lifecycle-sa");
+        assertThat(aclOwners)
+                .first()
+                .extracting(OwnerReference::getKind)
+                .isEqualTo("ServiceAccount");
 
         // Step 2: Update resources
 
         // Update topic partitions
         topic.getSpec().setPartitions(12);
         Topic updatedTopic = k8sClient.resource(topic).update();
-        assertEquals(12, updatedTopic.getSpec().getPartitions());
+        assertThat(updatedTopic.getSpec().getPartitions())
+                .isEqualTo(12);
         store.update("Topic", "default", topic.getMetadata().getName(), updatedTopic);
 
         // Update ACL operations
         acl.getSpec().setOperations(List.of(AclCRSpec.Operation.READ, AclCRSpec.Operation.WRITE, AclCRSpec.Operation.DESCRIBE));
         ACL updatedAcl = k8sClient.resource(acl).update();
-        assertEquals(3, updatedAcl.getSpec().getOperations().size());
-        assertTrue(updatedAcl.getSpec().getOperations().contains(AclCRSpec.Operation.DESCRIBE));
+        assertThat(updatedAcl.getSpec().getOperations())
+                .hasSize(3);
+        assertThat(updatedAcl.getSpec().getOperations())
+                .contains(AclCRSpec.Operation.DESCRIBE);
         store.update("ACL", "default", acl.getMetadata().getName(), updatedAcl);
 
         // Step 3: Verify all resources exist in store
-        assertEquals(1, store.list("ApplicationService", "default").size());
-        assertEquals(1, store.list("VirtualCluster", "default").size());
-        assertEquals(1, store.list("ServiceAccount", "default").size());
-        assertEquals(1, store.list("Topic", "default").size());
-        assertEquals(1, store.list("ACL", "default").size());
+        assertThat(store.list("ApplicationService", "default"))
+                .hasSize(1);
+        assertThat(store.list("VirtualCluster", "default"))
+                .hasSize(1);
+        assertThat(store.list("ServiceAccount", "default"))
+                .hasSize(1);
+        assertThat(store.list("Topic", "default"))
+                .hasSize(1);
+        assertThat(store.list("ACL", "default"))
+                .hasSize(1);
 
         // Step 4: Delete in reverse order (leaf to root)
 
         // Delete ACL
         k8sClient.resource(updatedAcl).delete();
         store.delete("ACL", "default", updatedAcl.getMetadata().getName());
-        assertEquals(0, store.list("ACL", "default").size());
+        assertThat(store.list("ACL", "default"))
+                .hasSize(0);
 
         // Delete Topic
         k8sClient.resource(updatedTopic).delete();
         store.delete("Topic", "default", updatedTopic.getMetadata().getName());
-        assertEquals(0, store.list("Topic", "default").size());
+        assertThat(store.list("Topic", "default"))
+                .hasSize(0);
 
         // Delete ServiceAccount
         k8sClient.resource(sa).delete();
         store.delete("ServiceAccount", "default", sa.getMetadata().getName());
-        assertEquals(0, store.list("ServiceAccount", "default").size());
+        assertThat(store.list("ServiceAccount", "default"))
+                .hasSize(0);
 
         // Delete VirtualCluster
         k8sClient.resource(vc).delete();
         store.delete("VirtualCluster", "default", vc.getMetadata().getName());
-        assertEquals(0, store.list("VirtualCluster", "default").size());
+        assertThat(store.list("VirtualCluster", "default"))
+                .hasSize(0);
 
         // Delete ApplicationService
         k8sClient.resource(app).delete();
         store.delete("ApplicationService", "default", app.getMetadata().getName());
-        assertEquals(0, store.list("ApplicationService", "default").size());
+        assertThat(store.list("ApplicationService", "default"))
+                .hasSize(0);
     }
 
     @Test
@@ -218,51 +264,81 @@ public class CRDLifecycleIT extends ScenarioITBase {
         syncToStore(acl);
 
         // Verify all resources created successfully
-        assertEquals(1, store.list("ApplicationService", "default").size());
-        assertEquals(1, store.list("VirtualCluster", "default").size());
-        assertEquals(1, store.list("ServiceAccount", "default").size());
-        assertEquals(2, store.list("Topic", "default").size());
-        assertEquals(1, store.list("ACL", "default").size());
+        assertThat(store.list("ApplicationService", "default"))
+                .hasSize(1);
+        assertThat(store.list("VirtualCluster", "default"))
+                .hasSize(1);
+        assertThat(store.list("ServiceAccount", "default"))
+                .hasSize(1);
+        assertThat(store.list("Topic", "default"))
+                .hasSize(2);
+        assertThat(store.list("ACL", "default"))
+                .hasSize(1);
 
         // Verify specific resources by name
         ApplicationService appFromStore = (ApplicationService) store.get("ApplicationService", "default", "orders-app");
-        assertNotNull(appFromStore);
-        assertEquals("orders-app", appFromStore.getSpec().getName());
+        assertThat(appFromStore)
+                .isNotNull();
+        assertThat(appFromStore.getSpec().getName())
+                .isEqualTo("orders-app");
 
         VirtualCluster vcFromStore = (VirtualCluster) store.get("VirtualCluster", "default", "prod-cluster");
-        assertNotNull(vcFromStore);
-        assertEquals("prod-cluster", vcFromStore.getSpec().getClusterId());
-        assertEquals("orders-app", vcFromStore.getSpec().getApplicationServiceRef());
+        assertThat(vcFromStore)
+                .isNotNull();
+        assertThat(vcFromStore.getSpec().getClusterId())
+                .isEqualTo("prod-cluster");
+        assertThat(vcFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         ServiceAccount saFromStore = (ServiceAccount) store.get("ServiceAccount", "default", "orders-sa");
-        assertNotNull(saFromStore);
-        assertEquals("orders", saFromStore.getSpec().getName());
-        assertEquals("prod-cluster", saFromStore.getSpec().getClusterRef());
-        assertEquals("orders-app", saFromStore.getSpec().getApplicationServiceRef());
+        assertThat(saFromStore)
+                .isNotNull();
+        assertThat(saFromStore.getSpec().getName())
+                .isEqualTo("orders");
+        assertThat(saFromStore.getSpec().getClusterRef())
+                .isEqualTo("prod-cluster");
+        assertThat(saFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         Topic topic1 = (Topic) store.get("Topic", "default", "orders-events");
-        assertNotNull(topic1);
-        assertEquals("orders.events", topic1.getSpec().getName());
-        assertEquals(6, topic1.getSpec().getPartitions());
-        assertEquals(3, topic1.getSpec().getReplicationFactor());
-        assertEquals("orders-sa", topic1.getSpec().getServiceRef());
-        assertEquals("orders-app", topic1.getSpec().getApplicationServiceRef());
+        assertThat(topic1)
+                .isNotNull();
+        assertThat(topic1.getSpec().getName())
+                .isEqualTo("orders.events");
+        assertThat(topic1.getSpec().getPartitions())
+                .isEqualTo(6);
+        assertThat(topic1.getSpec().getReplicationFactor())
+                .isEqualTo(3);
+        assertThat(topic1.getSpec().getServiceRef())
+                .isEqualTo("orders-sa");
+        assertThat(topic1.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         Topic topic2 = (Topic) store.get("Topic", "default", "orders-dlq");
-        assertNotNull(topic2);
-        assertEquals("orders.dlq", topic2.getSpec().getName());
-        assertEquals(3, topic2.getSpec().getPartitions());
-        assertEquals(3, topic2.getSpec().getReplicationFactor());
-        assertEquals("orders-sa", topic2.getSpec().getServiceRef());
-        assertEquals("orders-app", topic2.getSpec().getApplicationServiceRef());
+        assertThat(topic2)
+                .isNotNull();
+        assertThat(topic2.getSpec().getName())
+                .isEqualTo("orders.dlq");
+        assertThat(topic2.getSpec().getPartitions())
+                .isEqualTo(3);
+        assertThat(topic2.getSpec().getReplicationFactor())
+                .isEqualTo(3);
+        assertThat(topic2.getSpec().getServiceRef())
+                .isEqualTo("orders-sa");
+        assertThat(topic2.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         ACL aclFromStore = (ACL) store.get("ACL", "default", "orders-read");
-        assertNotNull(aclFromStore);
-        assertEquals("orders-sa", aclFromStore.getSpec().getServiceRef());
-        assertEquals("orders-events", aclFromStore.getSpec().getTopicRef());
-        assertEquals(2, aclFromStore.getSpec().getOperations().size());
-        assertTrue(aclFromStore.getSpec().getOperations().contains(AclCRSpec.Operation.READ));
-        assertTrue(aclFromStore.getSpec().getOperations().contains(AclCRSpec.Operation.DESCRIBE));
-        assertEquals("orders-app", aclFromStore.getSpec().getApplicationServiceRef());
+        assertThat(aclFromStore)
+                .isNotNull();
+        assertThat(aclFromStore.getSpec().getServiceRef())
+                .isEqualTo("orders-sa");
+        assertThat(aclFromStore.getSpec().getTopicRef())
+                .isEqualTo("orders-events");
+        assertThat(aclFromStore.getSpec().getOperations())
+                .hasSize(2)
+                .contains(AclCRSpec.Operation.READ, AclCRSpec.Operation.DESCRIBE);
+        assertThat(aclFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
     }
 }

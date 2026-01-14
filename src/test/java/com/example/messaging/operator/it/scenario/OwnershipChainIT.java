@@ -1,6 +1,6 @@
 package com.example.messaging.operator.it.scenario;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
@@ -46,8 +46,12 @@ public class OwnershipChainIT extends ScenarioITBase {
 
         // Validate - should REJECT due to cross-tenant ownership
         ValidationResult result = ownershipValidator.validateCreate(sa, "default");
-        assertFalse(result.isValid(), "Cross-tenant ServiceAccount should be rejected");
-        assertTrue(result.getMessage().contains("owned by 'app1', not 'app2'"), "Error message should indicate ownership mismatch");
+        assertThat(result.isValid())
+                .as("Cross-tenant ServiceAccount should be rejected")
+                .isFalse();
+        assertThat(result.getMessage())
+                .as("Error message should indicate ownership mismatch")
+                .contains("owned by 'app1', not 'app2'");
     }
 
     @Test
@@ -95,8 +99,12 @@ public class OwnershipChainIT extends ScenarioITBase {
 
         // Validate - should REJECT due to cross-tenant ownership
         ValidationResult result = ownershipValidator.validateCreate(topic, "default");
-        assertFalse(result.isValid(), "Cross-tenant Topic should be rejected");
-        assertTrue(result.getMessage().contains("owned by 'orders-app', not 'payments-app'"), "Error message should indicate ownership mismatch");
+        assertThat(result.isValid())
+                .as("Cross-tenant Topic should be rejected")
+                .isFalse();
+        assertThat(result.getMessage())
+                .as("Error message should indicate ownership mismatch")
+                .contains("owned by 'orders-app', not 'payments-app'");
     }
 
     @Test
@@ -105,7 +113,8 @@ public class OwnershipChainIT extends ScenarioITBase {
 
         // Create ApplicationService
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("orders-app").appName("orders-app").createIn(k8sClient);
-        assertNotNull(app.getMetadata().getUid());
+        assertThat(app.getMetadata().getUid())
+                .isNotNull();
         syncToStore(app);
 
         // Create VirtualCluster owned by app
@@ -116,7 +125,8 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .applicationServiceRef("orders-app")
                 .ownedBy(app)
                 .createIn(k8sClient);
-        assertNotNull(vc.getMetadata().getUid());
+        assertThat(vc.getMetadata().getUid())
+                .isNotNull();
         syncToStore(vc);
 
         // Create ServiceAccount owned by vc
@@ -129,7 +139,8 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .applicationServiceRef("orders-app")
                 .ownedBy(vc)
                 .createIn(k8sClient);
-        assertNotNull(sa.getMetadata().getUid());
+        assertThat(sa.getMetadata().getUid())
+                .isNotNull();
         syncToStore(sa);
 
         // Create Topic owned by sa
@@ -143,7 +154,8 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .applicationServiceRef("orders-app")
                 .ownedBy(sa)
                 .createIn(k8sClient);
-        assertNotNull(topic1.getMetadata().getUid());
+        assertThat(topic1.getMetadata().getUid())
+                .isNotNull();
         syncToStore(topic1);
 
         // Create second Topic owned by sa
@@ -157,7 +169,8 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .applicationServiceRef("orders-app")
                 .ownedBy(sa)
                 .createIn(k8sClient);
-        assertNotNull(topic2.getMetadata().getUid());
+        assertThat(topic2.getMetadata().getUid())
+                .isNotNull();
         syncToStore(topic2);
 
         // Create ACL owned by sa
@@ -170,51 +183,77 @@ public class OwnershipChainIT extends ScenarioITBase {
                 .applicationServiceRef("orders-app")
                 .ownedBy(sa)
                 .createIn(k8sClient);
-        assertNotNull(acl.getMetadata().getUid());
+        assertThat(acl.getMetadata().getUid())
+                .isNotNull();
         syncToStore(acl);
 
         // Validate all creations should succeed
         ValidationResult vcResult = ownershipValidator.validateCreate(vc, "default");
-        assertTrue(vcResult.isValid(), "VirtualCluster creation should be valid");
+        assertThat(vcResult.isValid())
+                .as("VirtualCluster creation should be valid")
+                .isTrue();
 
         ValidationResult saResult = ownershipValidator.validateCreate(sa, "default");
-        assertTrue(saResult.isValid(), "ServiceAccount creation should be valid");
+        assertThat(saResult.isValid())
+                .as("ServiceAccount creation should be valid")
+                .isTrue();
 
         ValidationResult topic1Result = ownershipValidator.validateCreate(topic1, "default");
-        assertTrue(topic1Result.isValid(), "Topic1 creation should be valid");
+        assertThat(topic1Result.isValid())
+                .as("Topic1 creation should be valid")
+                .isTrue();
 
         ValidationResult topic2Result = ownershipValidator.validateCreate(topic2, "default");
-        assertTrue(topic2Result.isValid(), "Topic2 creation should be valid");
+        assertThat(topic2Result.isValid())
+                .as("Topic2 creation should be valid")
+                .isTrue();
 
         ValidationResult aclResult = ownershipValidator.validateCreate(acl, "default");
-        assertTrue(aclResult.isValid(), "ACL creation should be valid");
+        assertThat(aclResult.isValid())
+                .as("ACL creation should be valid")
+                .isTrue();
 
         // Verify all resources exist in store
-        assertEquals(1, store.list("ApplicationService", "default").size());
-        assertEquals(1, store.list("VirtualCluster", "default").size());
-        assertEquals(1, store.list("ServiceAccount", "default").size());
-        assertEquals(2, store.list("Topic", "default").size());
-        assertEquals(1, store.list("ACL", "default").size());
+        assertThat(store.list("ApplicationService", "default"))
+                .hasSize(1);
+        assertThat(store.list("VirtualCluster", "default"))
+                .hasSize(1);
+        assertThat(store.list("ServiceAccount", "default"))
+                .hasSize(1);
+        assertThat(store.list("Topic", "default"))
+                .hasSize(2);
+        assertThat(store.list("ACL", "default"))
+                .hasSize(1);
 
         // Verify ownership chain integrity
         ApplicationService appFromStore = (ApplicationService) store.get("ApplicationService", "default", "orders-app");
-        assertNotNull(appFromStore);
-        assertEquals("orders-app", appFromStore.getSpec().getName());
+        assertThat(appFromStore)
+                .isNotNull();
+        assertThat(appFromStore.getSpec().getName())
+                .isEqualTo("orders-app");
 
         VirtualCluster vcFromStore = (VirtualCluster) store.get("VirtualCluster", "default", "prod-cluster");
-        assertNotNull(vcFromStore);
-        assertEquals("orders-app", vcFromStore.getSpec().getApplicationServiceRef());
+        assertThat(vcFromStore)
+                .isNotNull();
+        assertThat(vcFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         ServiceAccount saFromStore = (ServiceAccount) store.get("ServiceAccount", "default", "orders-sa");
-        assertNotNull(saFromStore);
-        assertEquals("orders-app", saFromStore.getSpec().getApplicationServiceRef());
+        assertThat(saFromStore)
+                .isNotNull();
+        assertThat(saFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         Topic topic1FromStore = (Topic) store.get("Topic", "default", "orders-events");
-        assertNotNull(topic1FromStore);
-        assertEquals("orders-app", topic1FromStore.getSpec().getApplicationServiceRef());
+        assertThat(topic1FromStore)
+                .isNotNull();
+        assertThat(topic1FromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
 
         ACL aclFromStore = (ACL) store.get("ACL", "default", "orders-read");
-        assertNotNull(aclFromStore);
-        assertEquals("orders-app", aclFromStore.getSpec().getApplicationServiceRef());
+        assertThat(aclFromStore)
+                .isNotNull();
+        assertThat(aclFromStore.getSpec().getApplicationServiceRef())
+                .isEqualTo("orders-app");
     }
 }

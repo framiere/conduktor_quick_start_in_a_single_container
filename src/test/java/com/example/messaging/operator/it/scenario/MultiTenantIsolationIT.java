@@ -1,6 +1,6 @@
 package com.example.messaging.operator.it.scenario;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ScenarioITBase;
@@ -106,50 +106,74 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
 
         // Verify both tenants exist in store
         List<HasMetadata> apps = store.list("ApplicationService", "default");
-        assertEquals(2, apps.size(), "Should have 2 ApplicationServices");
+        assertThat(apps)
+                .as("Should have 2 ApplicationServices")
+                .hasSize(2);
 
         List<HasMetadata> vcs = store.list("VirtualCluster", "default");
-        assertEquals(2, vcs.size(), "Should have 2 VirtualClusters");
+        assertThat(vcs)
+                .as("Should have 2 VirtualClusters")
+                .hasSize(2);
 
         List<HasMetadata> sas = store.list("ServiceAccount", "default");
-        assertEquals(2, sas.size(), "Should have 2 ServiceAccounts");
+        assertThat(sas)
+                .as("Should have 2 ServiceAccounts")
+                .hasSize(2);
 
         List<HasMetadata> topics = store.list("Topic", "default");
-        assertEquals(2, topics.size(), "Should have 2 Topics");
+        assertThat(topics)
+                .as("Should have 2 Topics")
+                .hasSize(2);
 
         // Verify app1 resources
         ApplicationService app1 = (ApplicationService) store.get("ApplicationService", "default", "app1");
-        assertNotNull(app1);
-        assertEquals("app1", app1.getSpec().getName());
+        assertThat(app1)
+                .isNotNull();
+        assertThat(app1.getSpec().getName())
+                .isEqualTo("app1");
 
         VirtualCluster vc1 = (VirtualCluster) store.get("VirtualCluster", "default", "vc1");
-        assertNotNull(vc1);
-        assertEquals("app1", vc1.getSpec().getApplicationServiceRef());
+        assertThat(vc1)
+                .isNotNull();
+        assertThat(vc1.getSpec().getApplicationServiceRef())
+                .isEqualTo("app1");
 
         ServiceAccount sa1 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app1");
-        assertNotNull(sa1);
-        assertEquals("app1", sa1.getSpec().getApplicationServiceRef());
+        assertThat(sa1)
+                .isNotNull();
+        assertThat(sa1.getSpec().getApplicationServiceRef())
+                .isEqualTo("app1");
 
         Topic topic1 = (Topic) store.get("Topic", "default", "orders-events");
-        assertNotNull(topic1);
-        assertEquals("app1", topic1.getSpec().getApplicationServiceRef());
+        assertThat(topic1)
+                .isNotNull();
+        assertThat(topic1.getSpec().getApplicationServiceRef())
+                .isEqualTo("app1");
 
         // Verify app2 resources
         ApplicationService app2 = (ApplicationService) store.get("ApplicationService", "default", "app2");
-        assertNotNull(app2);
-        assertEquals("app2", app2.getSpec().getName());
+        assertThat(app2)
+                .isNotNull();
+        assertThat(app2.getSpec().getName())
+                .isEqualTo("app2");
 
         VirtualCluster vc2 = (VirtualCluster) store.get("VirtualCluster", "default", "vc2");
-        assertNotNull(vc2);
-        assertEquals("app2", vc2.getSpec().getApplicationServiceRef());
+        assertThat(vc2)
+                .isNotNull();
+        assertThat(vc2.getSpec().getApplicationServiceRef())
+                .isEqualTo("app2");
 
         ServiceAccount sa2 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app2");
-        assertNotNull(sa2);
-        assertEquals("app2", sa2.getSpec().getApplicationServiceRef());
+        assertThat(sa2)
+                .isNotNull();
+        assertThat(sa2.getSpec().getApplicationServiceRef())
+                .isEqualTo("app2");
 
         Topic topic2 = (Topic) store.get("Topic", "default", "payments-events");
-        assertNotNull(topic2);
-        assertEquals("app2", topic2.getSpec().getApplicationServiceRef());
+        assertThat(topic2)
+                .isNotNull();
+        assertThat(topic2.getSpec().getApplicationServiceRef())
+                .isEqualTo("app2");
     }
 
     @Test
@@ -159,8 +183,10 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
 
         // Get app2's topic from k8s (to ensure we have the latest version)
         Topic app2Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("payments-events").get();
-        assertNotNull(app2Topic);
-        assertEquals("app2", app2Topic.getSpec().getApplicationServiceRef());
+        assertThat(app2Topic)
+                .isNotNull();
+        assertThat(app2Topic.getSpec().getApplicationServiceRef())
+                .isEqualTo("app2");
 
         // Attempt to update app2's topic to reference app1 (ownership change)
         Topic updatedTopic = new Topic();
@@ -174,9 +200,12 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
 
         // Validate update - should REJECT due to ownership change attempt
         ValidationResult result = ownershipValidator.validateUpdate(updatedTopic, "default");
-        assertFalse(result.isValid(), "Cross-tenant ownership change should be rejected: " + result.getMessage());
-        assertTrue(result.getMessage().contains("applicationServiceRef") || result.getMessage().contains("ownership"),
-                "Error message should indicate ownership change is not allowed. Got: " + result.getMessage());
+        assertThat(result.isValid())
+                .as("Cross-tenant ownership change should be rejected: " + result.getMessage())
+                .isFalse();
+        assertThat(result.getMessage().contains("applicationServiceRef") || result.getMessage().contains("ownership"))
+                .as("Error message should indicate ownership change is not allowed. Got: " + result.getMessage())
+                .isTrue();
     }
 
     @Test
@@ -197,8 +226,12 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
 
         // Validate - should REJECT due to cross-tenant ServiceAccount reference
         ValidationResult result = ownershipValidator.validateCreate(crossTenantTopic, "default");
-        assertFalse(result.isValid(), "Cross-tenant ServiceAccount reference should be rejected");
-        assertTrue(result.getMessage().contains("owned by 'app2', not 'app1'"), "Error message should indicate ServiceAccount ownership mismatch");
+        assertThat(result.isValid())
+                .as("Cross-tenant ServiceAccount reference should be rejected")
+                .isFalse();
+        assertThat(result.getMessage().contains("owned by 'app2', not 'app1'"))
+                .as("Error message should indicate ServiceAccount ownership mismatch")
+                .isTrue();
     }
 
     @Test
@@ -218,7 +251,9 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
                 .build();
 
         ValidationResult app1Result = ownershipValidator.validateCreate(app1NewTopic, "default");
-        assertTrue(app1Result.isValid(), "App1 should be able to create its own topic");
+        assertThat(app1Result.isValid())
+                .as("App1 should be able to create its own topic")
+                .isTrue();
 
         // Create the topic in k8s and store
         ServiceAccount sa1 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app1");
@@ -246,7 +281,9 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
                 .build();
 
         ValidationResult app2Result = ownershipValidator.validateCreate(app2NewTopic, "default");
-        assertTrue(app2Result.isValid(), "App2 should be able to create its own topic");
+        assertThat(app2Result.isValid())
+                .as("App2 should be able to create its own topic")
+                .isTrue();
 
         // Create the topic in k8s and store
         ServiceAccount sa2 = (ServiceAccount) store.get("ServiceAccount", "default", "sa-app2");
@@ -264,35 +301,45 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
 
         // Verify both tenants have 2 topics each
         List<HasMetadata> allTopics = store.list("Topic", "default");
-        assertEquals(4, allTopics.size(), "Should have 4 topics total (2 per tenant)");
+        assertThat(allTopics)
+                .as("Should have 4 topics total (2 per tenant)")
+                .hasSize(4);
 
         // Verify app1 topics
         long app1TopicCount = allTopics.stream().map(t -> (Topic) t).filter(t -> "app1".equals(t.getSpec().getApplicationServiceRef())).count();
-        assertEquals(2, app1TopicCount, "App1 should have 2 topics");
+        assertThat(app1TopicCount)
+                .as("App1 should have 2 topics")
+                .isEqualTo(2);
 
         // Verify app2 topics
         long app2TopicCount = allTopics.stream().map(t -> (Topic) t).filter(t -> "app2".equals(t.getSpec().getApplicationServiceRef())).count();
-        assertEquals(2, app2TopicCount, "App2 should have 2 topics");
+        assertThat(app2TopicCount)
+                .as("App2 should have 2 topics")
+                .isEqualTo(2);
 
         // App1 updates its own topic - should succeed
         Topic app1Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("orders-events").get();
         app1Topic.getSpec().setPartitions(6);
         Topic updatedApp1Topic = k8sClient.resource(app1Topic).update();
-        assertEquals(6, updatedApp1Topic.getSpec().getPartitions());
+        assertThat(updatedApp1Topic.getSpec().getPartitions())
+                .isEqualTo(6);
         store.update("Topic", "default", app1Topic.getMetadata().getName(), updatedApp1Topic);
 
         // App2 updates its own topic - should succeed
         Topic app2Topic = k8sClient.resources(Topic.class).inNamespace("default").withName("payments-events").get();
         app2Topic.getSpec().setPartitions(6);
         Topic updatedApp2Topic = k8sClient.resource(app2Topic).update();
-        assertEquals(6, updatedApp2Topic.getSpec().getPartitions());
+        assertThat(updatedApp2Topic.getSpec().getPartitions())
+                .isEqualTo(6);
         store.update("Topic", "default", app2Topic.getMetadata().getName(), updatedApp2Topic);
 
         // Verify both updates succeeded independently
         Topic verifyApp1 = (Topic) store.get("Topic", "default", "orders-events");
-        assertEquals(6, verifyApp1.getSpec().getPartitions());
+        assertThat(verifyApp1.getSpec().getPartitions())
+                .isEqualTo(6);
 
         Topic verifyApp2 = (Topic) store.get("Topic", "default", "payments-events");
-        assertEquals(6, verifyApp2.getSpec().getPartitions());
+        assertThat(verifyApp2.getSpec().getPartitions())
+                .isEqualTo(6);
     }
 }

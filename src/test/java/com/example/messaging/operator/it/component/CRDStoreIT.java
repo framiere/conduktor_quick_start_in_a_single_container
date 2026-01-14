@@ -105,8 +105,10 @@ public class CRDStoreIT extends ComponentITBase {
         // Verify all topics are present
         assertThat(topics)
                 .hasSize(3);
-        assertThat(topics).extracting(t -> t.getMetadata().getName()).containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
-        assertThat(topics).extracting(t -> t.getSpec().getPartitions()).containsExactlyInAnyOrder(3, 6, 9);
+        assertThat(topics).extracting(t -> t.getMetadata().getName())
+                .containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
+        assertThat(topics).extracting(t -> t.getSpec().getPartitions())
+                .containsExactlyInAnyOrder(3, 6, 9);
     }
 
     @Test
@@ -145,11 +147,13 @@ public class CRDStoreIT extends ComponentITBase {
                 .isNotNull();
         assertThat(updated.getSpec().getClusterId())
                 .isEqualTo("updated-cluster-id");
-        assertThat(updated.getMetadata().getResourceVersion()).isNotEqualTo(originalVersion);
+        assertThat(updated.getMetadata().getResourceVersion())
+                .isNotEqualTo(originalVersion);
 
         // Verify persisted in store
         VirtualCluster fromStoreAfterUpdate = store.get("VirtualCluster", "default", "test-cluster");
-        assertThat(fromStoreAfterUpdate.getSpec().getClusterId()).isEqualTo("updated-cluster-id");
+        assertThat(fromStoreAfterUpdate.getSpec().getClusterId())
+                .isEqualTo("updated-cluster-id");
     }
 
     @Test
