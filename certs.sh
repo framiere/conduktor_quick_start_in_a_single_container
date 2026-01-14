@@ -154,6 +154,7 @@ create_certificate "gateway"
 create_certificate "demo-admin"
 create_certificate "demo-acl-admin"
 create_certificate "demo-acl-user"
+create_certificate "orders-service"
 
 # Cleanup intermediate files
 rm -f *.csr *.der *.p12 *-signed.crt 2>/dev/null || true

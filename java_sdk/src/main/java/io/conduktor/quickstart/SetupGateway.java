@@ -7,6 +7,8 @@ import io.conduktor.gateway.client.ApiException;
 import io.conduktor.gateway.client.api.CliGatewayServiceAccountGatewayV210Api;
 import io.conduktor.gateway.client.api.CliVirtualClusterGatewayV27Api;
 import io.conduktor.gateway.client.model.*;
+import jakarta.validation.*;
+import jakarta.validation.constraints.*;
 import okhttp3.*;
 import org.openapitools.client.ApiClient;
 import org.openapitools.client.Configuration;
@@ -26,12 +28,22 @@ import java.util.concurrent.TimeUnit;
 
 public class SetupGateway {
     private static final Logger log = LoggerFactory.getLogger(SetupGateway.class);
+    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     // CRD Data Model POJOs
     static class MessagingDeclaration {
+        @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
+
+        @NotBlank(message = "kind must not be empty")
         public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
         public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
         public Spec spec;
     }
 
@@ -41,25 +53,56 @@ public class SetupGateway {
     }
 
     static class Spec {
+        @NotBlank(message = "serviceName must not be empty")
         public String serviceName;
+
+        @NotBlank(message = "virtualClusterId must not be empty")
         public String virtualClusterId;
+
+        @Valid
+        @Size(max = 10, message = "topics list must not exceed 10 items")
         public List<TopicDef> topics = List.of();
+
+        @Valid
+        @Size(max = 10, message = "acls list must not exceed 10 items")
         public List<AclDef> acls = List.of();
     }
 
     static class TopicDef {
+        @NotBlank(message = "topic name must not be empty")
         public String name;
+
+        @NotNull
+        @Min(value = 1, message = "partitions must be at least 1")
+        @Max(value = 100, message = "partitions must not exceed 100")
         public Integer partitions = 3;
+
+        @NotNull
+        @Min(value = 1, message = "replicationFactor must be at least 1")
+        @Max(value = 10, message = "replicationFactor must not exceed 10")
         public Integer replicationFactor = 3;
+
         public Map<String, String> config = Map.of();
     }
 
     static class AclDef {
+        @NotNull
         public AclResourceType type = AclResourceType.TOPIC;
+
+        @NotBlank(message = "acl name must not be empty")
         public String name;
+
+        @NotNull
+        @Size(min = 1, max = 10, message = "operations list must have between 1 and 10 items")
         public List<String> operations = List.of("READ", "WRITE", "DESCRIBE");
+
+        @NotNull
         public ResourcePatternType patternType = ResourcePatternType.LITERAL;
+
+        @NotBlank(message = "host must not be empty")
         public String host = "*";
+
+        @NotNull
         public AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
     }
 
@@ -150,6 +193,9 @@ public class SetupGateway {
     private final CliVirtualClusterGatewayV27Api virtualClusterApi;
     private final CliGatewayServiceAccountGatewayV210Api gatewayServiceAccountApi;
 
+    // Track vClusters already created in this session
+    private final java.util.Set<String> createdVClusters = new java.util.HashSet<>();
+
     public SetupGateway() {
         this.cdkBaseUrl = env("CDK_BASE_URL", "http://localhost:8080");
         this.cdkUser = env("CDK_USER", "admin@demo.dev");
@@ -206,12 +252,8 @@ public class SetupGateway {
         log.info("Setting up vClusters with mTLS: {}, {}", vCluster, vClusterAcl);
 
         // Parse and process all CRDs
-        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
-        );
-
-        for (Object doc : yaml.loadAll(CRDS)) {
-            MessagingDeclaration crd = (MessagingDeclaration) doc;
+        List<MessagingDeclaration> crds = parseAllCrds(CRDS);
+        for (MessagingDeclaration crd : crds) {
             processCRD(crd);
         }
 
@@ -360,28 +402,83 @@ public class SetupGateway {
 
     // CRD Processing Methods
 
+    /**
+     * Parse and validate multiple CRD documents from a multi-document YAML string.
+     * This method is type-safe and validates each document against bean validation constraints.
+     *
+     * @param multiDocYaml Multi-document YAML string containing CRD definitions
+     * @return List of validated MessagingDeclaration objects
+     * @throws IllegalArgumentException if any document fails validation or is not a valid MessagingDeclaration
+     */
+    List<MessagingDeclaration> parseAllCrds(String multiDocYaml) {
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
+                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
+        );
+
+        List<MessagingDeclaration> crds = new ArrayList<>();
+        int documentIndex = 0;
+
+        for (Object doc : yaml.loadAll(multiDocYaml)) {
+            documentIndex++;
+
+            // Type safety: verify the document is actually a MessagingDeclaration
+            if (!(doc instanceof MessagingDeclaration)) {
+                throw new IllegalArgumentException(
+                        "Document #" + documentIndex + " is not a valid MessagingDeclaration. Got: " +
+                                (doc != null ? doc.getClass().getName() : "null")
+                );
+            }
+
+            MessagingDeclaration crd = (MessagingDeclaration) doc;
+
+            // Validate using bean validation
+            java.util.Set<ConstraintViolation<MessagingDeclaration>> violations = validator.validate(crd);
+            if (!violations.isEmpty()) {
+                StringBuilder errorMsg = new StringBuilder("CRD validation failed for document #" + documentIndex);
+                if (crd.metadata != null && crd.metadata.name != null) {
+                    errorMsg.append(" (").append(crd.metadata.name).append(")");
+                }
+                errorMsg.append(":\n");
+
+                for (ConstraintViolation<MessagingDeclaration> violation : violations) {
+                    errorMsg.append("  - ").append(violation.getPropertyPath())
+                            .append(": ").append(violation.getMessage()).append("\n");
+                }
+                throw new IllegalArgumentException(errorMsg.toString());
+            }
+
+            crds.add(crd);
+        }
+
+        if (crds.isEmpty()) {
+            throw new IllegalArgumentException("No valid CRD documents found in YAML");
+        }
+
+        return crds;
+    }
+
     MessagingDeclaration parseYaml(String crdYaml) {
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
                 new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
         );
         MessagingDeclaration crd = yaml.load(crdYaml);
 
-        // Validate required fields
-        if (crd.spec == null) {
-            throw new IllegalArgumentException("Invalid CRD format: missing spec");
-        }
-        if (crd.spec.serviceName == null || crd.spec.serviceName.isBlank()) {
-            throw new IllegalArgumentException("Invalid CRD format: missing required field serviceName");
-        }
-        if (crd.spec.virtualClusterId == null || crd.spec.virtualClusterId.isBlank()) {
-            throw new IllegalArgumentException("Invalid CRD format: missing required field virtualClusterId");
+        // Validate using bean validation
+        java.util.Set<ConstraintViolation<MessagingDeclaration>> violations = validator.validate(crd);
+        if (!violations.isEmpty()) {
+            StringBuilder errorMsg = new StringBuilder("CRD validation failed:\n");
+            for (ConstraintViolation<MessagingDeclaration> violation : violations) {
+                errorMsg.append("  - ").append(violation.getPropertyPath())
+                        .append(": ").append(violation.getMessage()).append("\n");
+            }
+            throw new IllegalArgumentException(errorMsg.toString());
         }
 
         return crd;
     }
 
     private void upsertVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
-            throws IOException, org.openapitools.client.ApiException, ApiException {
+            throws IOException, org.openapitools.client.ApiException, ApiException, InterruptedException {
         VirtualClusterSpec spec = new VirtualClusterSpec();
 
         String adminUser;
@@ -416,12 +513,20 @@ public class SetupGateway {
 
         generateSslProperties(adminUser);
 
+        // Wait for Gateway to fully set up the vCluster
+        log.info("Waiting for Gateway vCluster to be fully ready...");
+        Thread.sleep(3000);
+
         // Add to Console
         addVClusterToConsole(vClusterName, adminUser, hasAcls);
     }
 
+    private boolean vClusterExistsInConsole(String vClusterName) {
+        return createdVClusters.contains(vClusterName);
+    }
+
     private void addVClusterToConsole(String vClusterName, String adminUser, boolean aclEnabled)
-            throws org.openapitools.client.ApiException {
+            throws org.openapitools.client.ApiException, InterruptedException {
         log.info("Adding vCluster {} to Console...", vClusterName);
 
         String displayName = vClusterName + " (mTLS" + (aclEnabled ? " + ACL" : "") + ")";
@@ -448,6 +553,13 @@ public class SetupGateway {
                                 .password(cdkGatewayPassword)
                                 .virtualCluster(vClusterName)))), null);
         log.info("KafkaCluster/{} created in Console", vClusterName);
+
+        // Mark as created
+        createdVClusters.add(vClusterName);
+
+        // Wait for Console to establish connection to the cluster
+        log.info("Waiting for Console to connect to vCluster {}...", vClusterName);
+        Thread.sleep(5000);
     }
 
     private void createTopicsFromCRD(String vClusterName, List<TopicDef> topics)
@@ -503,9 +615,13 @@ public class SetupGateway {
 
         log.info("Processing CRD for service: {}", serviceName);
 
-        // 2. Upsert vCluster
+        // 2. Upsert vCluster (only if it doesn't already exist in Console)
         boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
-        upsertVClusterFromCRD(vClusterName, hasAcls, serviceName);
+        boolean vClusterExistsInConsole = vClusterExistsInConsole(vClusterName);
+
+        if (!vClusterExistsInConsole) {
+            upsertVClusterFromCRD(vClusterName, hasAcls, serviceName);
+        }
 
         // 3. Upsert Gateway ServiceAccount for the service (mTLS)
         log.info("Upserting Gateway ServiceAccount: {}", serviceName);

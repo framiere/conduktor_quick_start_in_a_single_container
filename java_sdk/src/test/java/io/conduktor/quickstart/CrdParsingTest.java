@@ -180,7 +180,7 @@ class CrdParsingTest {
 
         assertThatThrownBy(() -> setup.parseYaml(crd))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Invalid CRD format: missing spec");
+            .hasMessageContaining("spec must not be null");
     }
 
     @Test
@@ -196,7 +196,7 @@ class CrdParsingTest {
 
         assertThatThrownBy(() -> setup.parseYaml(crd))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("missing required field serviceName");
+            .hasMessageContaining("serviceName must not be empty");
     }
 
     @Test
@@ -213,7 +213,7 @@ class CrdParsingTest {
 
         assertThatThrownBy(() -> setup.parseYaml(crd))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("missing required field serviceName");
+            .hasMessageContaining("serviceName must not be empty");
     }
 
     @Test
@@ -229,7 +229,7 @@ class CrdParsingTest {
 
         assertThatThrownBy(() -> setup.parseYaml(crd))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("missing required field virtualClusterId");
+            .hasMessageContaining("virtualClusterId must not be empty");
     }
 
     @Test
@@ -246,7 +246,7 @@ class CrdParsingTest {
 
         assertThatThrownBy(() -> setup.parseYaml(crd))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("missing required field virtualClusterId");
+            .hasMessageContaining("virtualClusterId must not be empty");
     }
 
     @Test
@@ -363,12 +363,9 @@ class CrdParsingTest {
                   operations: []
             """;
 
-        SetupGateway.MessagingDeclaration result = setup.parseYaml(crd);
-
-        assertThat(result).isNotNull();
-        assertThat(result.spec.acls).hasSize(1);
-        assertThat(result.spec.acls.get(0).name).isEqualTo("all-access.topic");
-        assertThat(result.spec.acls.get(0).operations).isEmpty();
+        assertThatThrownBy(() -> setup.parseYaml(crd))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("operations list must have between 1 and 10 items");
     }
 
     @Test
@@ -408,5 +405,84 @@ class CrdParsingTest {
         assertThat(result.spec.acls.get(2).name).isEqualTo("default.topic");
         assertThat(result.spec.acls.get(2).patternType).isEqualTo(ResourcePatternType.LITERAL);
         assertThat(result.spec.acls.get(2).operations).containsExactly("READ");
+    }
+
+    @Test
+    void testParseAllCrdsMultiDocument() {
+        String multiDocYaml = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: service-one
+            spec:
+              serviceName: service-one
+              virtualClusterId: cluster-one
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: service-two
+            spec:
+              serviceName: service-two
+              virtualClusterId: cluster-two
+              topics:
+                - name: test.topic
+                  partitions: 3
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: service-three
+            spec:
+              serviceName: service-three
+              virtualClusterId: cluster-three
+              acls:
+                - type: TOPIC
+                  name: secure.topic
+                  operations: [READ, WRITE]
+            """;
+
+        List<SetupGateway.MessagingDeclaration> crds = setup.parseAllCrds(multiDocYaml);
+
+        assertThat(crds).hasSize(3);
+        assertThat(crds.get(0).spec.serviceName).isEqualTo("service-one");
+        assertThat(crds.get(1).spec.serviceName).isEqualTo("service-two");
+        assertThat(crds.get(2).spec.serviceName).isEqualTo("service-three");
+        assertThat(crds.get(1).spec.topics).hasSize(1);
+        assertThat(crds.get(2).spec.acls).hasSize(1);
+    }
+
+    @Test
+    void testParseAllCrdsEmptyYaml() {
+        assertThatThrownBy(() -> setup.parseAllCrds(""))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("No valid CRD documents found in YAML");
+    }
+
+    @Test
+    void testParseAllCrdsInvalidDocumentInMultiDoc() {
+        String multiDocYaml = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: valid-service
+            spec:
+              serviceName: valid-service
+              virtualClusterId: test-cluster
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: invalid-service
+            spec:
+              serviceName: ""
+              virtualClusterId: test-cluster
+            """;
+
+        assertThatThrownBy(() -> setup.parseAllCrds(multiDocYaml))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("document #2")
+            .hasMessageContaining("invalid-service")
+            .hasMessageContaining("serviceName must not be empty");
     }
 }
