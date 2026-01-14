@@ -25,7 +25,8 @@ metadata:
   namespace: orders
 spec:
   name: orders-service
-  cn: CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US
+  dn:
+    - CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US
   clusterRef: prod-cluster
   applicationServiceRef: orders-service
 ---
@@ -143,7 +144,8 @@ metadata:
   name: demo-admin-sa
 spec:
   name: demo-admin
-  cn: CN=demo-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  dn:
+    - CN=demo-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
   clusterRef: demo
   applicationServiceRef: demo-admin
 ---
@@ -153,7 +155,8 @@ metadata:
   name: demo-acl-admin-sa
 spec:
   name: demo-acl-admin
-  cn: CN=demo-acl-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  dn:
+    - CN=demo-acl-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
   clusterRef: demo-acl
   applicationServiceRef: demo-acl-admin
 ---
@@ -171,7 +174,8 @@ metadata:
   name: demo-acl-user-sa
 spec:
   name: demo-acl-user
-  cn: CN=demo-acl-user,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  dn:
+    - CN=demo-acl-user,OU=DEMO,O=EXAMPLE,L=CITY,C=US
   clusterRef: demo-acl
   applicationServiceRef: demo-acl-user
 ---
