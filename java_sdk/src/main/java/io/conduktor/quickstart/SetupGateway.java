@@ -152,8 +152,8 @@ public class SetupGateway {
             """;
 
     // Gateway SDK clients
-    private CliVirtualClusterGatewayV27Api virtualClusterApi;
-    private CliGatewayServiceAccountGatewayV210Api gatewayServiceAccountApi;
+    private final CliVirtualClusterGatewayV27Api virtualClusterApi;
+    private final CliGatewayServiceAccountGatewayV210Api gatewayServiceAccountApi;
 
     public SetupGateway() {
         this.cdkBaseUrl = env("CDK_BASE_URL", "http://localhost:8080");
