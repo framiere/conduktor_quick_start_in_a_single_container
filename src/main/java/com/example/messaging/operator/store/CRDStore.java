@@ -33,40 +33,39 @@ public class CRDStore {
         return String.format("%s/%s/%s", kind, namespace, name);
     }
 
-    /**
-     * Create a new resource
-     *
-     * @param kind      The resource kind (e.g., "Topic", "ServiceAccount")
-     * @param namespace The namespace
-     * @param resource  The resource to create
-     * @return The created resource with server-assigned metadata
-     * @throws IllegalStateException if resource already exists
-     */
     public <T> T create(String kind, String namespace, T resource) {
         String name = getName(resource);
         String appService = getApplicationServiceRef(resource);
 
         // Publish BEFORE event
-        eventPublisher.publishBefore(
-                ReconciliationEvent.Operation.CREATE,
-                kind,
-                name,
-                namespace,
-                appService
-        );
+        ReconciliationEvent event1 = ReconciliationEvent.builder()
+                .phase(ReconciliationEvent.Phase.BEFORE)
+                .operation(ReconciliationEvent.Operation.CREATE)
+                .resourceKind(kind)
+                .resourceName(name)
+                .resourceNamespace(namespace)
+                .applicationService(appService)
+                .build();
+
+        eventPublisher.publish(event1);
 
         try {
             String key = getKey(kind, namespace, name);
             if (store.containsKey(key)) {
                 String errorMessage = "Resource already exists: " + key;
-                eventPublisher.publishFailure(
-                        ReconciliationEvent.Operation.CREATE,
-                        kind,
-                        name,
-                        namespace,
-                        appService,
-                        errorMessage
-                );
+                ReconciliationEvent event = ReconciliationEvent.builder()
+                        .phase(ReconciliationEvent.Phase.AFTER)
+                        .operation(ReconciliationEvent.Operation.CREATE)
+                        .resourceKind(kind)
+                        .resourceName(name)
+                        .resourceNamespace(namespace)
+                        .applicationService(appService)
+                        .result(ReconciliationEvent.Result.FAILURE)
+                        .message("Operation failed")
+                        .errorDetails(errorMessage)
+                        .build();
+
+                eventPublisher.publish(event);
                 throw new IllegalStateException(errorMessage);
             }
 
@@ -74,14 +73,20 @@ public class CRDStore {
             if (!(resource instanceof ApplicationService)) {
                 ValidationResult validationResult = ownershipValidator.validateCreate(resource, namespace);
                 if (!validationResult.isValid()) {
-                    eventPublisher.publishValidationError(
-                            ReconciliationEvent.Operation.CREATE,
-                            kind,
-                            name,
-                            namespace,
-                            appService,
-                            validationResult.getMessage()
-                    );
+                    String validationMessage = validationResult.getMessage();
+                    ReconciliationEvent event = ReconciliationEvent.builder()
+                            .phase(ReconciliationEvent.Phase.AFTER)
+                            .operation(ReconciliationEvent.Operation.CREATE)
+                            .resourceKind(kind)
+                            .resourceName(name)
+                            .resourceNamespace(namespace)
+                            .applicationService(appService)
+                            .result(ReconciliationEvent.Result.VALIDATION_ERROR)
+                            .message("Validation failed")
+                            .reason(validationMessage)
+                            .build();
+
+                    eventPublisher.publish(event);
                     throw new SecurityException("Ownership validation failed: " + validationResult.getMessage());
                 }
             }
@@ -90,20 +95,25 @@ public class CRDStore {
             setResourceVersion(resource, String.valueOf(version));
             setUid(resource, UUID.randomUUID().toString());
 
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("resource", resource);
-            entry.put("timestamp", System.currentTimeMillis());
-            store.put(key, entry);
+
+            store.put(key, Map.of(
+                    "resource", resource,
+                    "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
-            eventPublisher.publishSuccess(
-                    ReconciliationEvent.Operation.CREATE,
-                    kind,
-                    name,
-                    namespace,
-                    appService,
-                    version
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind(kind)
+                    .resourceName(name)
+                    .resourceNamespace(namespace)
+                    .applicationService(appService)
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.CREATE.name() + " completed successfully")
+                    .resourceVersion(version)
+                    .build();
+
+            eventPublisher.publish(event);
 
             return resource;
         } catch (IllegalStateException | SecurityException e) {
@@ -111,52 +121,55 @@ public class CRDStore {
             throw e;
         } catch (Exception e) {
             // Unexpected exception, publish failure and rethrow
-            eventPublisher.publishFailure(
-                    ReconciliationEvent.Operation.CREATE,
-                    kind,
-                    name,
-                    namespace,
-                    appService,
-                    e.getMessage()
-            );
+            String errorMessage = e.getMessage();
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind(kind)
+                    .resourceName(name)
+                    .resourceNamespace(namespace)
+                    .applicationService(appService)
+                    .result(ReconciliationEvent.Result.FAILURE)
+                    .message("Operation failed")
+                    .errorDetails(errorMessage)
+                    .build();
+
+            eventPublisher.publish(event);
             throw e;
         }
     }
 
-    /**
-     * Update an existing resource
-     *
-     * @param kind      The resource kind
-     * @param namespace The namespace
-     * @param name      The resource name
-     * @param resource  The updated resource
-     * @return The updated resource with incremented version
-     * @throws IllegalStateException if resource not found
-     */
     public <T> T update(String kind, String namespace, String name, T resource) {
         String appService = getApplicationServiceRef(resource);
 
-        // Publish BEFORE event
-        eventPublisher.publishBefore(
-                ReconciliationEvent.Operation.UPDATE,
-                kind,
-                name,
-                namespace,
-                appService
-        );
+        ReconciliationEvent event1 = ReconciliationEvent.builder()
+                .phase(ReconciliationEvent.Phase.BEFORE)
+                .operation(ReconciliationEvent.Operation.UPDATE)
+                .resourceKind(kind)
+                .resourceName(name)
+                .resourceNamespace(namespace)
+                .applicationService(appService)
+                .build();
+
+        eventPublisher.publish(event1);
 
         try {
             String key = getKey(kind, namespace, name);
             if (!store.containsKey(key)) {
                 String errorMessage = "Resource not found: " + key;
-                eventPublisher.publishFailure(
-                        ReconciliationEvent.Operation.UPDATE,
-                        kind,
-                        name,
-                        namespace,
-                        appService,
-                        errorMessage
-                );
+                ReconciliationEvent event = ReconciliationEvent.builder()
+                        .phase(ReconciliationEvent.Phase.AFTER)
+                        .operation(ReconciliationEvent.Operation.UPDATE)
+                        .resourceKind(kind)
+                        .resourceName(name)
+                        .resourceNamespace(namespace)
+                        .applicationService(appService)
+                        .result(ReconciliationEvent.Result.FAILURE)
+                        .message("Operation failed")
+                        .errorDetails(errorMessage)
+                        .build();
+
+                eventPublisher.publish(event);
                 throw new IllegalStateException(errorMessage);
             }
 
@@ -165,14 +178,20 @@ public class CRDStore {
             if (!(resource instanceof ApplicationService)) {
                 ValidationResult validationResult = ownershipValidator.validateUpdate(existingResource, resource);
                 if (!validationResult.isValid()) {
-                    eventPublisher.publishValidationError(
-                            ReconciliationEvent.Operation.UPDATE,
-                            kind,
-                            name,
-                            namespace,
-                            appService,
-                            validationResult.getMessage()
-                    );
+                    String validationMessage = validationResult.getMessage();
+                    ReconciliationEvent event = ReconciliationEvent.builder()
+                            .phase(ReconciliationEvent.Phase.AFTER)
+                            .operation(ReconciliationEvent.Operation.UPDATE)
+                            .resourceKind(kind)
+                            .resourceName(name)
+                            .resourceNamespace(namespace)
+                            .applicationService(appService)
+                            .result(ReconciliationEvent.Result.VALIDATION_ERROR)
+                            .message("Validation failed")
+                            .reason(validationMessage)
+                            .build();
+
+                    eventPublisher.publish(event);
                     throw new SecurityException("Ownership validation failed: " + validationResult.getMessage());
                 }
             }
@@ -180,20 +199,24 @@ public class CRDStore {
             long version = resourceVersionCounter.getAndIncrement();
             setResourceVersion(resource, String.valueOf(version));
 
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("resource", resource);
-            entry.put("timestamp", System.currentTimeMillis());
-            store.put(key, entry);
+            store.put(key, Map.of(
+                    "resource", resource,
+                    "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
-            eventPublisher.publishSuccess(
-                    ReconciliationEvent.Operation.UPDATE,
-                    kind,
-                    name,
-                    namespace,
-                    appService,
-                    version
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.UPDATE)
+                    .resourceKind(kind)
+                    .resourceName(name)
+                    .resourceNamespace(namespace)
+                    .applicationService(appService)
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.UPDATE.name() + " completed successfully")
+                    .resourceVersion(version)
+                    .build();
+
+            eventPublisher.publish(event);
 
             return resource;
         } catch (IllegalStateException | SecurityException e) {
@@ -201,14 +224,20 @@ public class CRDStore {
             throw e;
         } catch (Exception e) {
             // Unexpected exception, publish failure and rethrow
-            eventPublisher.publishFailure(
-                    ReconciliationEvent.Operation.UPDATE,
-                    kind,
-                    name,
-                    namespace,
-                    appService,
-                    e.getMessage()
-            );
+            String errorMessage = e.getMessage();
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.UPDATE)
+                    .resourceKind(kind)
+                    .resourceName(name)
+                    .resourceNamespace(namespace)
+                    .applicationService(appService)
+                    .result(ReconciliationEvent.Result.FAILURE)
+                    .message("Operation failed")
+                    .errorDetails(errorMessage)
+                    .build();
+
+            eventPublisher.publish(event);
             throw e;
         }
     }
@@ -269,27 +298,36 @@ public class CRDStore {
         String appService = existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
 
         // Publish BEFORE event
-        eventPublisher.publishBefore(
-                ReconciliationEvent.Operation.DELETE,
-                kind,
-                name,
-                namespace,
-                appService
-        );
+        ReconciliationEvent event1 = ReconciliationEvent.builder()
+                .phase(ReconciliationEvent.Phase.BEFORE)
+                .operation(ReconciliationEvent.Operation.DELETE)
+                .resourceKind(kind)
+                .resourceName(name)
+                .resourceNamespace(namespace)
+                .applicationService(appService)
+                .build();
+
+        eventPublisher.publish(event1);
 
         try {
             // OWNERSHIP ENFORCEMENT: Validate only owner can delete
             if (existingResource != null && requestingAppService != null && !(existingResource instanceof ApplicationService)) {
                 ValidationResult validationResult = ownershipValidator.validateDelete(existingResource, requestingAppService);
                 if (!validationResult.isValid()) {
-                    eventPublisher.publishValidationError(
-                            ReconciliationEvent.Operation.DELETE,
-                            kind,
-                            name,
-                            namespace,
-                            appService,
-                            validationResult.getMessage()
-                    );
+                    String validationMessage = validationResult.getMessage();
+                    ReconciliationEvent event = ReconciliationEvent.builder()
+                            .phase(ReconciliationEvent.Phase.AFTER)
+                            .operation(ReconciliationEvent.Operation.DELETE)
+                            .resourceKind(kind)
+                            .resourceName(name)
+                            .resourceNamespace(namespace)
+                            .applicationService(appService)
+                            .result(ReconciliationEvent.Result.VALIDATION_ERROR)
+                            .message("Validation failed")
+                            .reason(validationMessage)
+                            .build();
+
+                    eventPublisher.publish(event);
                     throw new SecurityException("Ownership validation failed: " + validationResult.getMessage());
                 }
             }
@@ -299,25 +337,34 @@ public class CRDStore {
 
             if (deleted) {
                 // Publish AFTER SUCCESS event
-                eventPublisher.publishSuccess(
-                        ReconciliationEvent.Operation.DELETE,
-                        kind,
-                        name,
-                        namespace,
-                        appService,
-                        null  // No version after delete
-                );
+                // No version after delete
+                ReconciliationEvent event = ReconciliationEvent.builder()
+                        .phase(ReconciliationEvent.Phase.AFTER)
+                        .operation(ReconciliationEvent.Operation.DELETE)
+                        .resourceKind(kind)
+                        .resourceName(name)
+                        .resourceNamespace(namespace)
+                        .applicationService(appService)
+                        .result(ReconciliationEvent.Result.SUCCESS)
+                        .message(ReconciliationEvent.Operation.DELETE.name() + " completed successfully")
+                        .resourceVersion(null)
+                        .build();
+
+                eventPublisher.publish(event);
             } else {
-                eventPublisher.publishAfter(
-                        ReconciliationEvent.Operation.DELETE,
-                        kind,
-                        name,
-                        namespace,
-                        appService,
-                        ReconciliationEvent.Result.NOT_FOUND,
-                        "Resource not found",
-                        null
-                );
+                ReconciliationEvent event = ReconciliationEvent.builder()
+                        .phase(ReconciliationEvent.Phase.AFTER)
+                        .operation(ReconciliationEvent.Operation.DELETE)
+                        .resourceKind(kind)
+                        .resourceName(name)
+                        .resourceNamespace(namespace)
+                        .applicationService(appService)
+                        .result(ReconciliationEvent.Result.NOT_FOUND)
+                        .message("Resource not found")
+                        .resourceVersion(null)
+                        .build();
+
+                eventPublisher.publish(event);
             }
 
             return deleted;
@@ -326,14 +373,19 @@ public class CRDStore {
             throw e;
         } catch (Exception e) {
             // Unexpected exception, publish failure and rethrow
-            eventPublisher.publishFailure(
-                    ReconciliationEvent.Operation.DELETE,
-                    kind,
-                    name,
-                    namespace,
-                    appService,
-                    e.getMessage()
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.DELETE)
+                    .resourceKind(kind)
+                    .resourceName(name)
+                    .resourceNamespace(namespace)
+                    .applicationService(appService)
+                    .result(ReconciliationEvent.Result.FAILURE)
+                    .message("Operation failed")
+                    .errorDetails(e.getMessage())
+                    .build();
+
+            eventPublisher.publish(event);
             throw e;
         }
     }

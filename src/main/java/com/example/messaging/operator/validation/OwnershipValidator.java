@@ -26,8 +26,7 @@ public class OwnershipValidator {
         if (resource instanceof VirtualCluster) {
             VirtualCluster vc = (VirtualCluster) resource;
             return validateApplicationServiceExists(vc.getSpec().getApplicationServiceRef(), namespace);
-        } else if (resource instanceof ServiceAccount) {
-            ServiceAccount sa = (ServiceAccount) resource;
+        } else if (resource instanceof ServiceAccount sa) {
             ValidationResult appServiceResult = validateApplicationServiceExists(
                     sa.getSpec().getApplicationServiceRef(), namespace);
             if (!appServiceResult.isValid()) return appServiceResult;
@@ -122,8 +121,8 @@ public class OwnershipValidator {
     }
 
     private String getApplicationServiceRef(Object resource) {
-        if (resource instanceof VirtualCluster) {
-            return ((VirtualCluster) resource).getSpec().getApplicationServiceRef();
+        if (resource instanceof VirtualCluster r) {
+            return r.getSpec().getApplicationServiceRef();
         } else if (resource instanceof ServiceAccount) {
             return ((ServiceAccount) resource).getSpec().getApplicationServiceRef();
         } else if (resource instanceof Topic) {

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -315,13 +314,16 @@ class ReconciliationEventTest {
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
-            publisher.publishBefore(
-                    ReconciliationEvent.Operation.CREATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service"
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(1)
@@ -343,14 +345,19 @@ class ReconciliationEventTest {
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
-            publisher.publishSuccess(
-                    ReconciliationEvent.Operation.UPDATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service",
-                    5L
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.UPDATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.UPDATE.name() + " completed successfully")
+                    .resourceVersion(5L)
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(1)
@@ -370,14 +377,19 @@ class ReconciliationEventTest {
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
-            publisher.publishFailure(
-                    ReconciliationEvent.Operation.DELETE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service",
-                    "Resource not found in Kafka"
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.DELETE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.FAILURE)
+                    .message("Operation failed")
+                    .errorDetails("Resource not found in Kafka")
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(1)
@@ -396,14 +408,19 @@ class ReconciliationEventTest {
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
-            publisher.publishValidationError(
-                    ReconciliationEvent.Operation.CREATE,
-                    "VirtualCluster",
-                    "prod-cluster",
-                    "production",
-                    "orders-service",
-                    "ApplicationService 'orders-service' does not exist"
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("VirtualCluster")
+                    .resourceName("prod-cluster")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.VALIDATION_ERROR)
+                    .message("Validation failed")
+                    .reason("ApplicationService 'orders-service' does not exist")
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(1)
@@ -427,25 +444,33 @@ class ReconciliationEventTest {
             publisher.addListener(events::add);
 
             // BEFORE event
-            publisher.publishBefore(
-                    ReconciliationEvent.Operation.CREATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service"
-            );
+            ReconciliationEvent event1 = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .build();
+
+            publisher.publish(event1);
 
             // Simulate reconciliation work...
 
             // AFTER event
-            publisher.publishSuccess(
-                    ReconciliationEvent.Operation.CREATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service",
-                    1L
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.CREATE.name() + " completed successfully")
+                    .resourceVersion(1L)
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(2)
@@ -469,25 +494,33 @@ class ReconciliationEventTest {
             publisher.addListener(events::add);
 
             // BEFORE event
-            publisher.publishBefore(
-                    ReconciliationEvent.Operation.CREATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service"
-            );
+            ReconciliationEvent event1 = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .build();
+
+            publisher.publish(event1);
 
             // Simulate validation failure...
 
             // AFTER event with validation error
-            publisher.publishValidationError(
-                    ReconciliationEvent.Operation.CREATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service",
-                    "ServiceAccount 'orders-sa' does not exist"
-            );
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.CREATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.VALIDATION_ERROR)
+                    .message("Validation failed")
+                    .reason("ServiceAccount 'orders-sa' does not exist")
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(2)
@@ -507,23 +540,32 @@ class ReconciliationEventTest {
             publisher.addListener(events::add);
 
             // BEFORE event
-            publisher.publishBefore(
-                    ReconciliationEvent.Operation.UPDATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service"
-            );
+            ReconciliationEvent event1 = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    .operation(ReconciliationEvent.Operation.UPDATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .build();
+
+            publisher.publish(event1);
 
             // AFTER event with new version
-            publisher.publishSuccess(
-                    ReconciliationEvent.Operation.UPDATE,
-                    "Topic",
-                    "orders-events",
-                    "production",
-                    "orders-service",
-                    5L  // New version after update
-            );
+            // New version after update
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.UPDATE)
+                    .resourceKind("Topic")
+                    .resourceName("orders-events")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.UPDATE.name() + " completed successfully")
+                    .resourceVersion(5L)
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(2)
@@ -545,23 +587,32 @@ class ReconciliationEventTest {
             publisher.addListener(events::add);
 
             // BEFORE event
-            publisher.publishBefore(
-                    ReconciliationEvent.Operation.DELETE,
-                    "ACL",
-                    "orders-events-rw",
-                    "production",
-                    "orders-service"
-            );
+            ReconciliationEvent event1 = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.BEFORE)
+                    .operation(ReconciliationEvent.Operation.DELETE)
+                    .resourceKind("ACL")
+                    .resourceName("orders-events-rw")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .build();
+
+            publisher.publish(event1);
 
             // AFTER event
-            publisher.publishSuccess(
-                    ReconciliationEvent.Operation.DELETE,
-                    "ACL",
-                    "orders-events-rw",
-                    "production",
-                    "orders-service",
-                    null  // No version after delete
-            );
+            // No version after delete
+            ReconciliationEvent event = ReconciliationEvent.builder()
+                    .phase(ReconciliationEvent.Phase.AFTER)
+                    .operation(ReconciliationEvent.Operation.DELETE)
+                    .resourceKind("ACL")
+                    .resourceName("orders-events-rw")
+                    .resourceNamespace("production")
+                    .applicationService("orders-service")
+                    .result(ReconciliationEvent.Result.SUCCESS)
+                    .message(ReconciliationEvent.Operation.DELETE.name() + " completed successfully")
+                    .resourceVersion(null)
+                    .build();
+
+            publisher.publish(event);
 
             assertThat(events)
                     .hasSize(2)

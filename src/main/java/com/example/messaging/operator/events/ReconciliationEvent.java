@@ -1,12 +1,19 @@
 package com.example.messaging.operator.events;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+
 import java.time.Instant;
-import java.util.Objects;
 
 /**
  * Event emitted during CRD reconciliation operations.
  * Follows Kubernetes Event best practices for operator observability.
  */
+@Getter
+@Builder
+@EqualsAndHashCode
 public class ReconciliationEvent {
 
     public enum Phase {
@@ -28,86 +35,25 @@ public class ReconciliationEvent {
         NOT_FOUND
     }
 
+    @NonNull
     private final Phase phase;
+    @NonNull
     private final Operation operation;
+    @NonNull
     private final String resourceKind;
+    @NonNull
     private final String resourceName;
+    @NonNull
     private final String resourceNamespace;
     private final String applicationService;
-    private final Instant timestamp;
+    @Builder.Default
+    private final Instant timestamp = Instant.now();
     private Result result;
     private String message;
     private String reason;
     private Long resourceVersion;
     private String errorDetails;
 
-    private ReconciliationEvent(Builder builder) {
-        this.phase = builder.phase;
-        this.operation = builder.operation;
-        this.resourceKind = builder.resourceKind;
-        this.resourceName = builder.resourceName;
-        this.resourceNamespace = builder.resourceNamespace;
-        this.applicationService = builder.applicationService;
-        this.timestamp = builder.timestamp != null ? builder.timestamp : Instant.now();
-        this.result = builder.result;
-        this.message = builder.message;
-        this.reason = builder.reason;
-        this.resourceVersion = builder.resourceVersion;
-        this.errorDetails = builder.errorDetails;
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    // Getters
-    public Phase getPhase() {
-        return phase;
-    }
-
-    public Operation getOperation() {
-        return operation;
-    }
-
-    public String getResourceKind() {
-        return resourceKind;
-    }
-
-    public String getResourceName() {
-        return resourceName;
-    }
-
-    public String getResourceNamespace() {
-        return resourceNamespace;
-    }
-
-    public String getApplicationService() {
-        return applicationService;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public Result getResult() {
-        return result;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public Long getResourceVersion() {
-        return resourceVersion;
-    }
-
-    public String getErrorDetails() {
-        return errorDetails;
-    }
 
     public String getResourceReference() {
         return String.format("%s/%s/%s", resourceKind, resourceNamespace, resourceName);
@@ -124,7 +70,6 @@ public class ReconciliationEvent {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(timestamp).append("] ");
         sb.append(phase).append(" ");
         sb.append(operation).append(" ");
         sb.append(getResourceReference());
@@ -145,108 +90,15 @@ public class ReconciliationEvent {
             sb.append(": ").append(message);
         }
 
+        if (reason != null) {
+            sb.append(" (").append(reason).append(")");
+        }
+
+        if (errorDetails != null) {
+            sb.append(" | ").append(errorDetails);
+        }
+
         return sb.toString();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ReconciliationEvent that = (ReconciliationEvent) o;
-        return phase == that.phase &&
-                operation == that.operation &&
-                Objects.equals(resourceKind, that.resourceKind) &&
-                Objects.equals(resourceName, that.resourceName) &&
-                Objects.equals(resourceNamespace, that.resourceNamespace) &&
-                Objects.equals(timestamp, that.timestamp);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(phase, operation, resourceKind, resourceName, resourceNamespace, timestamp);
-    }
-
-    public static class Builder {
-        private Phase phase;
-        private Operation operation;
-        private String resourceKind;
-        private String resourceName;
-        private String resourceNamespace;
-        private String applicationService;
-        private Instant timestamp;
-        private Result result;
-        private String message;
-        private String reason;
-        private Long resourceVersion;
-        private String errorDetails;
-
-        public Builder phase(Phase phase) {
-            this.phase = phase;
-            return this;
-        }
-
-        public Builder operation(Operation operation) {
-            this.operation = operation;
-            return this;
-        }
-
-        public Builder resourceKind(String resourceKind) {
-            this.resourceKind = resourceKind;
-            return this;
-        }
-
-        public Builder resourceName(String resourceName) {
-            this.resourceName = resourceName;
-            return this;
-        }
-
-        public Builder resourceNamespace(String resourceNamespace) {
-            this.resourceNamespace = resourceNamespace;
-            return this;
-        }
-
-        public Builder applicationService(String applicationService) {
-            this.applicationService = applicationService;
-            return this;
-        }
-
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
-            return this;
-        }
-
-        public Builder result(Result result) {
-            this.result = result;
-            return this;
-        }
-
-        public Builder message(String message) {
-            this.message = message;
-            return this;
-        }
-
-        public Builder reason(String reason) {
-            this.reason = reason;
-            return this;
-        }
-
-        public Builder resourceVersion(Long resourceVersion) {
-            this.resourceVersion = resourceVersion;
-            return this;
-        }
-
-        public Builder errorDetails(String errorDetails) {
-            this.errorDetails = errorDetails;
-            return this;
-        }
-
-        public ReconciliationEvent build() {
-            Objects.requireNonNull(phase, "phase is required");
-            Objects.requireNonNull(operation, "operation is required");
-            Objects.requireNonNull(resourceKind, "resourceKind is required");
-            Objects.requireNonNull(resourceName, "resourceName is required");
-            Objects.requireNonNull(resourceNamespace, "resourceNamespace is required");
-            return new ReconciliationEvent(this);
-        }
-    }
 }

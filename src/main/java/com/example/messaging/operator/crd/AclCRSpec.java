@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -49,7 +48,6 @@ public class AclCRSpec {
     @Required
     private String applicationServiceRef;
 
-    @AllArgsConstructor
     public enum Operation {
         ALL,
         ALTER,
@@ -66,7 +64,6 @@ public class AclCRSpec {
         WRITE
     }
 
-    @AllArgsConstructor
     public enum AclPermissionTypeForAccessControlEntry {
         DENY,
         ALLOW
