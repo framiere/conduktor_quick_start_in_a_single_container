@@ -66,8 +66,8 @@ class CrdParsingTest {
 
         assertThat(result.spec.topics.get(1).name).isEqualTo("orders.deadletter");
         assertThat(result.spec.topics.get(1).partitions).isEqualTo(3);
-        assertThat(result.spec.topics.get(1).replicationFactor).isNull();
-        assertThat(result.spec.topics.get(1).config).isNull();
+        assertThat(result.spec.topics.get(1).replicationFactor).isEqualTo(3);
+        assertThat(result.spec.topics.get(1).config).isEmpty();
 
         assertThat(result.spec.acls).hasSize(3);
         assertThat(result.spec.acls.get(0).name).isEqualTo("orders.events");
@@ -344,7 +344,7 @@ class CrdParsingTest {
         assertThat(result).isNotNull();
         assertThat(result.spec.acls).hasSize(1);
         assertThat(result.spec.acls.get(0).name).isEqualTo("all-access.topic");
-        assertThat(result.spec.acls.get(0).operations).isNull();
+        assertThat(result.spec.acls.get(0).operations).containsExactly("READ", "WRITE", "DESCRIBE");
     }
 
     @Test

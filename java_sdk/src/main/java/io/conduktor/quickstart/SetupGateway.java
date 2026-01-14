@@ -49,15 +49,15 @@ public class SetupGateway {
 
     static class TopicDef {
         public String name;
-        public Integer partitions;
-        public Integer replicationFactor;
-        public Map<String, String> config;
+        public Integer partitions = 3;
+        public Integer replicationFactor = 3;
+        public Map<String, String> config = Map.of();
     }
 
     static class AclDef {
         public AclResourceType type = AclResourceType.TOPIC;
         public String name;
-        public List<String> operations;  // If empty/null, grants default READ, WRITE, DESCRIBE operations
+        public List<String> operations = List.of("READ", "WRITE", "DESCRIBE");
         public ResourcePatternType patternType = ResourcePatternType.LITERAL;
         public String host = "*";
         public AclPermissionTypeForAccessControlEntry permission = AclPermissionTypeForAccessControlEntry.ALLOW;
@@ -195,8 +195,7 @@ public class SetupGateway {
         try {
             new SetupGateway().run();
         } catch (Exception e) {
-            System.err.println("ERROR: " + e.getMessage());
-            e.printStackTrace();
+            log.error("ERROR: " + e.getMessage(), e);
             System.exit(1);
         }
     }
@@ -209,7 +208,6 @@ public class SetupGateway {
         // Authenticate and initialize Console SDK clients
         authenticate();
 
-        log.info("");
         log.info("Setting up vClusters with mTLS: {}, {}", vCluster, vClusterAcl);
 
         // Parse and process all CRDs
@@ -222,7 +220,6 @@ public class SetupGateway {
             processCRD(crd);
         }
 
-        log.info("");
         log.info("Setup complete!");
     }
 
@@ -321,11 +318,11 @@ public class SetupGateway {
                     ssl.key.password=conduktor
                     """.formatted(certDir, user, certDir, user));
         }
-        log.info("{} {}", "Created: ", propsFile);
+        log.info("Created: {}", propsFile);
     }
 
     private void createTopic(String clusterName, String topicName,
-                             int partitions, Integer replicationFactor,
+                             int partitions, int replicationFactor,
                              Map<String, String> configs) throws org.openapitools.client.ApiException {
         TopicResourceV2 topicResource = new TopicResourceV2()
                 .apiVersion("v2")
@@ -335,11 +332,11 @@ public class SetupGateway {
                         .cluster(clusterName))
                 .spec(new TopicSpec()
                         .partitions(partitions)
-                        .replicationFactor(replicationFactor != null ? replicationFactor : 1)
+                        .replicationFactor(replicationFactor)
                         .configs(configs));
 
         topicApi.createOrUpdateTopicV2(clusterName, topicResource, null);
-        log.info("{} {}", "Topic/" + topicName, " created");
+        log.info("Topic/{} created", topicName);
     }
 
     // Workaround for SDK response deserialization bug
@@ -395,16 +392,16 @@ public class SetupGateway {
             spec.aclMode("KAFKA_API").superUsers(List.of(serviceName));
         }
 
-        log.info("{} {}", "Upserting VirtualCluster: ", vClusterName);
+        log.info("Upserting VirtualCluster: {}", vClusterName);
         upsertVirtualCluster(new VirtualCluster()
             .kind("VirtualCluster")
             .apiVersion("gateway/v2")
             .metadata(new VirtualClusterMetadata().name(vClusterName))
             .spec(spec));
-        log.info("{} {}", "VirtualCluster/" + vClusterName, " upserted");
+        log.info("VirtualCluster/{} upserted", vClusterName);
 
         // Upsert admin service account
-        log.info("{} {}", "Upserting admin service account: ", adminUser);
+        log.info("Upserting admin service account: {}", adminUser);
         upsertServiceAccount(new External()
             .kind("GatewayServiceAccount")
             .apiVersion("gateway/v2")
@@ -414,7 +411,7 @@ public class SetupGateway {
             .spec(new ExternalSpec()
                 .type("EXTERNAL")
                 .externalNames(List.of("CN=" + adminUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        log.info("{} {}", "GatewayServiceAccount/" + adminUser, " upserted");
+        log.info("GatewayServiceAccount/{} upserted", adminUser);
 
         generateSslProperties(adminUser);
 
@@ -424,7 +421,7 @@ public class SetupGateway {
 
     private void addVClusterToConsole(String vClusterName, String adminUser, boolean aclEnabled)
             throws org.openapitools.client.ApiException {
-        log.info("{} {}", "Adding vCluster " + vClusterName, " to Console...");
+        log.info("Adding vCluster {} to Console...", vClusterName);
 
         String displayName = vClusterName + " (mTLS" + (aclEnabled ? " + ACL" : "") + ")";
 
@@ -449,7 +446,7 @@ public class SetupGateway {
                     .user(cdkGatewayUser)
                     .password(cdkGatewayPassword)
                     .virtualCluster(vClusterName)))), null);
-        log.info("{} {}", "KafkaCluster/" + vClusterName, " created in Console");
+        log.info("KafkaCluster/{} created in Console", vClusterName);
     }
 
     private void createTopicsFromCRD(String vClusterName, List<TopicDef> topics)
@@ -458,9 +455,9 @@ public class SetupGateway {
             createTopic(
                 vClusterName,
                 topic.name,
-                topic.partitions != null ? topic.partitions : 1,
+                topic.partitions,
                 topic.replicationFactor,
-                topic.config != null ? topic.config : Map.of()
+                topic.config
             );
         }
     }
@@ -471,19 +468,9 @@ public class SetupGateway {
 
         // Convert CRD ACLs to Kafka ACLs
         for (AclDef aclDef : acls) {
-            List<Operation> ops;
-            if (aclDef.operations == null || aclDef.operations.isEmpty()) {
-                // No operations defined: grant secure default operations (READ, WRITE, DESCRIBE)
-                ops = List.of(
-                    Operation.READ,
-                    Operation.WRITE,
-                    Operation.DESCRIBE
-                );
-            } else {
-                ops = aclDef.operations.stream()
-                    .map(Operation::valueOf)
-                    .toList();
-            }
+            List<Operation> ops = aclDef.operations.stream()
+                .map(Operation::valueOf)
+                .toList();
 
             kafkaAcls.add(new KafkaServiceAccountACL()
                 .type(aclDef.type)
@@ -506,14 +493,13 @@ public class SetupGateway {
                     .authorization(new ServiceAccountAuthorization(new KAFKAACL()
                         .type(KAFKAACL.TypeEnum.KAFKA_ACL)
                         .acls(kafkaAcls)))), null);
-        log.info("{} {}", "ServiceAccount/" + serviceName, " created in Console");
+        log.info("ServiceAccount/{} created in Console", serviceName);
     }
 
     private void processCRD(MessagingDeclaration crd) throws Exception {
         String serviceName = crd.spec.serviceName;
         String vClusterName = crd.spec.virtualClusterId;
 
-        log.info("");
         log.info("Processing CRD for service: {}", serviceName);
 
         // 2. Upsert vCluster
@@ -521,7 +507,7 @@ public class SetupGateway {
         upsertVClusterFromCRD(vClusterName, hasAcls, serviceName);
 
         // 3. Upsert Gateway ServiceAccount for the service (mTLS)
-        log.info("{} {}", "Upserting Gateway ServiceAccount: ", serviceName);
+        log.info("Upserting Gateway ServiceAccount: {}", serviceName);
         upsertServiceAccount(new External()
             .kind("GatewayServiceAccount")
             .apiVersion("gateway/v2")
@@ -531,7 +517,7 @@ public class SetupGateway {
             .spec(new ExternalSpec()
                 .type("EXTERNAL")
                 .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
-        log.info("{} {}", "GatewayServiceAccount/" + serviceName, " upserted");
+        log.info("GatewayServiceAccount/{} upserted", serviceName);
 
         // 4. Create topics
         if (crd.spec.topics != null && !crd.spec.topics.isEmpty()) {
@@ -541,13 +527,13 @@ public class SetupGateway {
 
         // 5. Create Console ServiceAccount with ACLs (only if ACLs defined)
         if (crd.spec.acls != null && !crd.spec.acls.isEmpty()) {
-            log.info("{} {}", "Creating Console ServiceAccount with ACLs: ", serviceName);
+            log.info("Creating Console ServiceAccount with ACLs: {}", serviceName);
             createAclsFromCRD(vClusterName, serviceName, crd.spec.acls);
         }
 
         // 6. Generate SSL properties
         generateSslProperties(serviceName);
 
-        log.info("{} {}", "Service " + serviceName, " setup complete");
+        log.info("Service {} setup complete", serviceName);
     }
 }
