@@ -7,11 +7,20 @@ import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.*;
-import org.openapitools.client.model.Operation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.ALTER;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.DESCRIBE;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.READ;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.WRITE;
+import static com.example.messaging.operator.events.ReconciliationEvent.Operation.*;
+import static com.example.messaging.operator.events.ReconciliationEvent.Phase.*;
+import static com.example.messaging.operator.events.ReconciliationEvent.Result.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Comprehensive reconciliation tests for CRD lifecycle management.
@@ -291,7 +300,7 @@ class CrdReconciliationTest {
                     .first()
                     .satisfies(a -> {
                         assertThat(a.getSpec().getTopicRef()).isEqualTo("orders-events");
-                        assertThat(a.getSpec().getOperations()).contains(Operation.READ, Operation.WRITE);
+                        assertThat(a.getSpec().getOperations()).contains(READ, WRITE);
                         assertThat(a.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
                     });
         }
@@ -426,8 +435,8 @@ class CrdReconciliationTest {
             assertThat(beforeState.getSpec().getOperations()).hasSize(2);
 
             // UPDATE OPERATION
-            beforeState.getSpec().getOperations().add(Operation.DESCRIBE);
-            beforeState.getSpec().getOperations().add(Operation.ALTER);
+            beforeState.getSpec().getOperations().add(DESCRIBE);
+            beforeState.getSpec().getOperations().add(ALTER);
 
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult result = validator.validateUpdate(
@@ -444,7 +453,7 @@ class CrdReconciliationTest {
 
             assertThat(afterState.getSpec().getOperations())
                     .hasSize(4)
-                    .containsExactlyInAnyOrder(Operation.READ, Operation.WRITE, Operation.DESCRIBE, Operation.ALTER);
+                    .containsExactlyInAnyOrder(READ, WRITE, DESCRIBE, ALTER);
 
             assertThat(afterState.getSpec().getApplicationServiceRef())
                     .as("Owner should remain unchanged")
@@ -662,8 +671,8 @@ class CrdReconciliationTest {
                     .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(CREATE);
             assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
             assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
             assertThat(beforeEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
@@ -671,13 +680,13 @@ class CrdReconciliationTest {
             assertThat(beforeEvent.getResult()).isNull();
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(CREATE);
             assertThat(afterEvent.getResourceKind()).isEqualTo("Topic");
             assertThat(afterEvent.getResourceName()).isEqualTo("orders-events");
             assertThat(afterEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
             assertThat(afterEvent.getApplicationService()).isEqualTo(OWNER_APP_SERVICE);
-            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
             assertThat(afterEvent.getResourceVersion()).isNotNull();
             assertThat(afterEvent.isSuccess()).isTrue();
         }
@@ -701,15 +710,15 @@ class CrdReconciliationTest {
                     .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(UPDATE);
             assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
             assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(UPDATE);
+            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
             assertThat(afterEvent.getResourceVersion()).isNotNull();
             assertThat(afterEvent.isSuccess()).isTrue();
         }
@@ -733,15 +742,15 @@ class CrdReconciliationTest {
                     .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
+            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(DELETE);
             assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
             assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
+            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(DELETE);
+            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
             assertThat(afterEvent.isSuccess()).isTrue();
         }
 
@@ -768,13 +777,13 @@ class CrdReconciliationTest {
                     .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation()).isEqualTo(CREATE);
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-            assertThat(afterEvent.getResult()).isEqualTo(ReconciliationEvent.Result.FAILURE);
+            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation()).isEqualTo(CREATE);
+            assertThat(afterEvent.getResult()).isEqualTo(FAILURE);
             assertThat(afterEvent.isFailure()).isTrue();
             assertThat(afterEvent.getErrorDetails()).isNotNull();
         }
@@ -802,26 +811,26 @@ class CrdReconciliationTest {
 
             // VERIFY FULL LIFECYCLE
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getPhase() == ReconciliationEvent.Phase.BEFORE)
+                    .filter(e -> e.getPhase() == BEFORE)
                     .count())
                     .as("Should have 3 BEFORE events")
                     .isEqualTo(3);
 
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getPhase() == ReconciliationEvent.Phase.AFTER)
+                    .filter(e -> e.getPhase() == AFTER)
                     .count())
                     .as("Should have 3 AFTER events")
                     .isEqualTo(3);
 
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getResult() == ReconciliationEvent.Result.SUCCESS)
+                    .filter(e -> e.getResult() == SUCCESS)
                     .count())
                     .as("All operations should be successful")
                     .isEqualTo(3);
 
             // Verify operations in order
-            assertThat(capturedEvents.get(0).getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-            assertThat(capturedEvents.get(2).getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
+            assertThat(capturedEvents.get(0).getOperation()).isEqualTo(CREATE);
+            assertThat(capturedEvents.get(2).getOperation()).isEqualTo(UPDATE);
             assertThat(capturedEvents.get(4).getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
         }
 
@@ -934,7 +943,7 @@ class CrdReconciliationTest {
         AclCRSpec spec = new AclCRSpec();
         spec.setServiceRef(serviceRef);
         spec.setTopicRef(topicRef);
-        spec.setOperations(new ArrayList<>(List.of(Operation.READ, Operation.WRITE)));
+        spec.setOperations(new ArrayList<>(List.of(READ, WRITE)));
         spec.setApplicationServiceRef(appServiceRef);
         acl.setSpec(spec);
 

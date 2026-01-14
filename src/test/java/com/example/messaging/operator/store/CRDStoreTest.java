@@ -228,12 +228,11 @@ class CRDStoreTest {
             store.create("ApplicationService", NAMESPACE, buildApplicationService("other-service"));
             store.create("VirtualCluster", NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
 
-            // Try to change owner
-            VirtualCluster vCluster = store.get("VirtualCluster", NAMESPACE, "prod-cluster");
-            vCluster.getSpec().setApplicationServiceRef("other-service");
+            // Try to change owner - create new VirtualCluster with different owner
+            VirtualCluster modifiedCluster = buildVirtualCluster("prod-cluster", "other-service");
 
             assertThatThrownBy(() ->
-                store.update("VirtualCluster", NAMESPACE, "prod-cluster", vCluster)
+                store.update("VirtualCluster", NAMESPACE, "prod-cluster", modifiedCluster)
             )
             .isInstanceOf(SecurityException.class)
             .hasMessageContaining("Ownership validation failed")

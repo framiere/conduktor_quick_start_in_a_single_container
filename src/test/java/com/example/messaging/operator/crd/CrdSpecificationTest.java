@@ -1,15 +1,21 @@
 package com.example.messaging.operator.crd;
 
+import com.example.messaging.operator.crd.ConsumerGroupSpec.ResourcePatternType;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.openapitools.client.model.Operation;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.*;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.ALTER;
+import static com.example.messaging.operator.crd.AclCRSpec.Operation.CREATE;
+
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static com.example.messaging.operator.crd.ConsumerGroupSpec.ResourcePatternType.PREFIXED;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Comprehensive unit tests for all CRD specifications using AssertJ.
@@ -333,7 +339,7 @@ class CrdSpecificationTest {
             ConsumerGroupSpec spec = new ConsumerGroupSpec();
             spec.setServiceRef("demo-acl-user-sa");
             spec.setName("myconsumer-");
-            spec.setPatternType("PREFIXED");
+            spec.setPatternType(ResourcePatternType.PREFIXED);
             spec.setApplicationServiceRef("demo-acl-user");
 
             assertThat(spec)
@@ -341,7 +347,7 @@ class CrdSpecificationTest {
                     .satisfies(s -> {
                         assertThat(s.getServiceRef()).isEqualTo("demo-acl-user-sa");
                         assertThat(s.getName()).isEqualTo("myconsumer-");
-                        assertThat(s.getPatternType()).isEqualTo("PREFIXED");
+                        assertThat(s.getPatternType()).isEqualTo(ResourcePatternType.PREFIXED);
                         assertThat(s.getApplicationServiceRef()).isEqualTo("demo-acl-user");
                     });
         }
@@ -352,7 +358,7 @@ class CrdSpecificationTest {
             ConsumerGroupSpec spec = new ConsumerGroupSpecBuilder()
                     .withServiceRef("test-sa")
                     .withName("test-consumer-")
-                    .withPatternType("PREFIXED")
+                    .withPatternType(PREFIXED)
                     .withApplicationServiceRef("test-app")
                     .build();
 
@@ -363,18 +369,18 @@ class CrdSpecificationTest {
                             ConsumerGroupSpec::getPatternType,
                             ConsumerGroupSpec::getApplicationServiceRef
                     )
-                    .containsExactly("test-sa", "test-consumer-", "PREFIXED", "test-app");
+                    .containsExactly("test-sa", "test-consumer-", PREFIXED, "test-app");
         }
 
         @Test
         @DisplayName("should support PREFIXED pattern type")
         void testConsumerGroupPrefixedPattern() {
             ConsumerGroupSpec spec = new ConsumerGroupSpec();
-            spec.setPatternType("PREFIXED");
+            spec.setPatternType(PREFIXED);
             spec.setName("myconsumer-");
 
             assertThat(spec.getPatternType())
-                    .isEqualTo("PREFIXED")
+                    .isEqualTo(PREFIXED)
                     .as("Pattern type should allow prefix-based matching");
 
             assertThat(spec.getName())
@@ -393,7 +399,7 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("orders-service-sa");
             spec.setTopicRef("orders-events");
-            spec.setOperations(List.of(Operation.READ, Operation.WRITE));
+            spec.setOperations(List.of(READ, WRITE));
             spec.setApplicationServiceRef("orders-service");
 
             assertThat(spec)
@@ -403,7 +409,7 @@ class CrdSpecificationTest {
                         assertThat(s.getTopicRef()).isEqualTo("orders-events");
                         assertThat(s.getOperations())
                                 .hasSize(2)
-                                .containsExactly(Operation.READ, Operation.WRITE);
+                                .containsExactly(READ, WRITE);
                         assertThat(s.getConsumerGroupRef()).isNull();
                         assertThat(s.getApplicationServiceRef()).isEqualTo("orders-service");
                     });
@@ -415,7 +421,7 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("demo-acl-user-sa");
             spec.setConsumerGroupRef("myconsumer-group");
-            spec.setOperations(List.of(Operation.READ));
+            spec.setOperations(List.of(READ));
             spec.setApplicationServiceRef("demo-acl-user");
 
             assertThat(spec)
@@ -425,7 +431,7 @@ class CrdSpecificationTest {
                         assertThat(s.getConsumerGroupRef()).isEqualTo("myconsumer-group");
                         assertThat(s.getOperations())
                                 .hasSize(1)
-                                .containsExactly(Operation.READ);
+                                .containsExactly(READ);
                         assertThat(s.getTopicRef()).isNull();
                         assertThat(s.getApplicationServiceRef()).isEqualTo("demo-acl-user");
                     });
@@ -437,7 +443,7 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpecBuilder()
                     .withServiceRef("test-sa")
                     .withTopicRef("test-topic")
-                    .withOperations(List.of(Operation.READ, Operation.WRITE, Operation.DESCRIBE))
+                    .withOperations(List.of(READ, WRITE, DESCRIBE))
                     .withApplicationServiceRef("test-app")
                     .build();
 
@@ -446,7 +452,7 @@ class CrdSpecificationTest {
                     .satisfies(s -> {
                         assertThat(s.getOperations())
                                 .hasSize(3)
-                                .containsExactlyInAnyOrder(Operation.READ, Operation.WRITE, Operation.DESCRIBE);
+                                .containsExactlyInAnyOrder(READ, WRITE, DESCRIBE);
                     });
         }
 
@@ -456,12 +462,12 @@ class CrdSpecificationTest {
             AclCRSpec spec = new AclCRSpec();
             spec.setServiceRef("inventory-service-sa");
             spec.setTopicRef("inventory-updates");
-            spec.setOperations(List.of(Operation.READ));
+            spec.setOperations(List.of(READ));
             spec.setApplicationServiceRef("inventory-service");
 
             assertThat(spec.getOperations())
                     .hasSize(1)
-                    .containsOnly(Operation.READ)
+                    .containsOnly(READ)
                     .as("ACL should support read-only permissions");
         }
 
@@ -469,11 +475,11 @@ class CrdSpecificationTest {
         @DisplayName("should support read-write operations")
         void testAclReadWrite() {
             AclCRSpec spec = new AclCRSpec();
-            spec.setOperations(List.of(Operation.READ, Operation.WRITE));
+            spec.setOperations(List.of(READ, WRITE));
 
             assertThat(spec.getOperations())
                     .hasSize(2)
-                    .contains(Operation.READ, Operation.WRITE)
+                    .contains(READ, WRITE)
                     .as("ACL should support read-write permissions");
         }
 
