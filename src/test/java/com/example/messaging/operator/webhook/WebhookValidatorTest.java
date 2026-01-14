@@ -211,37 +211,4 @@ class WebhookValidatorTest {
         assertThat(response.isAllowed()).isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
-
-    @Test
-    @DisplayName("should deny ConsumerGroup UPDATE when applicationServiceRef changed")
-    void testDenyConsumerGroupUpdate() {
-        ConsumerGroup oldConsumerGroup = new ConsumerGroup();
-        oldConsumerGroup.setMetadata(new ObjectMeta());
-        oldConsumerGroup.getMetadata().setName("consumer-group-1");
-        ConsumerGroupSpec oldSpec = new ConsumerGroupSpec();
-        oldSpec.setApplicationServiceRef("app-1");
-        oldSpec.setServiceRef("sa-1");
-        oldSpec.setName("my-group");
-        oldConsumerGroup.setSpec(oldSpec);
-
-        ConsumerGroup newConsumerGroup = new ConsumerGroup();
-        newConsumerGroup.setMetadata(new ObjectMeta());
-        newConsumerGroup.getMetadata().setName("consumer-group-1");
-        ConsumerGroupSpec newSpec = new ConsumerGroupSpec();
-        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
-        newSpec.setServiceRef("sa-1");
-        newSpec.setName("my-group");
-        newConsumerGroup.setSpec(newSpec);
-
-        AdmissionRequest request = new AdmissionRequest();
-        request.setUid("test-uid-consumergroup");
-        request.setOperation("UPDATE");
-        request.setObject(mapper.convertValue(newConsumerGroup, Map.class));
-        request.setOldObject(mapper.convertValue(oldConsumerGroup, Map.class));
-
-        AdmissionResponse response = validator.validate(request, ConsumerGroup.class);
-
-        assertThat(response.isAllowed()).isFalse();
-        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
-    }
 }

@@ -3,6 +3,7 @@ package com.example.messaging.operator.webhook;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,16 +12,12 @@ import org.slf4j.LoggerFactory;
  * Integrates with existing OwnershipValidator to enforce immutable ownership
  * and authorization for DELETE operations.
  */
+@AllArgsConstructor
 public class WebhookValidator {
     private static final Logger log = LoggerFactory.getLogger(WebhookValidator.class);
 
     private final OwnershipValidator ownershipValidator;
     private final ObjectMapper objectMapper;
-
-    public WebhookValidator(OwnershipValidator ownershipValidator, ObjectMapper objectMapper) {
-        this.ownershipValidator = ownershipValidator;
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * Validate an admission request for a specific resource type.

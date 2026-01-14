@@ -22,11 +22,10 @@ public class WebhookServer {
 
     private final HttpServer server;
     private final WebhookValidator validator;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public WebhookServer(WebhookValidator validator, int port) throws IOException {
         this.validator = validator;
-        this.objectMapper = new ObjectMapper();
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/health", new HealthHandler());
