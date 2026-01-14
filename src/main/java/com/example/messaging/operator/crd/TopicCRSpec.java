@@ -17,7 +17,7 @@ import java.util.Map;
 public class TopicCRSpec {
 
     @JsonProperty("serviceRef")
-    @JsonPropertyDescription("Reference to MessagingService CR")
+    @JsonPropertyDescription("Reference to ServiceAccount CR")
     @Required
     private String serviceRef;
 

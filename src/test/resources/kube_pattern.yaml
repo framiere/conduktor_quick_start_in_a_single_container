@@ -15,15 +15,6 @@ metadata:
   namespace: orders
 spec:
   name: orders-service
----
-# MessagingService CR - ties together service account and cluster
-apiVersion: messaging.example.com/v1
-kind: MessagingService
-metadata:
-  name: orders-service
-  namespace: orders
-spec:
-  serviceAccountRef: orders-service-sa
   clusterRef: prod-cluster
 ---
 # Topic CR - references parent service
@@ -33,7 +24,7 @@ metadata:
   name: orders-events
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   name: orders.events
   partitions: 12
   replicationFactor: 3
@@ -47,7 +38,7 @@ metadata:
   name: orders-deadletter
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   name: orders.deadletter
   partitions: 3
   replicationFactor: 3
@@ -58,7 +49,7 @@ metadata:
   name: inventory-updates
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   name: inventory.updates
   partitions: 6
   replicationFactor: 3
@@ -70,7 +61,7 @@ metadata:
   name: orders-events-rw
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   topicRef: orders-events
   operations: [READ, WRITE]
 ---
@@ -80,7 +71,7 @@ metadata:
   name: orders-deadletter-rw
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   topicRef: orders-deadletter
   operations: [READ, WRITE]
 ---
@@ -90,7 +81,7 @@ metadata:
   name: inventory-updates-read
   namespace: orders
 spec:
-  serviceRef: orders-service
+  serviceRef: orders-service-sa
   topicRef: inventory-updates
   operations: [READ]
 ---
@@ -116,13 +107,6 @@ metadata:
   name: demo-admin-sa
 spec:
   name: demo-admin
----
-apiVersion: messaging.example.com/v1
-kind: MessagingService
-metadata:
-  name: demo-admin
-spec:
-  serviceAccountRef: demo-admin-sa
   clusterRef: demo
 ---
 apiVersion: messaging.example.com/v1
@@ -131,13 +115,6 @@ metadata:
   name: demo-acl-admin-sa
 spec:
   name: demo-acl-admin
----
-apiVersion: messaging.example.com/v1
-kind: MessagingService
-metadata:
-  name: demo-acl-admin
-spec:
-  serviceAccountRef: demo-acl-admin-sa
   clusterRef: demo-acl
 ---
 apiVersion: messaging.example.com/v1
@@ -146,13 +123,6 @@ metadata:
   name: demo-acl-user-sa
 spec:
   name: demo-acl-user
----
-apiVersion: messaging.example.com/v1
-kind: MessagingService
-metadata:
-  name: demo-acl-user
-spec:
-  serviceAccountRef: demo-acl-user-sa
   clusterRef: demo-acl
 ---
 # Topic CR for demo-acl-user
@@ -161,7 +131,7 @@ kind: Topic
 metadata:
   name: click-topic
 spec:
-  serviceRef: demo-acl-user
+  serviceRef: demo-acl-user-sa
   name: click
   partitions: 6
   replicationFactor: 3
@@ -172,7 +142,7 @@ kind: ConsumerGroup
 metadata:
   name: myconsumer-group
 spec:
-  serviceRef: demo-acl-user
+  serviceRef: demo-acl-user-sa
   name: myconsumer-
   patternType: PREFIXED
 ---
@@ -182,7 +152,7 @@ kind: ACL
 metadata:
   name: demo-acl-user-click-read
 spec:
-  serviceRef: demo-acl-user
+  serviceRef: demo-acl-user-sa
   topicRef: click-topic
   operations: [READ]
 ---
@@ -192,6 +162,6 @@ kind: ACL
 metadata:
   name: demo-acl-user-consumer-read
 spec:
-  serviceRef: demo-acl-user
+  serviceRef: demo-acl-user-sa
   consumerGroupRef: myconsumer-group
   operations: [READ]

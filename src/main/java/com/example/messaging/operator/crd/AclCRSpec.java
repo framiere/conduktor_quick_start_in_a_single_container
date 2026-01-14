@@ -13,14 +13,14 @@ import java.util.List;
 
 /**
  * ACL specification for individual ACL CR.
- * References a MessagingService and either a Topic or ConsumerGroup.
+ * References a ServiceAccount and either a Topic or ConsumerGroup.
  */
 @Buildable(editableEnabled = false)
 @Data
 public class AclCRSpec {
 
     @JsonProperty("serviceRef")
-    @JsonPropertyDescription("Reference to MessagingService CR")
+    @JsonPropertyDescription("Reference to ServiceAccount CR")
     @Required
     private String serviceRef;
 

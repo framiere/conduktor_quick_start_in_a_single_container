@@ -11,7 +11,7 @@ import lombok.Data;
 public class ConsumerGroupSpec {
 
     @JsonProperty("serviceRef")
-    @JsonPropertyDescription("Reference to MessagingService CR")
+    @JsonPropertyDescription("Reference to ServiceAccount CR")
     @Required
     private String serviceRef;
 
