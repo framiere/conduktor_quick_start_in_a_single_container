@@ -169,6 +169,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Fabric8 Kubernetes Mock Server for IT tests -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-server-mock</artifactId>
+            <version>${fabric8.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Jackson for JSON processing (webhook) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -221,6 +229,26 @@
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin for Integration Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
                     </includes>
                 </configuration>
             </plugin>
