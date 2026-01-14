@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.openapitools.client.model.AclOperationForAccessControlEntry.*;
+
 public class SetupGateway {
     private static final Logger log = LoggerFactory.getLogger(SetupGateway.class);
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
@@ -213,7 +215,7 @@ public class SetupGateway {
 
         @NotNull
         @Size(min = 1, max = 10, message = "operations list must have between 1 and 10 items")
-        public List<String> operations = List.of("READ", "WRITE", "DESCRIBE");
+        public List<Operation> operations = List.of(Operation.READ, Operation.WRITE);
 
         @NotBlank(message = "host must not be empty")
         public String host = "*";
@@ -294,7 +296,6 @@ public class SetupGateway {
     // Console SDK clients
     private CliKafkaClusterConsoleV22Api kafkaClusterApi;
     private CliServiceAccountSelfServeV111Api serviceAccountApi;
-    private CliTopicKafkaV212Api topicApi;
 
     private static final String CRDS = """
             # VirtualCluster CR - represents a Conduktor virtual cluster
@@ -655,7 +656,7 @@ public class SetupGateway {
 
         kafkaClusterApi = new CliKafkaClusterConsoleV22Api(apiClient);
         serviceAccountApi = new CliServiceAccountSelfServeV111Api(apiClient);
-        topicApi = new CliTopicKafkaV212Api(apiClient);
+
 
         log.info("Authenticated.");
     }
@@ -871,15 +872,10 @@ public class SetupGateway {
                         MessagingDeclaration cr = parseAndValidate(docMap, MessagingDeclaration.class, documentIndex);
                         result.messagingDeclarations.add(cr);
                     }
-                    default -> throw new IllegalArgumentException(
-                            "Document #" + documentIndex + " has unknown kind: " + kind
-                    );
+                    default -> throw new IllegalArgumentException("Document #" + documentIndex + " has unknown kind: " + kind);
                 }
             } catch (Exception e) {
-                throw new IllegalArgumentException(
-                        "Failed to parse document #" + documentIndex + " (kind: " + kind + "): " + e.getMessage(),
-                        e
-                );
+                throw new IllegalArgumentException("Failed to parse document #" + documentIndex + " (kind: " + kind + "): " + e.getMessage(), e);
             }
         }
 
@@ -904,10 +900,7 @@ public class SetupGateway {
                 for (AclDef acl : msgDecl.spec.acls) {
                     // If operations is explicitly set to empty, fail validation
                     if (acl.operations != null && acl.operations.isEmpty()) {
-                        throw new IllegalArgumentException(
-                            "CRD validation failed for document #" + documentIndex + ":\n" +
-                            "  - spec.acls.operations: operations list must have between 1 and 10 items\n"
-                        );
+                        throw new IllegalArgumentException("CRD validation failed for document #" + documentIndex + ":\n  - spec.acls.operations: operations list must have between 1 and 10 items\n");
                     }
                     // If operations is null (not provided), set default
                     if (acl.operations == null) {
@@ -1004,11 +997,7 @@ public class SetupGateway {
                     } catch (Exception ignored) {
                     }
 
-                    throw new IllegalArgumentException(
-                            "Failed to parse document #" + documentIndex +
-                            " (" + name + "): " + e.getMessage(),
-                            e
-                    );
+                    throw new IllegalArgumentException("Failed to parse document #" + documentIndex + " (" + name + "): " + e.getMessage(), e);
                 }
             }
         }
@@ -1129,18 +1118,10 @@ public class SetupGateway {
 
         // Resolve references
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
-            );
-        }
+        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef
-            );
-        }
+        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
@@ -1187,25 +1168,13 @@ public class SetupGateway {
 
         // Resolve references: Topic -> MessagingService -> VirtualCluster
         MessagingServiceCR msgService = messagingServiceMap.get(topic.spec.serviceRef);
-        if (msgService == null) {
-            throw new IllegalArgumentException(
-                    "Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef
-            );
-        }
+        if (msgService == null) throw new IllegalArgumentException("Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef
-            );
-        }
+        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
-            );
-        }
+        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         String vClusterName = vCluster.spec.clusterId;
         String serviceName = serviceAccount.spec.name;
@@ -1246,25 +1215,13 @@ public class SetupGateway {
 
         // Resolve references: ACL -> MessagingService -> ServiceAccount + VirtualCluster
         MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
-        if (msgService == null) {
-            throw new IllegalArgumentException(
-                    "ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef
-            );
-        }
+        if (msgService == null) throw new IllegalArgumentException("ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef);
 
         ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
-            );
-        }
+        if (serviceAccount == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
 
         VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null) {
-            throw new IllegalArgumentException(
-                    "MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef
-            );
-        }
+        if (vCluster == null) throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
@@ -1278,9 +1235,7 @@ public class SetupGateway {
             // Topic ACL
             TopicCR topic = topicMap.get(acl.spec.topicRef);
             if (topic == null) {
-                throw new IllegalArgumentException(
-                        "ACL " + aclName + " references unknown Topic: " + acl.spec.topicRef
-                );
+                throw new IllegalArgumentException("ACL " + aclName + " references unknown Topic: " + acl.spec.topicRef);
             }
             aclType = AclResourceType.TOPIC;
             resourceName = topic.spec.name;
@@ -1289,33 +1244,23 @@ public class SetupGateway {
             // ConsumerGroup ACL
             ConsumerGroupCR consumerGroup = consumerGroupMap.get(acl.spec.consumerGroupRef);
             if (consumerGroup == null) {
-                throw new IllegalArgumentException(
-                        "ACL " + aclName + " references unknown ConsumerGroup: " + acl.spec.consumerGroupRef
-                );
+                throw new IllegalArgumentException("ACL " + aclName + " references unknown ConsumerGroup: " + acl.spec.consumerGroupRef);
             }
             aclType = AclResourceType.CONSUMER_GROUP;
             resourceName = consumerGroup.spec.name;
             patternType = consumerGroup.spec.patternType;
         } else {
-            throw new IllegalArgumentException(
-                    "ACL " + aclName + " must reference either topicRef or consumerGroupRef"
-            );
+            throw new IllegalArgumentException("ACL " + aclName + " must reference either topicRef or consumerGroupRef");
         }
 
-        // Convert operations to Kafka operations
-        List<Operation> ops = acl.spec.operations.stream()
-                .map(Operation::valueOf)
-                .toList();
-
         // Create the ACL via Console ServiceAccount
-        List<KafkaServiceAccountACL> kafkaAcls = List.of(
-                new KafkaServiceAccountACL()
-                        .type(aclType)
-                        .name(resourceName)
-                        .patternType(patternType)
-                        .operations(ops)
-                        .host(acl.spec.host)
-                        .permission(acl.spec.permission)
+        List<KafkaServiceAccountACL> kafkaAcls = List.of(new KafkaServiceAccountACL()
+                .type(aclType)
+                .name(resourceName)
+                .patternType(patternType)
+                .operations(acl.spec.operations)
+                .host(acl.spec.host)
+                .permission(acl.spec.permission)
         );
 
         // Create or update Console ServiceAccount with this ACL
