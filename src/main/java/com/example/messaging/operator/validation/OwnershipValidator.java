@@ -23,24 +23,16 @@ public class OwnershipValidator {
      */
     public ValidationResult validateCreate(Object resource, String namespace) {
         // For create operations, just validate references exist
-        if (resource instanceof VirtualCluster) {
-            VirtualCluster vc = (VirtualCluster) resource;
+        if (resource instanceof VirtualCluster vc) {
             return validateApplicationServiceExists(vc.getSpec().getApplicationServiceRef(), namespace);
         } else if (resource instanceof ServiceAccount sa) {
-            ValidationResult appServiceResult = validateApplicationServiceExists(
-                    sa.getSpec().getApplicationServiceRef(), namespace);
+            ValidationResult appServiceResult = validateApplicationServiceExists(sa.getSpec().getApplicationServiceRef(), namespace);
             if (!appServiceResult.isValid()) return appServiceResult;
-
-            return validateVirtualClusterExists(sa.getSpec().getClusterRef(), namespace,
-                    sa.getSpec().getApplicationServiceRef());
-        } else if (resource instanceof Topic) {
-            Topic topic = (Topic) resource;
-            return validateServiceAccountExists(topic.getSpec().getServiceRef(), namespace,
-                    topic.getSpec().getApplicationServiceRef());
-        } else if (resource instanceof ACL) {
-            ACL acl = (ACL) resource;
-            return validateServiceAccountExists(acl.getSpec().getServiceRef(), namespace,
-                    acl.getSpec().getApplicationServiceRef());
+            return validateVirtualClusterExists(sa.getSpec().getClusterRef(), namespace, sa.getSpec().getApplicationServiceRef());
+        } else if (resource instanceof Topic topic) {
+            return validateServiceAccountExists(topic.getSpec().getServiceRef(), namespace, topic.getSpec().getApplicationServiceRef());
+        } else if (resource instanceof ACL acl) {
+            return validateServiceAccountExists(acl.getSpec().getServiceRef(), namespace, acl.getSpec().getApplicationServiceRef());
         }
         return ValidationResult.valid();
     }
@@ -60,7 +52,7 @@ public class OwnershipValidator {
         if (!existingOwner.equals(newOwner)) {
             return ValidationResult.invalid(
                     String.format("Cannot change applicationServiceRef from '%s' to '%s'. " +
-                            "Only the original owner can modify this resource.",
+                                    "Only the original owner can modify this resource.",
                             existingOwner, newOwner));
         }
 
@@ -93,7 +85,7 @@ public class OwnershipValidator {
     }
 
     private ValidationResult validateVirtualClusterExists(String clusterRef, String namespace,
-                                                           String expectedAppService) {
+                                                          String expectedAppService) {
         VirtualCluster vc = store.get("VirtualCluster", namespace, clusterRef);
         if (vc == null) {
             return ValidationResult.invalid("Referenced VirtualCluster '" + clusterRef + "' does not exist");
@@ -107,7 +99,7 @@ public class OwnershipValidator {
     }
 
     private ValidationResult validateServiceAccountExists(String saRef, String namespace,
-                                                           String expectedAppService) {
+                                                          String expectedAppService) {
         ServiceAccount sa = store.get("ServiceAccount", namespace, saRef);
         if (sa == null) {
             return ValidationResult.invalid("Referenced ServiceAccount '" + saRef + "' does not exist");
@@ -123,14 +115,14 @@ public class OwnershipValidator {
     private String getApplicationServiceRef(Object resource) {
         if (resource instanceof VirtualCluster r) {
             return r.getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ServiceAccount) {
-            return ((ServiceAccount) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof Topic) {
-            return ((Topic) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ConsumerGroup) {
-            return ((ConsumerGroup) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ACL) {
-            return ((ACL) resource).getSpec().getApplicationServiceRef();
+        } else if (resource instanceof ServiceAccount sa) {
+            return sa.getSpec().getApplicationServiceRef();
+        } else if (resource instanceof Topic topic) {
+            return topic.getSpec().getApplicationServiceRef();
+        } else if (resource instanceof ConsumerGroup cg) {
+            return cg.getSpec().getApplicationServiceRef();
+        } else if (resource instanceof ACL acl) {
+            return acl.getSpec().getApplicationServiceRef();
         }
         return null;
     }

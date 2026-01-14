@@ -391,6 +391,20 @@ public class CRDStore {
     }
 
     /**
+     * Add a listener for reconciliation events
+     */
+    public void addReconciliationListener(ReconciliationEventPublisher.ReconciliationEventListener listener) {
+        eventPublisher.addListener(listener);
+    }
+
+    /**
+     * Remove a reconciliation event listener
+     */
+    public void removeReconciliationListener(ReconciliationEventPublisher.ReconciliationEventListener listener) {
+        eventPublisher.removeListener(listener);
+    }
+
+    /**
      * Clear all resources from the store
      */
     public void clear() {
@@ -399,68 +413,50 @@ public class CRDStore {
     }
 
     private String getName(Object resource) {
-        if (resource instanceof ApplicationService) {
-            return ((ApplicationService) resource).getMetadata().getName();
-        } else if (resource instanceof VirtualCluster) {
-            return ((VirtualCluster) resource).getMetadata().getName();
-        } else if (resource instanceof ServiceAccount) {
-            return ((ServiceAccount) resource).getMetadata().getName();
-        } else if (resource instanceof Topic) {
-            return ((Topic) resource).getMetadata().getName();
-        } else if (resource instanceof ConsumerGroup) {
-            return ((ConsumerGroup) resource).getMetadata().getName();
-        } else if (resource instanceof ACL) {
-            return ((ACL) resource).getMetadata().getName();
-        }
-        throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
+        return switch (resource) {
+            case ApplicationService r -> r.getMetadata().getName();
+            case VirtualCluster r -> r.getMetadata().getName();
+            case ServiceAccount r -> r.getMetadata().getName();
+            case Topic r -> r.getMetadata().getName();
+            case ConsumerGroup r -> r.getMetadata().getName();
+            case ACL r -> r.getMetadata().getName();
+            default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
+        };
     }
 
     private String getApplicationServiceRef(Object resource) {
-        if (resource instanceof ApplicationService) {
-            return ((ApplicationService) resource).getSpec().getName();
-        } else if (resource instanceof VirtualCluster) {
-            return ((VirtualCluster) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ServiceAccount) {
-            return ((ServiceAccount) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof Topic) {
-            return ((Topic) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ConsumerGroup) {
-            return ((ConsumerGroup) resource).getSpec().getApplicationServiceRef();
-        } else if (resource instanceof ACL) {
-            return ((ACL) resource).getSpec().getApplicationServiceRef();
-        }
-        return null;
+        return switch (resource) {
+            case ApplicationService r -> r.getSpec().getName();
+            case VirtualCluster r -> r.getSpec().getApplicationServiceRef();
+            case ServiceAccount r -> r.getSpec().getApplicationServiceRef();
+            case Topic r -> r.getSpec().getApplicationServiceRef();
+            case ConsumerGroup r -> r.getSpec().getApplicationServiceRef();
+            case ACL r -> r.getSpec().getApplicationServiceRef();
+            default -> null;
+        };
     }
 
     private void setResourceVersion(Object resource, String version) {
-        if (resource instanceof ApplicationService) {
-            ((ApplicationService) resource).getMetadata().setResourceVersion(version);
-        } else if (resource instanceof VirtualCluster) {
-            ((VirtualCluster) resource).getMetadata().setResourceVersion(version);
-        } else if (resource instanceof ServiceAccount) {
-            ((ServiceAccount) resource).getMetadata().setResourceVersion(version);
-        } else if (resource instanceof Topic) {
-            ((Topic) resource).getMetadata().setResourceVersion(version);
-        } else if (resource instanceof ConsumerGroup) {
-            ((ConsumerGroup) resource).getMetadata().setResourceVersion(version);
-        } else if (resource instanceof ACL) {
-            ((ACL) resource).getMetadata().setResourceVersion(version);
+        switch (resource) {
+            case ApplicationService r -> r.getMetadata().setResourceVersion(version);
+            case VirtualCluster r -> r.getMetadata().setResourceVersion(version);
+            case ServiceAccount r -> r.getMetadata().setResourceVersion(version);
+            case Topic r -> r.getMetadata().setResourceVersion(version);
+            case ConsumerGroup r -> r.getMetadata().setResourceVersion(version);
+            case ACL r -> r.getMetadata().setResourceVersion(version);
+            default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         }
     }
 
     private void setUid(Object resource, String uid) {
-        if (resource instanceof ApplicationService) {
-            ((ApplicationService) resource).getMetadata().setUid(uid);
-        } else if (resource instanceof VirtualCluster) {
-            ((VirtualCluster) resource).getMetadata().setUid(uid);
-        } else if (resource instanceof ServiceAccount) {
-            ((ServiceAccount) resource).getMetadata().setUid(uid);
-        } else if (resource instanceof Topic) {
-            ((Topic) resource).getMetadata().setUid(uid);
-        } else if (resource instanceof ConsumerGroup) {
-            ((ConsumerGroup) resource).getMetadata().setUid(uid);
-        } else if (resource instanceof ACL) {
-            ((ACL) resource).getMetadata().setUid(uid);
+        switch (resource) {
+            case ApplicationService r -> r.getMetadata().setUid(uid);
+            case VirtualCluster r -> r.getMetadata().setUid(uid);
+            case ServiceAccount r -> r.getMetadata().setUid(uid);
+            case Topic r -> r.getMetadata().setUid(uid);
+            case ConsumerGroup r -> r.getMetadata().setUid(uid);
+            case ACL r -> r.getMetadata().setUid(uid);
+            default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         }
     }
 }
