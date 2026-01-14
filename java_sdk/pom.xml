@@ -35,6 +35,8 @@
         <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
         <kafka.version>3.6.1</kafka.version>
         <lombok.version>1.18.34</lombok.version>
+        <fabric8.version>6.13.3</fabric8.version>
+        <sundrio.version>0.103.1</sundrio.version>
     </properties>
 
     <dependencies>
@@ -43,6 +45,29 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Fabric8 Kubernetes Client -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>${fabric8.version}</version>
+        </dependency>
+
+        <!-- Fabric8 CRD Generator -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>crd-generator-apt</artifactId>
+            <version>${fabric8.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Sundrio for @Buildable -->
+        <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>builder-annotations</artifactId>
+            <version>${sundrio.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -245,6 +270,23 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.fabric8</groupId>
+                            <artifactId>crd-generator-apt</artifactId>
+                            <version>${fabric8.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.sundr</groupId>
+                            <artifactId>builder-annotations</artifactId>
+                            <version>${sundrio.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 

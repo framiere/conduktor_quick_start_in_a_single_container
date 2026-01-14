@@ -21,7 +21,6 @@
 
     <modules>
         <module>java_sdk</module>
-        <module>crd</module>
     </modules>
 
     <build>

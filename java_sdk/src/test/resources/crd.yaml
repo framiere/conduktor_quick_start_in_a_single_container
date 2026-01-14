@@ -1,0 +1,60 @@
+apiVersion: messaging.example.com/v1
+kind: MessagingDeclaration
+metadata:
+  name: demo-admin
+spec:
+  serviceName: demo-admin
+  virtualClusterId: demo
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingDeclaration
+metadata:
+  name: demo-acl-admin
+spec:
+  serviceName: demo-acl-admin
+  virtualClusterId: demo-acl
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingDeclaration
+metadata:
+  name: demo-acl-user
+spec:
+  serviceName: demo-acl-user
+  virtualClusterId: demo-acl
+  acls:
+    - type: TOPIC
+      name: click
+      patternType: PREFIXED
+      operations: [READ]
+    - type: CONSUMER_GROUP
+      name: myconsumer-
+      patternType: PREFIXED
+      operations: [READ]
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingDeclaration
+metadata:
+  name: orders-service
+  namespace: orders
+spec:
+  serviceName: orders-service
+  virtualClusterId: prod-cluster
+  topics:
+    - name: orders.events
+      partitions: 12
+      replicationFactor: 3
+      config:
+        retention.ms: "604800000"
+        cleanup.policy: "delete"
+    - name: orders.deadletter
+      partitions: 3
+  acls:
+    - type: TOPIC
+      name: orders.events
+      operations: [READ, WRITE]
+    - type: TOPIC
+      name: orders.deadletter
+      operations: [READ, WRITE]
+    - type: TOPIC
+      name: inventory.updates
+      operations: [READ]
