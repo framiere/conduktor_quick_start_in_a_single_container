@@ -1,0 +1,225 @@
+# ApplicationService CR - represents an application service
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: orders-service
+  namespace: orders
+spec:
+  name: orders-service
+---
+# VirtualCluster CR - represents a Conduktor virtual cluster
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: prod-cluster
+  namespace: orders
+spec:
+  clusterId: prod-cluster
+  applicationServiceRef: orders-service
+---
+# ServiceAccount CR - represents a service identity
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: orders-service-sa
+  namespace: orders
+spec:
+  name: orders-service
+  dn:
+    - CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US
+  clusterRef: prod-cluster
+  applicationServiceRef: orders-service
+---
+# Topic CR - references parent service
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-events
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  name: orders.events
+  partitions: 12
+  replicationFactor: 3
+  config:
+    retention.ms: "604800000"
+    cleanup.policy: "delete"
+  applicationServiceRef: orders-service
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-deadletter
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  name: orders.deadletter
+  partitions: 3
+  replicationFactor: 3
+  applicationServiceRef: orders-service
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: inventory-updates
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  name: inventory.updates
+  partitions: 6
+  replicationFactor: 3
+  applicationServiceRef: orders-service
+---
+# ACL CR - references parent service and Topic CR
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: orders-events-rw
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  topicRef: orders-events
+  operations: [READ, WRITE]
+  applicationServiceRef: orders-service
+---
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: orders-deadletter-rw
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  topicRef: orders-deadletter
+  operations: [READ, WRITE]
+  applicationServiceRef: orders-service
+---
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: inventory-updates-read
+  namespace: orders
+spec:
+  serviceRef: orders-service-sa
+  topicRef: inventory-updates
+  operations: [READ]
+  applicationServiceRef: orders-service
+---
+# Additional examples from original crd.yaml
+---
+# ApplicationService for demo
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: demo-admin
+spec:
+  name: demo-admin
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: demo
+spec:
+  clusterId: demo
+  applicationServiceRef: demo-admin
+---
+# ApplicationService for demo-acl-admin
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: demo-acl-admin
+spec:
+  name: demo-acl-admin
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: demo-acl
+spec:
+  clusterId: demo-acl
+  applicationServiceRef: demo-acl-admin
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-admin-sa
+spec:
+  name: demo-admin
+  dn:
+    - CN=demo-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  clusterRef: demo
+  applicationServiceRef: demo-admin
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-acl-admin-sa
+spec:
+  name: demo-acl-admin
+  dn:
+    - CN=demo-acl-admin,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  clusterRef: demo-acl
+  applicationServiceRef: demo-acl-admin
+---
+# ApplicationService for demo-acl-user
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: demo-acl-user
+spec:
+  name: demo-acl-user
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-acl-user-sa
+spec:
+  name: demo-acl-user
+  dn:
+    - CN=demo-acl-user,OU=DEMO,O=EXAMPLE,L=CITY,C=US
+  clusterRef: demo-acl
+  applicationServiceRef: demo-acl-user
+---
+# Topic CR for demo-acl-user
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: click-topic
+spec:
+  serviceRef: demo-acl-user-sa
+  name: click
+  partitions: 6
+  replicationFactor: 3
+  applicationServiceRef: demo-acl-user
+---
+# ConsumerGroup CR
+apiVersion: messaging.example.com/v1
+kind: ConsumerGroup
+metadata:
+  name: myconsumer-group
+spec:
+  serviceRef: demo-acl-user-sa
+  name: myconsumer-
+  patternType: PREFIXED
+  applicationServiceRef: demo-acl-user
+---
+# ACL for Topic
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: demo-acl-user-click-read
+spec:
+  serviceRef: demo-acl-user-sa
+  topicRef: click-topic
+  operations: [READ]
+  applicationServiceRef: demo-acl-user
+---
+# ACL for ConsumerGroup
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: demo-acl-user-consumer-read
+spec:
+  serviceRef: demo-acl-user-sa
+  consumerGroupRef: myconsumer-group
+  operations: [READ]
+  applicationServiceRef: demo-acl-user

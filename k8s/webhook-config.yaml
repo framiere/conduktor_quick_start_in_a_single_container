@@ -1,0 +1,89 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: messaging-operator-webhook
+webhooks:
+  - name: topic.validate.example.com
+    clientConfig:
+      service:
+        name: messaging-operator-webhook
+        namespace: operator-system
+        path: /validate/topic
+      caBundle: ${CA_BUNDLE}  # Replace with your CA certificate
+    rules:
+      - operations: ["UPDATE", "DELETE"]
+        apiGroups: ["example.com"]
+        apiVersions: ["v1"]
+        resources: ["topics"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail  # CRITICAL: Block operations if webhook unavailable
+    timeoutSeconds: 10
+
+  - name: acl.validate.example.com
+    clientConfig:
+      service:
+        name: messaging-operator-webhook
+        namespace: operator-system
+        path: /validate/acl
+      caBundle: ${CA_BUNDLE}
+    rules:
+      - operations: ["UPDATE", "DELETE"]
+        apiGroups: ["example.com"]
+        apiVersions: ["v1"]
+        resources: ["acls"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    timeoutSeconds: 10
+
+  - name: serviceaccount.validate.example.com
+    clientConfig:
+      service:
+        name: messaging-operator-webhook
+        namespace: operator-system
+        path: /validate/serviceaccount
+      caBundle: ${CA_BUNDLE}
+    rules:
+      - operations: ["UPDATE", "DELETE"]
+        apiGroups: ["example.com"]
+        apiVersions: ["v1"]
+        resources: ["serviceaccounts"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    timeoutSeconds: 10
+
+  - name: virtualcluster.validate.example.com
+    clientConfig:
+      service:
+        name: messaging-operator-webhook
+        namespace: operator-system
+        path: /validate/virtualcluster
+      caBundle: ${CA_BUNDLE}
+    rules:
+      - operations: ["UPDATE", "DELETE"]
+        apiGroups: ["example.com"]
+        apiVersions: ["v1"]
+        resources: ["virtualclusters"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    timeoutSeconds: 10
+
+  - name: consumergroup.validate.example.com
+    clientConfig:
+      service:
+        name: messaging-operator-webhook
+        namespace: operator-system
+        path: /validate/consumergroup
+      caBundle: ${CA_BUNDLE}
+    rules:
+      - operations: ["UPDATE", "DELETE"]
+        apiGroups: ["example.com"]
+        apiVersions: ["v1"]
+        resources: ["consumergroups"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    timeoutSeconds: 10
