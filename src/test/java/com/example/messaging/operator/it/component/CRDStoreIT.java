@@ -20,18 +20,24 @@ public class CRDStoreIT extends ComponentITBase {
 
         // Verify resource exists in K8s
         ApplicationService fromK8s = k8sClient.resources(ApplicationService.class).inNamespace("default").withName("test-app").get();
-        assertThat(fromK8s).isNotNull();
-        assertThat(fromK8s.getSpec().getName()).isEqualTo("test-app");
+        assertThat(fromK8s)
+                .isNotNull();
+        assertThat(fromK8s.getSpec().getName())
+                .isEqualTo("test-app");
 
         // Sync to store
         syncToStore(app);
 
         // Verify resource exists in store
         ApplicationService fromStore = store.get("ApplicationService", "default", "test-app");
-        assertThat(fromStore).isNotNull();
-        assertThat(fromStore.getMetadata().getName()).isEqualTo("test-app");
-        assertThat(fromStore.getMetadata().getResourceVersion()).isNotNull();
-        assertThat(fromStore.getMetadata().getUid()).isNotNull();
+        assertThat(fromStore)
+                .isNotNull();
+        assertThat(fromStore.getMetadata().getName())
+                .isEqualTo("test-app");
+        assertThat(fromStore.getMetadata().getResourceVersion())
+                .isNotNull();
+        assertThat(fromStore.getMetadata().getUid())
+                .isNotNull();
     }
 
     @Test
@@ -97,7 +103,8 @@ public class CRDStoreIT extends ComponentITBase {
         List<Topic> topics = store.list("Topic", "default");
 
         // Verify all topics are present
-        assertThat(topics).hasSize(3);
+        assertThat(topics)
+                .hasSize(3);
         assertThat(topics).extracting(t -> t.getMetadata().getName()).containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
         assertThat(topics).extracting(t -> t.getSpec().getPartitions()).containsExactlyInAnyOrder(3, 6, 9);
     }
@@ -121,8 +128,10 @@ public class CRDStoreIT extends ComponentITBase {
 
         // Verify initial state
         VirtualCluster fromStore = store.get("VirtualCluster", "default", "test-cluster");
-        assertThat(fromStore).isNotNull();
-        assertThat(fromStore.getSpec().getClusterId()).isEqualTo("original-cluster-id");
+        assertThat(fromStore)
+                .isNotNull();
+        assertThat(fromStore.getSpec().getClusterId())
+                .isEqualTo("original-cluster-id");
         String originalVersion = fromStore.getMetadata().getResourceVersion();
 
         // Update cluster spec
@@ -132,8 +141,10 @@ public class CRDStoreIT extends ComponentITBase {
         VirtualCluster updated = store.update("VirtualCluster", "default", "test-cluster", fromStore);
 
         // Verify update
-        assertThat(updated).isNotNull();
-        assertThat(updated.getSpec().getClusterId()).isEqualTo("updated-cluster-id");
+        assertThat(updated)
+                .isNotNull();
+        assertThat(updated.getSpec().getClusterId())
+                .isEqualTo("updated-cluster-id");
         assertThat(updated.getMetadata().getResourceVersion()).isNotEqualTo(originalVersion);
 
         // Verify persisted in store
@@ -174,14 +185,17 @@ public class CRDStoreIT extends ComponentITBase {
 
         // Delete from store
         boolean deleted = store.delete("ServiceAccount", "default", "test-sa");
-        assertThat(deleted).isTrue();
+        assertThat(deleted)
+                .isTrue();
 
         // Verify resource no longer exists
         ServiceAccount afterDelete = store.get("ServiceAccount", "default", "test-sa");
-        assertThat(afterDelete).isNull();
+        assertThat(afterDelete)
+                .isNull();
 
         // Verify delete of non-existent resource returns false
         boolean deletedAgain = store.delete("ServiceAccount", "default", "test-sa");
-        assertThat(deletedAgain).isFalse();
+        assertThat(deletedAgain)
+                .isFalse();
     }
 }

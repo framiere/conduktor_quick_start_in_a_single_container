@@ -24,7 +24,7 @@ class WebhookValidatorTest {
         store = new CRDStore();
         OwnershipValidator ownershipValidator = new OwnershipValidator(store);
         mapper = new ObjectMapper();
-        validator = new WebhookValidator(ownershipValidator, mapper);
+        validator = new WebhookValidator(ownershipValidator);
     }
 
     @Test
@@ -66,8 +66,10 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, Topic.class);
 
-        assertThat(response.isAllowed()).isTrue();
-        assertThat(response.getUid()).isEqualTo("test-uid");
+        assertThat(response.isAllowed())
+                .isTrue();
+        assertThat(response.getUid())
+                .isEqualTo("test-uid");
     }
 
     @Test
@@ -107,7 +109,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, Topic.class);
 
-        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.isAllowed())
+                .isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef").contains("app-service-1").contains("hacker-service");
     }
 
@@ -138,7 +141,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, VirtualCluster.class);
 
-        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.isAllowed())
+                .isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 
@@ -171,7 +175,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, ServiceAccount.class);
 
-        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.isAllowed())
+                .isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 
@@ -204,7 +209,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, ACL.class);
 
-        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.isAllowed())
+                .isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 }

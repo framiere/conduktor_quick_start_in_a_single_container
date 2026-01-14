@@ -481,19 +481,27 @@ class CrdReconciliationTest {
 
             // BEFORE STATE
             List<Topic> beforeState = crdStore.list("Topic", TEST_NAMESPACE);
-            assertThat(beforeState).as("BEFORE: Topic should exist").hasSize(1);
+            assertThat(beforeState)
+                    .as("BEFORE: Topic should exist")
+                    .hasSize(1);
 
             // DELETE OPERATION
             boolean deleted = crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
 
-            assertThat(deleted).as("Delete operation should succeed").isTrue();
+            assertThat(deleted)
+                    .as("Delete operation should succeed")
+                    .isTrue();
 
             // AFTER STATE
             List<Topic> afterState = crdStore.list("Topic", TEST_NAMESPACE);
-            assertThat(afterState).as("AFTER: Topic should be removed").isEmpty();
+            assertThat(afterState)
+                    .as("AFTER: Topic should be removed")
+                    .isEmpty();
 
             Topic retrieved = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
-            assertThat(retrieved).as("Get operation should return null after delete").isNull();
+            assertThat(retrieved)
+                    .as("Get operation should return null after delete")
+                    .isNull();
         }
 
         @Test
@@ -508,13 +516,20 @@ class CrdReconciliationTest {
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult result = validator.validateDelete(topic, DIFFERENT_APP_SERVICE);
 
-            assertThat(result.isValid()).as("Delete should be rejected from non-owner").isFalse();
+            assertThat(result.isValid())
+                    .as("Delete should be rejected from non-owner")
+                    .isFalse();
 
-            assertThat(result.getMessage()).contains(DIFFERENT_APP_SERVICE).contains("cannot delete").contains(OWNER_APP_SERVICE);
+            assertThat(result.getMessage())
+                    .contains(DIFFERENT_APP_SERVICE)
+                    .contains("cannot delete")
+                    .contains(OWNER_APP_SERVICE);
 
             // AFTER STATE: Resource should still exist
             Topic afterState = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
-            assertThat(afterState).as("Resource should not be deleted").isNotNull();
+            assertThat(afterState)
+                    .as("Resource should not be deleted")
+                    .isNotNull();
         }
 
         @Test
@@ -532,10 +547,13 @@ class CrdReconciliationTest {
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult result = validator.validateDelete(topic, OWNER_APP_SERVICE);
 
-            assertThat(result.isValid()).as("Delete should be allowed for owner").isTrue();
+            assertThat(result.isValid())
+                    .as("Delete should be allowed for owner")
+                    .isTrue();
 
             boolean deleted = crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
-            assertThat(deleted).isTrue();
+            assertThat(deleted)
+                    .isTrue();
 
             // AFTER STATE
             assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
@@ -551,17 +569,24 @@ class CrdReconciliationTest {
             crdStore.create("ACL", TEST_NAMESPACE, buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE)).hasSize(1);
-            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).hasSize(1);
+            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE))
+                    .hasSize(1);
+            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
+                    .hasSize(1);
 
             // DELETE OPERATION
             boolean deleted = crdStore.delete("ACL", TEST_NAMESPACE, "orders-events-rw");
-            assertThat(deleted).isTrue();
+            assertThat(deleted)
+                    .isTrue();
 
             // AFTER STATE
-            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE)).as("ACL should be deleted").isEmpty();
+            assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE))
+                    .as("ACL should be deleted")
+                    .isEmpty();
 
-            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).as("Referenced Topic should remain").hasSize(1);
+            assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE))
+                    .as("Referenced Topic should remain")
+                    .hasSize(1);
         }
 
         @Test
@@ -639,27 +664,45 @@ class CrdReconciliationTest {
             Topic topic = crdStore.create("Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // VERIFY EVENTS
-            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(CREATE);
-            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
-            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
-            assertThat(beforeEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
-            assertThat(beforeEvent.getApplicationService()).isEqualTo(OWNER_APP_SERVICE);
-            assertThat(beforeEvent.getResult()).isNull();
+            assertThat(beforeEvent.getPhase())
+                    .isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation())
+                    .isEqualTo(CREATE);
+            assertThat(beforeEvent.getResourceKind())
+                    .isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName())
+                    .isEqualTo("orders-events");
+            assertThat(beforeEvent.getResourceNamespace())
+                    .isEqualTo(TEST_NAMESPACE);
+            assertThat(beforeEvent.getApplicationService())
+                    .isEqualTo(OWNER_APP_SERVICE);
+            assertThat(beforeEvent.getResult())
+                    .isNull();
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(CREATE);
-            assertThat(afterEvent.getResourceKind()).isEqualTo("Topic");
-            assertThat(afterEvent.getResourceName()).isEqualTo("orders-events");
-            assertThat(afterEvent.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
-            assertThat(afterEvent.getApplicationService()).isEqualTo(OWNER_APP_SERVICE);
-            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
-            assertThat(afterEvent.getResourceVersion()).isNotNull();
-            assertThat(afterEvent.isSuccess()).isTrue();
+            assertThat(afterEvent.getPhase())
+                    .isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation())
+                    .isEqualTo(CREATE);
+            assertThat(afterEvent.getResourceKind())
+                    .isEqualTo("Topic");
+            assertThat(afterEvent.getResourceName())
+                    .isEqualTo("orders-events");
+            assertThat(afterEvent.getResourceNamespace())
+                    .isEqualTo(TEST_NAMESPACE);
+            assertThat(afterEvent.getApplicationService())
+                    .isEqualTo(OWNER_APP_SERVICE);
+            assertThat(afterEvent.getResult())
+                    .isEqualTo(SUCCESS);
+            assertThat(afterEvent.getResourceVersion())
+                    .isNotNull();
+            assertThat(afterEvent.isSuccess())
+                    .isTrue();
         }
 
         @Test
@@ -675,20 +718,31 @@ class CrdReconciliationTest {
             Topic updated = crdStore.update("Topic", TEST_NAMESPACE, "orders-events", topic);
 
             // VERIFY EVENTS
-            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(UPDATE);
-            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
-            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
+            assertThat(beforeEvent.getPhase())
+                    .isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation())
+                    .isEqualTo(UPDATE);
+            assertThat(beforeEvent.getResourceKind())
+                    .isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName())
+                    .isEqualTo("orders-events");
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(UPDATE);
-            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
-            assertThat(afterEvent.getResourceVersion()).isNotNull();
-            assertThat(afterEvent.isSuccess()).isTrue();
+            assertThat(afterEvent.getPhase())
+                    .isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation())
+                    .isEqualTo(UPDATE);
+            assertThat(afterEvent.getResult())
+                    .isEqualTo(SUCCESS);
+            assertThat(afterEvent.getResourceVersion())
+                    .isNotNull();
+            assertThat(afterEvent.isSuccess())
+                    .isTrue();
         }
 
         @Test
@@ -703,20 +757,31 @@ class CrdReconciliationTest {
             boolean deleted = crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
 
             // VERIFY EVENTS
-            assertThat(deleted).isTrue();
-            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
+            assertThat(deleted)
+                    .isTrue();
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER events")
+                    .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(DELETE);
-            assertThat(beforeEvent.getResourceKind()).isEqualTo("Topic");
-            assertThat(beforeEvent.getResourceName()).isEqualTo("orders-events");
+            assertThat(beforeEvent.getPhase())
+                    .isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation())
+                    .isEqualTo(DELETE);
+            assertThat(beforeEvent.getResourceKind())
+                    .isEqualTo("Topic");
+            assertThat(beforeEvent.getResourceName())
+                    .isEqualTo("orders-events");
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(DELETE);
-            assertThat(afterEvent.getResult()).isEqualTo(SUCCESS);
-            assertThat(afterEvent.isSuccess()).isTrue();
+            assertThat(afterEvent.getPhase())
+                    .isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation())
+                    .isEqualTo(DELETE);
+            assertThat(afterEvent.getResult())
+                    .isEqualTo(SUCCESS);
+            assertThat(afterEvent.isSuccess())
+                    .isTrue();
         }
 
         @Test
@@ -735,18 +800,27 @@ class CrdReconciliationTest {
             }
 
             // VERIFY EVENTS
-            assertThat(capturedEvents).as("Should have BEFORE and AFTER(FAILURE) events").hasSize(2);
+            assertThat(capturedEvents)
+                    .as("Should have BEFORE and AFTER(FAILURE) events")
+                    .hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
-            assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
-            assertThat(beforeEvent.getOperation()).isEqualTo(CREATE);
+            assertThat(beforeEvent.getPhase())
+                    .isEqualTo(BEFORE);
+            assertThat(beforeEvent.getOperation())
+                    .isEqualTo(CREATE);
 
             ReconciliationEvent afterEvent = capturedEvents.get(1);
-            assertThat(afterEvent.getPhase()).isEqualTo(AFTER);
-            assertThat(afterEvent.getOperation()).isEqualTo(CREATE);
-            assertThat(afterEvent.getResult()).isEqualTo(FAILURE);
-            assertThat(afterEvent.isFailure()).isTrue();
-            assertThat(afterEvent.getErrorDetails()).isNotNull();
+            assertThat(afterEvent.getPhase())
+                    .isEqualTo(AFTER);
+            assertThat(afterEvent.getOperation())
+                    .isEqualTo(CREATE);
+            assertThat(afterEvent.getResult())
+                    .isEqualTo(FAILURE);
+            assertThat(afterEvent.isFailure())
+                    .isTrue();
+            assertThat(afterEvent.getErrorDetails())
+                    .isNotNull();
         }
 
         @Test
@@ -770,11 +844,17 @@ class CrdReconciliationTest {
             assertThat(capturedEvents).hasSize(6); // +2 for delete
 
             // VERIFY FULL LIFECYCLE
-            assertThat(capturedEvents.stream().filter(e -> e.getPhase() == BEFORE).count()).as("Should have 3 BEFORE events").isEqualTo(3);
+            assertThat(capturedEvents.stream().filter(e -> e.getPhase() == BEFORE).count())
+                    .as("Should have 3 BEFORE events")
+                    .isEqualTo(3);
 
-            assertThat(capturedEvents.stream().filter(e -> e.getPhase() == AFTER).count()).as("Should have 3 AFTER events").isEqualTo(3);
+            assertThat(capturedEvents.stream().filter(e -> e.getPhase() == AFTER).count())
+                    .as("Should have 3 AFTER events")
+                    .isEqualTo(3);
 
-            assertThat(capturedEvents.stream().filter(e -> e.getResult() == SUCCESS).count()).as("All operations should be successful").isEqualTo(3);
+            assertThat(capturedEvents.stream().filter(e -> e.getResult() == SUCCESS).count())
+                    .as("All operations should be successful")
+                    .isEqualTo(3);
 
             // Verify operations in order
             assertThat(capturedEvents.get(0).getOperation()).isEqualTo(CREATE);
@@ -794,7 +874,9 @@ class CrdReconciliationTest {
 
             ReconciliationEvent afterCreate = capturedEvents.get(1);
             Long versionAfterCreate = afterCreate.getResourceVersion();
-            assertThat(versionAfterCreate).isNotNull().isPositive();
+            assertThat(versionAfterCreate)
+                    .isNotNull()
+                    .isPositive();
 
             // UPDATE
             topic.getSpec().setPartitions(6);
@@ -802,7 +884,9 @@ class CrdReconciliationTest {
 
             ReconciliationEvent afterUpdate = capturedEvents.get(3);
             Long versionAfterUpdate = afterUpdate.getResourceVersion();
-            assertThat(versionAfterUpdate).as("Resource version should increment after update").isGreaterThan(versionAfterCreate);
+            assertThat(versionAfterUpdate)
+                    .as("Resource version should increment after update")
+                    .isGreaterThan(versionAfterCreate);
         }
     }
 

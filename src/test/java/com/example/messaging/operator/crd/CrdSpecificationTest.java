@@ -60,7 +60,8 @@ class CrdSpecificationTest {
             spec.setName("orders-service");
             appService.setSpec(spec);
 
-            assertThat(appService).isNotNull();
+            assertThat(appService)
+                    .isNotNull();
 
             assertThat(appService.getMetadata())
                     .isNotNull()
@@ -164,7 +165,8 @@ class CrdSpecificationTest {
             spec.setClusterRef("prod-cluster");
             spec.setApplicationServiceRef("orders-service");
 
-            assertThat(spec.getDn()).isNotNull()
+            assertThat(spec.getDn())
+                    .isNotNull()
                     .isInstanceOf(List.class)
                     .hasSize(2)
                     .containsExactly("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US", "CN=orders-service-alt,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");

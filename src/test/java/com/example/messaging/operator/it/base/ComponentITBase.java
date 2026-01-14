@@ -19,8 +19,7 @@ public abstract class ComponentITBase extends KubernetesITBase {
     static void setupWebhook() throws Exception {
         setupKubernetes();
 
-        ObjectMapper mapper = new ObjectMapper();
-        webhookValidator = new WebhookValidator(ownershipValidator, mapper);
+        webhookValidator = new WebhookValidator(ownershipValidator);
         webhookServer = new WebhookServer(webhookValidator, WEBHOOK_PORT);
         webhookServer.start();
     }

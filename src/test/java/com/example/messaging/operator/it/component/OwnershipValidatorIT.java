@@ -48,8 +48,10 @@ public class OwnershipValidatorIT extends ComponentITBase {
         ValidationResult result = ownershipValidator.validateCreate(topic, "default");
 
         // Verify validation succeeds
-        assertThat(result.isValid()).isTrue();
-        assertThat(result.getMessage()).isNull();
+        assertThat(result.isValid())
+                .isTrue();
+        assertThat(result.getMessage())
+                .isNull();
     }
 
     @Test
@@ -72,7 +74,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         ValidationResult result = ownershipValidator.validateCreate(topic, "default");
 
         // Verify validation fails
-        assertThat(result.isValid()).isFalse();
+        assertThat(result.isValid())
+                .isFalse();
         assertThat(result.getMessage()).contains("Referenced ServiceAccount 'missing-sa' does not exist");
     }
 
@@ -106,7 +109,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         ValidationResult result = ownershipValidator.validateCreate(sa, "default");
 
         // Verify validation fails
-        assertThat(result.isValid()).isFalse();
+        assertThat(result.isValid())
+                .isFalse();
         assertThat(result.getMessage()).contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
     }
 
@@ -130,7 +134,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
         // Get existing cluster from store
         VirtualCluster existingCluster = store.get("VirtualCluster", "default", "test-cluster");
-        assertThat(existingCluster).isNotNull();
+        assertThat(existingCluster)
+                .isNotNull();
 
         // Try to change ownership to app2
         VirtualCluster updatedCluster = TestDataBuilder.virtualCluster()
@@ -143,7 +148,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         ValidationResult result = ownershipValidator.validateUpdate(existingCluster, updatedCluster);
 
         // Verify validation fails
-        assertThat(result.isValid()).isFalse();
+        assertThat(result.isValid())
+                .isFalse();
         assertThat(result.getMessage()).contains("Cannot change applicationServiceRef from 'app1' to 'app2'")
                 .contains("Only the original owner can modify this resource");
     }
@@ -166,8 +172,10 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
         // Get existing cluster from store
         VirtualCluster existingCluster = store.get("VirtualCluster", "default", "test-cluster");
-        assertThat(existingCluster).isNotNull();
-        assertThat(existingCluster.getSpec().getClusterId()).isEqualTo("original-cluster-id");
+        assertThat(existingCluster)
+                .isNotNull();
+        assertThat(existingCluster.getSpec().getClusterId())
+                .isEqualTo("original-cluster-id");
 
         // Update cluster spec but keep same owner
         VirtualCluster updatedCluster = TestDataBuilder.virtualCluster()
@@ -180,7 +188,9 @@ public class OwnershipValidatorIT extends ComponentITBase {
         ValidationResult result = ownershipValidator.validateUpdate(existingCluster, updatedCluster);
 
         // Verify validation succeeds
-        assertThat(result.isValid()).isTrue();
-        assertThat(result.getMessage()).isNull();
+        assertThat(result.isValid())
+                .isTrue();
+        assertThat(result.getMessage())
+                .isNull();
     }
 }

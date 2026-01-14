@@ -357,7 +357,8 @@ class CRDStoreTest {
 
             boolean deleted = store.delete("VirtualCluster", NAMESPACE, "prod-cluster", APP_SERVICE);
 
-            assertThat(deleted).isTrue();
+            assertThat(deleted)
+                    .isTrue();
         }
     }
 

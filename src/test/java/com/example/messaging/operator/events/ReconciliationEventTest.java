@@ -36,14 +36,22 @@ class ReconciliationEventTest {
                     .build();
 
             assertThat(event).isNotNull().satisfies(e -> {
-                assertThat(e.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-                assertThat(e.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-                assertThat(e.getResourceKind()).isEqualTo("Topic");
-                assertThat(e.getResourceName()).isEqualTo(TEST_RESOURCE);
-                assertThat(e.getResourceNamespace()).isEqualTo(TEST_NAMESPACE);
-                assertThat(e.getApplicationService()).isEqualTo(TEST_APP_SERVICE);
-                assertThat(e.getTimestamp()).isNotNull();
-                assertThat(e.getResult()).isNull();
+                assertThat(e.getPhase())
+                        .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+                assertThat(e.getOperation())
+                        .isEqualTo(ReconciliationEvent.Operation.CREATE);
+                assertThat(e.getResourceKind())
+                        .isEqualTo("Topic");
+                assertThat(e.getResourceName())
+                        .isEqualTo(TEST_RESOURCE);
+                assertThat(e.getResourceNamespace())
+                        .isEqualTo(TEST_NAMESPACE);
+                assertThat(e.getApplicationService())
+                        .isEqualTo(TEST_APP_SERVICE);
+                assertThat(e.getTimestamp())
+                        .isNotNull();
+                assertThat(e.getResult())
+                        .isNull();
             });
         }
 
@@ -66,12 +74,18 @@ class ReconciliationEventTest {
                     .build();
 
             assertThat(event).satisfies(e -> {
-                assertThat(e.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-                assertThat(e.getResult()).isEqualTo(ReconciliationEvent.Result.SUCCESS);
-                assertThat(e.getMessage()).isEqualTo(message);
-                assertThat(e.getResourceVersion()).isEqualTo(resourceVersion);
-                assertThat(e.isSuccess()).isTrue();
-                assertThat(e.isFailure()).isFalse();
+                assertThat(e.getPhase())
+                        .isEqualTo(ReconciliationEvent.Phase.AFTER);
+                assertThat(e.getResult())
+                        .isEqualTo(ReconciliationEvent.Result.SUCCESS);
+                assertThat(e.getMessage())
+                        .isEqualTo(message);
+                assertThat(e.getResourceVersion())
+                        .isEqualTo(resourceVersion);
+                assertThat(e.isSuccess())
+                        .isTrue();
+                assertThat(e.isFailure())
+                        .isFalse();
             });
         }
 
@@ -94,11 +108,16 @@ class ReconciliationEventTest {
                     .build();
 
             assertThat(event).satisfies(e -> {
-                assertThat(e.getResult()).isEqualTo(ReconciliationEvent.Result.VALIDATION_ERROR);
-                assertThat(e.getReason()).isEqualTo(reason);
-                assertThat(e.getErrorDetails()).isEqualTo(errorDetails);
-                assertThat(e.isSuccess()).isFalse();
-                assertThat(e.isFailure()).isTrue();
+                assertThat(e.getResult())
+                        .isEqualTo(ReconciliationEvent.Result.VALIDATION_ERROR);
+                assertThat(e.getReason())
+                        .isEqualTo(reason);
+                assertThat(e.getErrorDetails())
+                        .isEqualTo(errorDetails);
+                assertThat(e.isSuccess())
+                        .isFalse();
+                assertThat(e.isFailure())
+                        .isTrue();
             });
         }
 
@@ -125,7 +144,8 @@ class ReconciliationEventTest {
                     .resourceNamespace("production")
                     .build();
 
-            assertThat(event.getResourceReference()).isEqualTo("ServiceAccount/production/orders-sa");
+            assertThat(event.getResourceReference())
+                    .isEqualTo("ServiceAccount/production/orders-sa");
         }
 
         @Test
@@ -177,7 +197,10 @@ class ReconciliationEventTest {
 
             publisher.publish(event);
 
-            assertThat(receivedEvents).hasSize(1).first().isEqualTo(event);
+            assertThat(receivedEvents)
+                    .hasSize(1)
+                    .first()
+                    .isEqualTo(event);
         }
 
         @Test
@@ -203,10 +226,14 @@ class ReconciliationEventTest {
 
             publisher.publish(event);
 
-            assertThat(listener1Count.get()).isEqualTo(1);
-            assertThat(listener2Count.get()).isEqualTo(1);
-            assertThat(listener3Count.get()).isEqualTo(1);
-            assertThat(publisher.getListenerCount()).isEqualTo(3);
+            assertThat(listener1Count.get())
+                    .isEqualTo(1);
+            assertThat(listener2Count.get())
+                    .isEqualTo(1);
+            assertThat(listener3Count.get())
+                    .isEqualTo(1);
+            assertThat(publisher.getListenerCount())
+                    .isEqualTo(3);
         }
 
         @Test
@@ -235,7 +262,10 @@ class ReconciliationEventTest {
             // Should not throw, second listener should still receive event
             assertThatCode(() -> publisher.publish(event)).doesNotThrowAnyException();
 
-            assertThat(successfulEvents).hasSize(1).first().isEqualTo(event);
+            assertThat(successfulEvents)
+                    .hasSize(1)
+                    .first()
+                    .isEqualTo(event);
         }
 
         @Test
@@ -247,10 +277,12 @@ class ReconciliationEventTest {
             ReconciliationEventPublisher.ReconciliationEventListener listener = e -> count.incrementAndGet();
 
             publisher.addListener(listener);
-            assertThat(publisher.getListenerCount()).isEqualTo(1);
+            assertThat(publisher.getListenerCount())
+                    .isEqualTo(1);
 
             publisher.removeListener(listener);
-            assertThat(publisher.getListenerCount()).isEqualTo(0);
+            assertThat(publisher.getListenerCount())
+                    .isEqualTo(0);
 
             ReconciliationEvent event = ReconciliationEvent.builder()
                     .phase(ReconciliationEvent.Phase.BEFORE)
@@ -262,7 +294,8 @@ class ReconciliationEventTest {
 
             publisher.publish(event);
 
-            assertThat(count.get()).isEqualTo(0);
+            assertThat(count.get())
+                    .isEqualTo(0);
         }
 
         @Test
@@ -277,11 +310,13 @@ class ReconciliationEventTest {
             publisher.addListener(e -> {
             });
 
-            assertThat(publisher.getListenerCount()).isEqualTo(3);
+            assertThat(publisher.getListenerCount())
+                    .isEqualTo(3);
 
             publisher.clearListeners();
 
-            assertThat(publisher.getListenerCount()).isEqualTo(0);
+            assertThat(publisher.getListenerCount())
+                    .isEqualTo(0);
         }
     }
 

@@ -17,7 +17,7 @@ public class WebhookValidator {
     private static final Logger log = LoggerFactory.getLogger(WebhookValidator.class);
 
     private final OwnershipValidator ownershipValidator;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Validate an admission request for a specific resource type. Returns allowed response for CREATE operations (handled by reconciler). Validates UPDATE and DELETE

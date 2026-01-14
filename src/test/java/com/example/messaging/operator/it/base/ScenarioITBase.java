@@ -17,8 +17,7 @@ public abstract class ScenarioITBase extends KubernetesITBase {
 
     @BeforeEach
     void setupWebhook() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        webhookValidator = new WebhookValidator(ownershipValidator, mapper);
+        webhookValidator = new WebhookValidator(ownershipValidator);
         webhookServer = new WebhookServer(webhookValidator, WEBHOOK_PORT);
         webhookServer.start();
     }

@@ -8,20 +8,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.junit.jupiter.api.*;
 
+import static com.example.messaging.operator.webhook.HttpStatus.OK;
+
 @DisplayName("WebhookServer Integration Tests")
 class WebhookServerTest {
 
     private WebhookServer server;
     private OkHttpClient httpClient;
-    private ObjectMapper mapper;
     private int port = 8443;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() throws Exception {
         CRDStore store = new CRDStore();
         OwnershipValidator ownershipValidator = new OwnershipValidator(store);
-        mapper = new ObjectMapper();
-        WebhookValidator validator = new WebhookValidator(ownershipValidator, mapper);
+        WebhookValidator validator = new WebhookValidator(ownershipValidator);
 
         server = new WebhookServer(validator, port);
         server.start();
@@ -42,8 +43,10 @@ class WebhookServerTest {
         Request request = new Request.Builder().url("http://localhost:" + port + "/health").get().build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            assertThat(response.code()).isEqualTo(200);
-            assertThat(response.body().string()).isEqualTo("OK");
+            assertThat(response.code())
+                    .isEqualTo(OK.getCode());
+            assertThat(response.body().string())
+                    .isEqualTo("OK");
         }
     }
 
@@ -93,14 +96,18 @@ class WebhookServerTest {
         Request request = new Request.Builder().url("http://localhost:" + port + "/validate/topic").post(body).build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            assertThat(response.code()).isEqualTo(200);
+            assertThat(response.code())
+                    .isEqualTo(OK.getCode());
 
             String responseBody = response.body().string();
             AdmissionReview review = mapper.readValue(responseBody, AdmissionReview.class);
 
-            assertThat(review.getResponse()).isNotNull();
-            assertThat(review.getResponse().isAllowed()).isFalse();
-            assertThat(review.getResponse().getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+            assertThat(review.getResponse())
+                    .isNotNull();
+            assertThat(review.getResponse().isAllowed())
+                    .isFalse();
+            assertThat(review.getResponse().getStatus().getMessage())
+                    .contains("Cannot change applicationServiceRef");
         }
     }
 }

@@ -8,13 +8,20 @@ import io.fabric8.generator.annotation.Pattern;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Specification for a Kafka topic to be created and owned by this CR.
  */
 @Buildable(editableEnabled = false)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TopicSpec {
 
     @JsonProperty("name")

@@ -238,6 +238,8 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
+                    <parallel>classes</parallel>
+                    <threadCount>1</threadCount>
                 </configuration>
             </plugin>
 
@@ -258,6 +260,8 @@
                     <includes>
                         <include>**/*IT.java</include>
                     </includes>
+                    <parallel>classes</parallel>
+                    <threadCount>1</threadCount>
                 </configuration>
             </plugin>
 

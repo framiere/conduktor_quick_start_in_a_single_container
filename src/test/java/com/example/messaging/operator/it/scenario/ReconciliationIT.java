@@ -32,26 +32,40 @@ public class ReconciliationIT extends ScenarioITBase {
         store.create("ApplicationService", "default", app);
 
         // Verify: Two events fired (START → END)
-        assertThat(receivedEvents).hasSize(2);
+        assertThat(receivedEvents)
+                .hasSize(2);
 
         // Verify START event
         ReconciliationEvent startEvent = receivedEvents.get(0);
-        assertThat(startEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(startEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-        assertThat(startEvent.getResourceKind()).isEqualTo("ApplicationService");
-        assertThat(startEvent.getResourceName()).isEqualTo("test-app");
-        assertThat(startEvent.getResourceNamespace()).isEqualTo("default");
-        assertThat(startEvent.getMessage()).isNull();
+        assertThat(startEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(startEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(startEvent.getResourceKind())
+                .isEqualTo("ApplicationService");
+        assertThat(startEvent.getResourceName())
+                .isEqualTo("test-app");
+        assertThat(startEvent.getResourceNamespace())
+                .isEqualTo("default");
+        assertThat(startEvent.getMessage())
+                .isNull();
 
         // Verify END event
         ReconciliationEvent endEvent = receivedEvents.get(1);
-        assertThat(endEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-        assertThat(endEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-        assertThat(endEvent.getResourceKind()).isEqualTo("ApplicationService");
-        assertThat(endEvent.getResourceName()).isEqualTo("test-app");
-        assertThat(endEvent.getResourceNamespace()).isEqualTo("default");
-        assertThat(endEvent.isSuccess()).isTrue();
-        assertThat(endEvent.getMessage()).contains("CREATE completed successfully");
+        assertThat(endEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(endEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(endEvent.getResourceKind())
+                .isEqualTo("ApplicationService");
+        assertThat(endEvent.getResourceName())
+                .isEqualTo("test-app");
+        assertThat(endEvent.getResourceNamespace())
+                .isEqualTo("default");
+        assertThat(endEvent.isSuccess())
+                .isTrue();
+        assertThat(endEvent.getMessage())
+                .contains("CREATE completed successfully");
     }
 
     @Test
@@ -70,18 +84,26 @@ public class ReconciliationIT extends ScenarioITBase {
         store.update("ApplicationService", "default", "test-app", app);
 
         // Verify: Two events fired (START → END)
-        assertThat(receivedEvents).hasSize(2);
+        assertThat(receivedEvents)
+                .hasSize(2);
 
         ReconciliationEvent startEvent = receivedEvents.get(0);
-        assertThat(startEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(startEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-        assertThat(startEvent.getResourceKind()).isEqualTo("ApplicationService");
+        assertThat(startEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(startEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.UPDATE);
+        assertThat(startEvent.getResourceKind())
+                .isEqualTo("ApplicationService");
 
         ReconciliationEvent endEvent = receivedEvents.get(1);
-        assertThat(endEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-        assertThat(endEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-        assertThat(endEvent.isSuccess()).isTrue();
-        assertThat(endEvent.getMessage()).contains("UPDATE completed successfully");
+        assertThat(endEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(endEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.UPDATE);
+        assertThat(endEvent.isSuccess())
+                .isTrue();
+        assertThat(endEvent.getMessage())
+                .contains("UPDATE completed successfully");
     }
 
     @Test
@@ -99,18 +121,26 @@ public class ReconciliationIT extends ScenarioITBase {
         store.delete("ApplicationService", "default", "test-app");
 
         // Verify: Two events fired (START → END)
-        assertThat(receivedEvents).hasSize(2);
+        assertThat(receivedEvents)
+                .hasSize(2);
 
         ReconciliationEvent startEvent = receivedEvents.get(0);
-        assertThat(startEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(startEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-        assertThat(startEvent.getResourceKind()).isEqualTo("ApplicationService");
+        assertThat(startEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(startEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.DELETE);
+        assertThat(startEvent.getResourceKind())
+                .isEqualTo("ApplicationService");
 
         ReconciliationEvent endEvent = receivedEvents.get(1);
-        assertThat(endEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-        assertThat(endEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-        assertThat(endEvent.isSuccess()).isTrue();
-        assertThat(endEvent.getMessage()).contains("DELETE completed successfully");
+        assertThat(endEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(endEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.DELETE);
+        assertThat(endEvent.isSuccess())
+                .isTrue();
+        assertThat(endEvent.getMessage())
+                .contains("DELETE completed successfully");
     }
 
     @Test
@@ -144,21 +174,29 @@ public class ReconciliationIT extends ScenarioITBase {
         }
 
         // Verify: Events include failure (BEFORE and AFTER with FAILURE result)
-        assertThat(receivedEvents).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(receivedEvents)
+                .hasSizeGreaterThanOrEqualTo(2);
 
         // Verify BEFORE event
         ReconciliationEvent beforeEvent = receivedEvents.get(0);
-        assertThat(beforeEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(beforeEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(beforeEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(beforeEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
 
         // Verify AFTER event with FAILURE result
         ReconciliationEvent afterEvent = receivedEvents.get(1);
-        assertThat(afterEvent.getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
-        assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-        assertThat(afterEvent.getResourceKind()).isEqualTo("Topic");
-        assertThat(afterEvent.isSuccess()).isFalse();
+        assertThat(afterEvent.getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(afterEvent.getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(afterEvent.getResourceKind())
+                .isEqualTo("Topic");
+        assertThat(afterEvent.isSuccess())
+                .isFalse();
         assertThat(afterEvent.getResult()).isIn(ReconciliationEvent.Result.FAILURE, ReconciliationEvent.Result.VALIDATION_ERROR);
-        assertThat(afterEvent.getMessage()).isNotNull();
+        assertThat(afterEvent.getMessage())
+                .isNotNull();
     }
 
     @Test
@@ -184,9 +222,12 @@ public class ReconciliationIT extends ScenarioITBase {
         store.delete("ApplicationService", "default", "multi-listener-app");
 
         // Verify: All listeners received all 6 events (2 per operation × 3 operations)
-        assertThat(listener1Events).hasSize(6);
-        assertThat(listener2Events).hasSize(6);
-        assertThat(listener3Events).hasSize(6);
+        assertThat(listener1Events)
+                .hasSize(6);
+        assertThat(listener2Events)
+                .hasSize(6);
+        assertThat(listener3Events)
+                .hasSize(6);
 
         // Verify: All listeners received same events in same order
         for (int i = 0; i < 6; i++) {
@@ -194,27 +235,43 @@ public class ReconciliationIT extends ScenarioITBase {
             ReconciliationEvent event2 = listener2Events.get(i);
             ReconciliationEvent event3 = listener3Events.get(i);
 
-            assertThat(event1.getOperation()).isEqualTo(event2.getOperation());
-            assertThat(event1.getOperation()).isEqualTo(event3.getOperation());
-            assertThat(event1.getPhase()).isEqualTo(event2.getPhase());
-            assertThat(event1.getPhase()).isEqualTo(event3.getPhase());
+            assertThat(event1.getOperation())
+                    .isEqualTo(event2.getOperation());
+            assertThat(event1.getOperation())
+                    .isEqualTo(event3.getOperation());
+            assertThat(event1.getPhase())
+                    .isEqualTo(event2.getPhase());
+            assertThat(event1.getPhase())
+                    .isEqualTo(event3.getPhase());
         }
 
         // Verify: Event sequence is correct (CREATE START/END, UPDATE START/END, DELETE START/END)
-        assertThat(listener1Events.get(0).getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-        assertThat(listener1Events.get(0).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(listener1Events.get(1).getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
-        assertThat(listener1Events.get(1).getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(listener1Events.get(0).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(listener1Events.get(0).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(listener1Events.get(1).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.CREATE);
+        assertThat(listener1Events.get(1).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
 
-        assertThat(listener1Events.get(2).getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-        assertThat(listener1Events.get(2).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(listener1Events.get(3).getOperation()).isEqualTo(ReconciliationEvent.Operation.UPDATE);
-        assertThat(listener1Events.get(3).getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(listener1Events.get(2).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.UPDATE);
+        assertThat(listener1Events.get(2).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(listener1Events.get(3).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.UPDATE);
+        assertThat(listener1Events.get(3).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
 
-        assertThat(listener1Events.get(4).getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-        assertThat(listener1Events.get(4).getPhase()).isEqualTo(ReconciliationEvent.Phase.BEFORE);
-        assertThat(listener1Events.get(5).getOperation()).isEqualTo(ReconciliationEvent.Operation.DELETE);
-        assertThat(listener1Events.get(5).getPhase()).isEqualTo(ReconciliationEvent.Phase.AFTER);
+        assertThat(listener1Events.get(4).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.DELETE);
+        assertThat(listener1Events.get(4).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.BEFORE);
+        assertThat(listener1Events.get(5).getOperation())
+                .isEqualTo(ReconciliationEvent.Operation.DELETE);
+        assertThat(listener1Events.get(5).getPhase())
+                .isEqualTo(ReconciliationEvent.Phase.AFTER);
     }
 
     @Test
@@ -242,15 +299,21 @@ public class ReconciliationIT extends ScenarioITBase {
         // Find ApplicationService events
         List<ReconciliationEvent> appEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals("ApplicationService")).toList();
 
-        assertThat(appEvents).hasSize(2);
-        assertThat(appEvents.get(0).getResourceName()).isEqualTo("metadata-app");
-        assertThat(appEvents.get(0).getResourceNamespace()).isEqualTo("default");
+        assertThat(appEvents)
+                .hasSize(2);
+        assertThat(appEvents.get(0).getResourceName())
+                .isEqualTo("metadata-app");
+        assertThat(appEvents.get(0).getResourceNamespace())
+                .isEqualTo("default");
 
         // Find VirtualCluster events
         List<ReconciliationEvent> vcEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals("VirtualCluster")).toList();
 
-        assertThat(vcEvents).hasSize(2);
-        assertThat(vcEvents.get(0).getResourceName()).isEqualTo("metadata-vc");
-        assertThat(vcEvents.get(0).getResourceNamespace()).isEqualTo("default");
+        assertThat(vcEvents)
+                .hasSize(2);
+        assertThat(vcEvents.get(0).getResourceName())
+                .isEqualTo("metadata-vc");
+        assertThat(vcEvents.get(0).getResourceNamespace())
+                .isEqualTo("default");
     }
 }

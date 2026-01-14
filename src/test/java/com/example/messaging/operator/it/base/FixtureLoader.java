@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Loads YAML fixtures for integration tests.
@@ -18,14 +19,10 @@ public class FixtureLoader {
      * Load a single resource of specific type from YAML fixture
      */
     public static <T> T load(KubernetesClient client, String path, Class<T> type) {
-        if (client == null) {
-            throw new IllegalArgumentException("Client cannot be null");
-        }
+        Objects.requireNonNull(client, "Client cannot be null");
 
         try (InputStream stream = FixtureLoader.class.getResourceAsStream(path)) {
-            if (stream == null) {
-                throw new IllegalArgumentException("Fixture not found: " + path);
-            }
+            Objects.requireNonNull(stream, "Fixture not found: " + path);
 
             return client.load(stream)
                     .get()
@@ -46,14 +43,10 @@ public class FixtureLoader {
      * Load all resources from YAML fixture
      */
     public static List<HasMetadata> loadAll(KubernetesClient client, String path) {
-        if (client == null) {
-            throw new IllegalArgumentException("Client cannot be null");
-        }
+        Objects.requireNonNull(client, "Client cannot be null");
 
         try (InputStream stream = FixtureLoader.class.getResourceAsStream(path)) {
-            if (stream == null) {
-                throw new IllegalArgumentException("Fixture not found: " + path);
-            }
+            Objects.requireNonNull(stream, "Fixture not found: " + path);
 
             return client.load(stream).get();
         } catch (Exception e) {

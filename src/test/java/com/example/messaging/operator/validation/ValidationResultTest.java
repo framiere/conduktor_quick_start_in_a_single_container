@@ -16,8 +16,10 @@ class ValidationResultTest {
     void testValidResult() {
         ValidationResult result = ValidationResult.valid();
 
-        assertThat(result.isValid()).isTrue();
-        assertThat(result.getMessage()).isNull();
+        assertThat(result.isValid())
+                .isTrue();
+        assertThat(result.getMessage())
+                .isNull();
     }
 
     @Test
@@ -26,8 +28,10 @@ class ValidationResultTest {
         String errorMessage = "ApplicationService 'foo' does not exist";
         ValidationResult result = ValidationResult.invalid(errorMessage);
 
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEqualTo(errorMessage);
+        assertThat(result.isValid())
+                .isFalse();
+        assertThat(result.getMessage())
+                .isEqualTo(errorMessage);
     }
 
     @Test
@@ -44,8 +48,10 @@ class ValidationResultTest {
     void testInvalidResultWithEmptyMessage() {
         ValidationResult result = ValidationResult.invalid("");
 
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEmpty();
+        assertThat(result.isValid())
+                .isFalse();
+        assertThat(result.getMessage())
+                .isEmpty();
     }
 
     @Test
@@ -58,8 +64,12 @@ class ValidationResultTest {
                 """;
         ValidationResult result = ValidationResult.invalid(multilineMessage);
 
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEqualTo(multilineMessage).contains("ApplicationService").contains("VirtualCluster");
+        assertThat(result.isValid())
+                .isFalse();
+        assertThat(result.getMessage())
+                .isEqualTo(multilineMessage)
+                .contains("ApplicationService")
+                .contains("VirtualCluster");
     }
 
     @Test
@@ -68,8 +78,10 @@ class ValidationResultTest {
         String messageWithSpecialChars = "Cannot change applicationServiceRef from 'foo-service' to 'bar-service'";
         ValidationResult result = ValidationResult.invalid(messageWithSpecialChars);
 
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEqualTo(messageWithSpecialChars);
+        assertThat(result.isValid())
+                .isFalse();
+        assertThat(result.getMessage())
+                .isEqualTo(messageWithSpecialChars);
     }
 
     @Test
@@ -78,9 +90,12 @@ class ValidationResultTest {
         ValidationResult valid = ValidationResult.valid();
         ValidationResult invalid = ValidationResult.invalid("error");
 
-        assertThat(valid.isValid()).isTrue();
-        assertThat(invalid.isValid()).isFalse();
-        assertThat(valid.isValid()).isNotEqualTo(invalid.isValid());
+        assertThat(valid.isValid())
+                .isTrue();
+        assertThat(invalid.isValid())
+                .isFalse();
+        assertThat(valid.isValid())
+                .isNotEqualTo(invalid.isValid());
     }
 
     @Test
@@ -91,8 +106,10 @@ class ValidationResultTest {
         String message1 = result.getMessage();
         String message2 = result.getMessage();
 
-        assertThat(message1).isSameAs(message2);
-        assertThat(result.isValid()).isFalse();
+        assertThat(message1)
+                .isSameAs(message2);
+        assertThat(result.isValid())
+                .isFalse();
     }
 
     @Test
@@ -104,8 +121,10 @@ class ValidationResultTest {
         ValidationResult invalid2 = ValidationResult.invalid("error2");
 
         // Each factory call creates a new instance
-        assertThat(valid1).isNotSameAs(valid2);
-        assertThat(invalid1).isNotSameAs(invalid2);
+        assertThat(valid1)
+                .isNotSameAs(valid2);
+        assertThat(invalid1)
+                .isNotSameAs(invalid2);
     }
 
     @Test
@@ -119,7 +138,10 @@ class ValidationResultTest {
 
         ValidationResult result = ValidationResult.invalid(longErrorMessage);
 
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEqualTo(longErrorMessage).hasSizeGreaterThan(5000);
+        assertThat(result.isValid())
+                .isFalse();
+        assertThat(result.getMessage())
+                .isEqualTo(longErrorMessage)
+                .hasSizeGreaterThan(5000);
     }
 }

@@ -47,8 +47,10 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateCreate(appService, NAMESPACE);
 
-            assertThat(result.isValid()).isTrue();
-            assertThat(result.getMessage()).isNull();
+            assertThat(result.isValid())
+                    .isTrue();
+            assertThat(result.getMessage())
+                    .isNull();
         }
 
         @Test
@@ -61,7 +63,8 @@ class OwnershipValidatorTest {
             VirtualCluster vCluster = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
             ValidationResult result = validator.validateCreate(vCluster, NAMESPACE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -71,8 +74,12 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateCreate(vCluster, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ApplicationService").contains("nonexistent-app-service").contains("does not exist");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ApplicationService")
+                    .contains("nonexistent-app-service")
+                    .contains("does not exist");
         }
 
         @Test
@@ -86,7 +93,8 @@ class OwnershipValidatorTest {
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -96,8 +104,11 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ApplicationService").contains("does not exist");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ApplicationService")
+                    .contains("does not exist");
         }
 
         @Test
@@ -110,8 +121,11 @@ class OwnershipValidatorTest {
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, "nonexistent-cluster", APP_SERVICE);
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("VirtualCluster").contains("does not exist");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("VirtualCluster")
+                    .contains("does not exist");
         }
 
         @Test
@@ -126,8 +140,13 @@ class OwnershipValidatorTest {
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("VirtualCluster").contains("is owned by").contains(OTHER_APP_SERVICE).contains(APP_SERVICE);
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("VirtualCluster")
+                    .contains("is owned by")
+                    .contains(OTHER_APP_SERVICE)
+                    .contains(APP_SERVICE);
         }
 
         @Test
@@ -140,7 +159,8 @@ class OwnershipValidatorTest {
             Topic topic = buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE);
             ValidationResult result = validator.validateCreate(topic, NAMESPACE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -150,8 +170,11 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateCreate(topic, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ServiceAccount").contains("does not exist");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ServiceAccount")
+                    .contains("does not exist");
         }
 
         @Test
@@ -167,8 +190,12 @@ class OwnershipValidatorTest {
             Topic topic = buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE);
             ValidationResult result = validator.validateCreate(topic, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ServiceAccount").contains("is owned by").contains(OTHER_APP_SERVICE);
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ServiceAccount")
+                    .contains("is owned by")
+                    .contains(OTHER_APP_SERVICE);
         }
 
         @Test
@@ -182,7 +209,8 @@ class OwnershipValidatorTest {
             ACL acl = buildACL("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
             ValidationResult result = validator.validateCreate(acl, NAMESPACE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -192,8 +220,11 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateCreate(acl, NAMESPACE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ServiceAccount").contains("does not exist");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ServiceAccount")
+                    .contains("does not exist");
         }
     }
 
@@ -212,7 +243,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -223,7 +255,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isFalse();
+            assertThat(result.isValid())
+                    .isFalse();
             assertThat(result.getMessage()).contains("Cannot change applicationServiceRef")
                     .contains(APP_SERVICE)
                     .contains(OTHER_APP_SERVICE)
@@ -238,8 +271,10 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("must have applicationServiceRef");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("must have applicationServiceRef");
         }
 
         @Test
@@ -250,8 +285,10 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("must have applicationServiceRef");
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("must have applicationServiceRef");
         }
 
         @Test
@@ -263,7 +300,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -274,8 +312,12 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("Cannot change applicationServiceRef").contains(APP_SERVICE).contains(OTHER_APP_SERVICE);
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("Cannot change applicationServiceRef")
+                    .contains(APP_SERVICE)
+                    .contains(OTHER_APP_SERVICE);
         }
     }
 
@@ -292,7 +334,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(resource, APP_SERVICE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -302,8 +345,13 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(resource, OTHER_APP_SERVICE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("ApplicationService").contains(OTHER_APP_SERVICE).contains("cannot delete resource owned by").contains(APP_SERVICE);
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains("ApplicationService")
+                    .contains(OTHER_APP_SERVICE)
+                    .contains("cannot delete resource owned by")
+                    .contains(APP_SERVICE);
         }
 
         @Test
@@ -313,7 +361,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(topic, APP_SERVICE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -323,8 +372,12 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(topic, OTHER_APP_SERVICE);
 
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains(OTHER_APP_SERVICE).contains("cannot delete").contains(APP_SERVICE);
+            assertThat(result.isValid())
+                    .isFalse();
+            assertThat(result.getMessage())
+                    .contains(OTHER_APP_SERVICE)
+                    .contains("cannot delete")
+                    .contains(APP_SERVICE);
         }
 
         @Test
@@ -334,7 +387,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(acl, APP_SERVICE);
 
-            assertThat(result.isValid()).isTrue();
+            assertThat(result.isValid())
+                    .isTrue();
         }
 
         @Test
@@ -344,7 +398,8 @@ class OwnershipValidatorTest {
 
             ValidationResult result = validator.validateDelete(acl, OTHER_APP_SERVICE);
 
-            assertThat(result.isValid()).isFalse();
+            assertThat(result.isValid())
+                    .isFalse();
         }
     }
 

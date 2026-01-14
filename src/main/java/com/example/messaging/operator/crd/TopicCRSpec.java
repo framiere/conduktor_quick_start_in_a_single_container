@@ -9,10 +9,17 @@ import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Buildable(editableEnabled = false)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TopicCRSpec {
 
     @JsonProperty("serviceRef")
