@@ -17,32 +17,25 @@ import lombok.Data;
 public class MessagingDeclarationStatus {
 
     @JsonProperty("state")
-    @JsonPropertyDescription("Current state of the CR")
-    private CRState state = CRState.PENDING;
+    @JsonPropertyDescription("Current state of the CR") private CRState state = CRState.PENDING;
 
     @JsonProperty("message")
-    @JsonPropertyDescription("Human-readable status message")
-    private String message;
+    @JsonPropertyDescription("Human-readable status message") private String message;
 
     @JsonProperty("ownedTopics")
-    @JsonPropertyDescription("Topics successfully claimed (unique set)")
-    private List<String> ownedTopics = new ArrayList<>();
+    @JsonPropertyDescription("Topics successfully claimed (unique set)") private List<String> ownedTopics = new ArrayList<>();
 
     @JsonProperty("referencedTopics")
-    @JsonPropertyDescription("External topics referenced (unique set)")
-    private List<String> referencedTopics = new ArrayList<>();
+    @JsonPropertyDescription("External topics referenced (unique set)") private List<String> referencedTopics = new ArrayList<>();
 
     @JsonProperty("lastReconcileTime")
-    @JsonPropertyDescription("Last reconciliation timestamp")
-    private String lastReconcileTime = Instant.now().toString();
+    @JsonPropertyDescription("Last reconciliation timestamp") private String lastReconcileTime = Instant.now().toString();
 
     @JsonProperty("observedGeneration")
-    @JsonPropertyDescription("Last observed generation")
-    private Long observedGeneration;
+    @JsonPropertyDescription("Last observed generation") private Long observedGeneration;
 
     @JsonProperty("conditions")
-    @JsonPropertyDescription("Kubernetes conditions")
-    private List<Condition> conditions = new ArrayList<>();
+    @JsonPropertyDescription("Kubernetes conditions") private List<Condition> conditions = new ArrayList<>();
 
     /**
      * Possible CR states during reconciliation.

@@ -14,21 +14,17 @@ public class ServiceAccountSpec {
 
     @JsonProperty("name")
     @JsonPropertyDescription("Service account name")
-    @Required
-    private String name;
+    @Required private String name;
 
     @JsonProperty("dn")
     @JsonPropertyDescription("Distinguished Names (DN) for certificates")
-    @Required
-    private List<String> dn = new ArrayList<>();
+    @Required private List<String> dn = new ArrayList<>();
 
     @JsonProperty("clusterRef")
     @JsonPropertyDescription("Reference to VirtualCluster CR")
-    @Required
-    private String clusterRef;
+    @Required private String clusterRef;
 
     @JsonProperty("applicationServiceRef")
     @JsonPropertyDescription("Reference to ApplicationService CR")
-    @Required
-    private String applicationServiceRef;
+    @Required private String applicationServiceRef;
 }

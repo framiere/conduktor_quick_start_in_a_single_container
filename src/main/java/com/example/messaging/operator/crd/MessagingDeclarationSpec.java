@@ -21,20 +21,16 @@ public class MessagingDeclarationSpec {
     @JsonPropertyDescription("Name of the service owning these resources")
     @Required
     @Pattern("^[a-z0-9][a-z0-9-]*[a-z0-9]$")
-    @Max(63)
-    private String serviceName;
+    @Max(63) private String serviceName;
 
     @JsonProperty("virtualClusterId")
     @JsonPropertyDescription("Conduktor Virtual Cluster ID")
     @Required
-    @Max(100)
-    private String virtualClusterId;
+    @Max(100) private String virtualClusterId;
 
     @JsonProperty("topics")
-    @JsonPropertyDescription("Topics OWNED by this CR")
-    private List<TopicSpec> topics = new ArrayList<>();
+    @JsonPropertyDescription("Topics OWNED by this CR") private List<TopicSpec> topics = new ArrayList<>();
 
     @JsonProperty("acls")
-    @JsonPropertyDescription("ACL declarations")
-    private List<AclSpec> acls = new ArrayList<>();
+    @JsonPropertyDescription("ACL declarations") private List<AclSpec> acls = new ArrayList<>();
 }

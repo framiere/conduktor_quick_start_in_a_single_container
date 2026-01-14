@@ -12,11 +12,9 @@ public class VirtualClusterSpec {
 
     @JsonProperty("clusterId")
     @JsonPropertyDescription("Conduktor Virtual Cluster ID")
-    @Required
-    private String clusterId;
+    @Required private String clusterId;
 
     @JsonProperty("applicationServiceRef")
     @JsonPropertyDescription("Reference to ApplicationService CR")
-    @Required
-    private String applicationServiceRef;
+    @Required private String applicationServiceRef;
 }

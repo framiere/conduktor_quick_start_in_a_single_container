@@ -38,8 +38,7 @@ public class ReconciliationEvent {
 
     private final String applicationService;
 
-    @Builder.Default
-    private final Instant timestamp = Instant.now();
+    @Builder.Default private final Instant timestamp = Instant.now();
 
     private Result result;
     private String message;
@@ -59,37 +58,4 @@ public class ReconciliationEvent {
         return result != null && result != Result.SUCCESS;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(phase).append(" ");
-        sb.append(operation).append(" ");
-        sb.append(getResourceReference());
-
-        if (applicationService != null) {
-            sb.append(" (owner: ").append(applicationService).append(")");
-        }
-
-        if (result != null) {
-            sb.append(" - ").append(result);
-        }
-
-        if (resourceVersion != null) {
-            sb.append(" [v").append(resourceVersion).append("]");
-        }
-
-        if (message != null) {
-            sb.append(": ").append(message);
-        }
-
-        if (reason != null) {
-            sb.append(" (").append(reason).append(")");
-        }
-
-        if (errorDetails != null) {
-            sb.append(" | ").append(errorDetails);
-        }
-
-        return sb.toString();
-    }
 }

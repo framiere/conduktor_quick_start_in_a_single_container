@@ -12,6 +12,5 @@ public class ApplicationServiceSpec {
 
     @JsonProperty("name")
     @JsonPropertyDescription("Application service name")
-    @Required
-    private String name;
+    @Required private String name;
 }

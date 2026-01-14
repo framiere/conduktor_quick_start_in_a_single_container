@@ -8,23 +8,18 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdmissionResponse {
 
-    @JsonProperty("uid")
-    private String uid; // Must match request uid
+    @JsonProperty("uid") private String uid; // Must match request uid
 
-    @JsonProperty("allowed")
-    private boolean allowed;
+    @JsonProperty("allowed") private boolean allowed;
 
-    @JsonProperty("status")
-    private Status status;
+    @JsonProperty("status") private Status status;
 
     @Data
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Status {
-        @JsonProperty("message")
-        private String message;
+        @JsonProperty("message") private String message;
 
-        @JsonProperty("code")
-        private Integer code;
+        @JsonProperty("code") private Integer code;
     }
 
     public static AdmissionResponse allowed(String uid) {

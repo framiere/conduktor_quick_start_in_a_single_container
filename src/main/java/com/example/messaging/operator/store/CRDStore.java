@@ -22,8 +22,7 @@ public class CRDStore {
     private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
     private final AtomicLong resourceVersionCounter = new AtomicLong(1);
 
-    @Getter
-    private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
+    @Getter private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
 
     private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
