@@ -14,4 +14,9 @@ public class ServiceAccountSpec {
     @JsonPropertyDescription("Service account name")
     @Required
     private String name;
+
+    @JsonProperty("clusterRef")
+    @JsonPropertyDescription("Reference to VirtualCluster CR")
+    @Required
+    private String clusterRef;
 }

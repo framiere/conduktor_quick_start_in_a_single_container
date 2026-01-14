@@ -89,30 +89,6 @@ public class SetupGateway {
     static class ServiceAccountSpec {
         @NotBlank(message = "service account name must not be empty")
         public String name;
-    }
-
-    // MessagingService CR
-    @Data
-    static class MessagingServiceCR {
-        @NotBlank(message = "apiVersion must not be empty")
-        public String apiVersion;
-
-        @NotBlank(message = "kind must not be empty")
-        public String kind;
-
-        @Valid
-        @NotNull(message = "metadata must not be null")
-        public Metadata metadata;
-
-        @Valid
-        @NotNull(message = "spec must not be null")
-        public MessagingServiceSpec spec;
-    }
-
-    @Data
-    static class MessagingServiceSpec {
-        @NotBlank(message = "serviceAccountRef must not be empty")
-        public String serviceAccountRef;
 
         @NotBlank(message = "clusterRef must not be empty")
         public String clusterRef;
@@ -726,10 +702,9 @@ public class SetupGateway {
 
     /**
      * Process all CRs in dependency order:
-     * 1. VirtualClusters and ServiceAccounts (foundation)
-     * 2. MessagingServices (bind service account to cluster)
-     * 3. Topics and ConsumerGroups (resources)
-     * 4. ACLs (access control)
+     * 1. VirtualClusters and ServiceAccounts (foundation - service accounts reference clusters)
+     * 2. Topics and ConsumerGroups (resources - reference service accounts)
+     * 3. ACLs (access control - reference service accounts and resources)
      */
     private void processCRs(ParsedCRs crds) throws Exception {
         // Build lookup maps for reference resolution
@@ -739,9 +714,6 @@ public class SetupGateway {
         Map<String, ServiceAccountCR> serviceAccountMap = crds.serviceAccounts.stream()
                 .collect(java.util.stream.Collectors.toMap(sa -> sa.metadata.name, sa -> sa));
 
-        Map<String, MessagingServiceCR> messagingServiceMap = crds.messagingServices.stream()
-                .collect(java.util.stream.Collectors.toMap(ms -> ms.metadata.name, ms -> ms));
-
         Map<String, TopicCR> topicMap = crds.topics.stream()
                 .collect(java.util.stream.Collectors.toMap(t -> t.metadata.name, t -> t));
 
@@ -749,16 +721,16 @@ public class SetupGateway {
                 .collect(java.util.stream.Collectors.toMap(cg -> cg.metadata.name, cg -> cg));
 
         // Scan for ACL requirements to determine which vClusters need ACL support
-        scanForAclRequirements(crds, messagingServiceMap, vClusterMap);
+        scanForAclRequirements(crds, serviceAccountMap, vClusterMap);
 
-        // Process MessagingServices (creates vClusters, service accounts, and generates SSL properties)
-        for (MessagingServiceCR msgService : crds.messagingServices) {
-            processMessagingService(msgService, serviceAccountMap, vClusterMap);
+        // Process ServiceAccounts (creates vClusters, service accounts, and generates SSL properties)
+        for (ServiceAccountCR serviceAccount : crds.serviceAccounts) {
+            processServiceAccount(serviceAccount, vClusterMap);
         }
 
         // Process Topics
         for (TopicCR topic : crds.topics) {
-            processTopic(topic, messagingServiceMap, serviceAccountMap, vClusterMap);
+            processTopic(topic, serviceAccountMap, vClusterMap);
         }
 
         // Process ConsumerGroups (no-op for now, just register them)
@@ -768,7 +740,7 @@ public class SetupGateway {
 
         // Process ACLs
         for (AclCR acl : crds.acls) {
-            processAcl(acl, messagingServiceMap, serviceAccountMap, vClusterMap, topicMap, consumerGroupMap);
+            processAcl(acl, serviceAccountMap, vClusterMap, topicMap, consumerGroupMap);
         }
     }
 
@@ -776,20 +748,20 @@ public class SetupGateway {
      * Scan for ACL requirements to determine which vClusters need ACL support.
      */
     private void scanForAclRequirements(ParsedCRs crds,
-                                        Map<String, MessagingServiceCR> messagingServiceMap,
+                                        Map<String, ServiceAccountCR> serviceAccountMap,
                                         Map<String, VirtualClusterCR> vClusterMap) {
         for (AclCR acl : crds.acls) {
-            // Resolve MessagingService -> VirtualCluster
-            MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
-            if (msgService == null) {
-                log.warn("ACL {} references unknown MessagingService {}", acl.metadata.name, acl.spec.serviceRef);
+            // Resolve ServiceAccount -> VirtualCluster
+            ServiceAccountCR serviceAccount = serviceAccountMap.get(acl.spec.serviceRef);
+            if (serviceAccount == null) {
+                log.warn("ACL {} references unknown ServiceAccount {}", acl.metadata.name, acl.spec.serviceRef);
                 continue;
             }
 
-            VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+            VirtualClusterCR vCluster = vClusterMap.get(serviceAccount.spec.clusterRef);
             if (vCluster == null) {
-                log.warn("MessagingService {} references unknown VirtualCluster {}",
-                        msgService.metadata.name, msgService.spec.clusterRef);
+                log.warn("ServiceAccount {} references unknown VirtualCluster {}",
+                        serviceAccount.metadata.name, serviceAccount.spec.clusterRef);
                 continue;
             }
 
@@ -807,7 +779,6 @@ public class SetupGateway {
     static class ParsedCRs {
         public List<VirtualClusterCR> virtualClusters = new ArrayList<>();
         public List<ServiceAccountCR> serviceAccounts = new ArrayList<>();
-        public List<MessagingServiceCR> messagingServices = new ArrayList<>();
         public List<TopicCR> topics = new ArrayList<>();
         public List<ConsumerGroupCR> consumerGroups = new ArrayList<>();
         public List<AclCR> acls = new ArrayList<>();
@@ -851,10 +822,6 @@ public class SetupGateway {
                     case "ServiceAccount" -> {
                         ServiceAccountCR cr = parseAndValidate(docMap, ServiceAccountCR.class, documentIndex);
                         result.serviceAccounts.add(cr);
-                    }
-                    case "MessagingService" -> {
-                        MessagingServiceCR cr = parseAndValidate(docMap, MessagingServiceCR.class, documentIndex);
-                        result.messagingServices.add(cr);
                     }
                     case "Topic" -> {
                         TopicCR cr = parseAndValidate(docMap, TopicCR.class, documentIndex);
@@ -1109,22 +1076,17 @@ public class SetupGateway {
     }
 
     /**
-     * Process a MessagingService CR - creates vCluster, service accounts, and generates SSL properties
+     * Process a ServiceAccount CR - creates vCluster, service accounts, and generates SSL properties
      */
-    private void processMessagingService(MessagingServiceCR msgService,
-                                         Map<String, ServiceAccountCR> serviceAccountMap,
-                                         Map<String, VirtualClusterCR> vClusterMap) throws Exception {
-        String msgServiceName = msgService.metadata.name;
-        log.info("Processing MessagingService: {}", msgServiceName);
+    private void processServiceAccount(ServiceAccountCR serviceAccount,
+                                       Map<String, VirtualClusterCR> vClusterMap) throws Exception {
+        String serviceAccountName = serviceAccount.metadata.name;
+        log.info("Processing ServiceAccount: {}", serviceAccountName);
 
         // Resolve references
-        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
-        if (serviceAccount == null)
-            throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
-
-        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+        VirtualClusterCR vCluster = vClusterMap.get(serviceAccount.spec.clusterRef);
         if (vCluster == null)
-            throw new IllegalArgumentException("MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
+            throw new IllegalArgumentException("ServiceAccount " + serviceAccountName + " references unknown VirtualCluster: " + serviceAccount.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
@@ -1156,31 +1118,26 @@ public class SetupGateway {
         // Generate SSL properties
         generateSslProperties(serviceName);
 
-        log.info("MessagingService {} setup complete", msgServiceName);
+        log.info("ServiceAccount {} setup complete", serviceAccountName);
     }
 
     /**
      * Process a Topic CR - creates the topic in the vCluster
      */
     private void processTopic(TopicCR topic,
-                              Map<String, MessagingServiceCR> messagingServiceMap,
                               Map<String, ServiceAccountCR> serviceAccountMap,
                               Map<String, VirtualClusterCR> vClusterMap) throws Exception {
         String topicName = topic.metadata.name;
         log.info("Processing Topic: {}", topicName);
 
-        // Resolve references: Topic -> MessagingService -> VirtualCluster
-        MessagingServiceCR msgService = messagingServiceMap.get(topic.spec.serviceRef);
-        if (msgService == null)
-            throw new IllegalArgumentException("Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef);
-
-        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
-        if (vCluster == null)
-            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
-
-        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
+        // Resolve references: Topic -> ServiceAccount -> VirtualCluster
+        ServiceAccountCR serviceAccount = serviceAccountMap.get(topic.spec.serviceRef);
         if (serviceAccount == null)
-            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
+            throw new IllegalArgumentException("Topic " + topicName + " references unknown ServiceAccount: " + topic.spec.serviceRef);
+
+        VirtualClusterCR vCluster = vClusterMap.get(serviceAccount.spec.clusterRef);
+        if (vCluster == null)
+            throw new IllegalArgumentException("ServiceAccount " + serviceAccount.metadata.name + " references unknown VirtualCluster: " + serviceAccount.spec.clusterRef);
 
         String vClusterName = vCluster.spec.clusterId;
         String serviceName = serviceAccount.spec.name;
@@ -1211,7 +1168,6 @@ public class SetupGateway {
      * Process an ACL CR - creates the ACL in the Console
      */
     private void processAcl(AclCR acl,
-                            Map<String, MessagingServiceCR> messagingServiceMap,
                             Map<String, ServiceAccountCR> serviceAccountMap,
                             Map<String, VirtualClusterCR> vClusterMap,
                             Map<String, TopicCR> topicMap,
@@ -1219,18 +1175,14 @@ public class SetupGateway {
         String aclName = acl.metadata.name;
         log.info("Processing ACL: {}", aclName);
 
-        // Resolve references: ACL -> MessagingService -> ServiceAccount + VirtualCluster
-        MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
-        if (msgService == null)
-            throw new IllegalArgumentException("ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef);
-
-        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
+        // Resolve references: ACL -> ServiceAccount -> VirtualCluster
+        ServiceAccountCR serviceAccount = serviceAccountMap.get(acl.spec.serviceRef);
         if (serviceAccount == null)
-            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef);
+            throw new IllegalArgumentException("ACL " + aclName + " references unknown ServiceAccount: " + acl.spec.serviceRef);
 
-        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+        VirtualClusterCR vCluster = vClusterMap.get(serviceAccount.spec.clusterRef);
         if (vCluster == null)
-            throw new IllegalArgumentException("MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef);
+            throw new IllegalArgumentException("ServiceAccount " + serviceAccount.metadata.name + " references unknown VirtualCluster: " + serviceAccount.spec.clusterRef);
 
         String serviceName = serviceAccount.spec.name;
         String vClusterName = vCluster.spec.clusterId;
