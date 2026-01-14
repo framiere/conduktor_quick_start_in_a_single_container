@@ -43,8 +43,8 @@ public class SetupGateway {
     static class Spec {
         public String serviceName;
         public String virtualClusterId;
-        public List<TopicDef> topics;
-        public List<AclDef> acls;
+        public List<TopicDef> topics = List.of();
+        public List<AclDef> acls = List.of();
     }
 
     static class TopicDef {
@@ -73,13 +73,10 @@ public class SetupGateway {
     private final String certDir;
     private final String vCluster;
     private final String vClusterAcl;
-    private final String vClusterAdmin;
-    private final String vClusterAclAdmin;
-    private final String vClusterAclUser;
+    private final int maxRetries;
 
     private final OkHttpClient httpClient;
     private final Gson gson;
-    private String bearerToken;
 
     // Console SDK clients
     private CliKafkaClusterConsoleV22Api kafkaClusterApi;
@@ -161,13 +158,11 @@ public class SetupGateway {
         this.cdkGatewayUser = env("CDK_GATEWAY_USER", "admin");
         this.cdkGatewayPassword = env("CDK_GATEWAY_PASSWORD", "conduktor");
         this.certDir = env("CERT_DIR", "certs");
+        this.maxRetries = Integer.parseInt(env("MAX_RETRIES", "20"));
 
         String baseVCluster = env("VCLUSTER", "demo");
         this.vCluster = baseVCluster;
         this.vClusterAcl = baseVCluster + "-acl";
-        this.vClusterAdmin = baseVCluster + "-admin";
-        this.vClusterAclAdmin = vClusterAcl + "-admin";
-        this.vClusterAclUser = vClusterAcl + "-user";
 
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
@@ -212,7 +207,7 @@ public class SetupGateway {
 
         // Parse and process all CRDs
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-            new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
+                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
         );
 
         for (Object doc : yaml.loadAll(CRDS)) {
@@ -226,29 +221,31 @@ public class SetupGateway {
     private void waitForService(String name, String url) throws InterruptedException {
         Request request = new Request.Builder().url(url).get().build();
 
-        if (isServiceReady(request)) {
-            log.info("{} is ready.", name);
-            return;
-        }
-
-        log.info("Waiting for {} to be ready", name);
-        while (!isServiceReady(request)) {
+        for (int i = 0; i < maxRetries; i++) {
+            if (isServiceReady(request)) {
+                log.info("{} is ready.", name);
+                return;
+            }
             Thread.sleep(1000);
+            if (i == 0) {
+                log.info("Waiting for {} to be ready", name);
+            }
         }
-        log.info("{} is ready.", name);
+        throw new RuntimeException(name + " did not become ready after " + maxRetries + " retries");
     }
 
     private void waitForGateway() throws InterruptedException {
-        if (isGatewayHealthy()) {
-            log.info("Gateway Admin API is ready.");
-            return;
-        }
-
-        log.info("Waiting for Gateway Admin API to be ready");
-        while (!isGatewayHealthy()) {
+        for (int i = 0; i < maxRetries; i++) {
+            if (isGatewayHealthy()) {
+                log.info("Gateway Admin API is ready.");
+                return;
+            }
             Thread.sleep(1000);
+            if (i == 0) {
+                log.info("Waiting for Gateway Admin API to be ready");
+            }
         }
-        log.info("Gateway Admin API is ready.");
+        throw new RuntimeException("Gateway Admin API did not become ready after " + maxRetries + " retries");
     }
 
     private boolean isGatewayHealthy() {
@@ -291,8 +288,6 @@ public class SetupGateway {
             JsonObject jsonResponse = gson.fromJson(response.body().string(), JsonObject.class);
             token = jsonResponse.get("access_token").getAsString();
         }
-
-        this.bearerToken = token;
 
         // Initialize Console SDK clients with Bearer token
         ApiClient apiClient = Configuration.getDefaultApiClient();
@@ -361,7 +356,7 @@ public class SetupGateway {
 
     MessagingDeclaration parseYaml(String crdYaml) {
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-            new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
+                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
         );
         MessagingDeclaration crd = yaml.load(crdYaml);
 
@@ -394,23 +389,23 @@ public class SetupGateway {
 
         log.info("Upserting VirtualCluster: {}", vClusterName);
         upsertVirtualCluster(new VirtualCluster()
-            .kind("VirtualCluster")
-            .apiVersion("gateway/v2")
-            .metadata(new VirtualClusterMetadata().name(vClusterName))
-            .spec(spec));
+                .kind("VirtualCluster")
+                .apiVersion("gateway/v2")
+                .metadata(new VirtualClusterMetadata().name(vClusterName))
+                .spec(spec));
         log.info("VirtualCluster/{} upserted", vClusterName);
 
         // Upsert admin service account
         log.info("Upserting admin service account: {}", adminUser);
         upsertServiceAccount(new External()
-            .kind("GatewayServiceAccount")
-            .apiVersion("gateway/v2")
-            .metadata(new ExternalMetadata()
-                .vCluster(vClusterName)
-                .name(adminUser))
-            .spec(new ExternalSpec()
-                .type("EXTERNAL")
-                .externalNames(List.of("CN=" + adminUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
+                .kind("GatewayServiceAccount")
+                .apiVersion("gateway/v2")
+                .metadata(new ExternalMetadata()
+                        .vCluster(vClusterName)
+                        .name(adminUser))
+                .spec(new ExternalSpec()
+                        .type("EXTERNAL")
+                        .externalNames(List.of("CN=" + adminUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         log.info("GatewayServiceAccount/{} upserted", adminUser);
 
         generateSslProperties(adminUser);
@@ -426,26 +421,26 @@ public class SetupGateway {
         String displayName = vClusterName + " (mTLS" + (aclEnabled ? " + ACL" : "") + ")";
 
         kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
-            .apiVersion("v2")
-            .kind(KafkaClusterKind.KAFKA_CLUSTER)
-            .metadata(new KafkaClusterMetadata().name(vClusterName))
-            .spec(new KafkaClusterSpec()
-                .displayName(displayName)
-                .bootstrapServers("localhost:6969")
-                .properties(Map.of(
-                    "security.protocol", "SSL",
-                    "ssl.truststore.location", "/var/lib/conduktor/certs/" + adminUser + ".truststore.jks",
-                    "ssl.truststore.password", "conduktor",
-                    "ssl.keystore.location", "/var/lib/conduktor/certs/" + adminUser + ".keystore.jks",
-                    "ssl.keystore.password", "conduktor",
-                    "ssl.key.password", "conduktor"
-                ))
-                .kafkaFlavor(new KafkaFlavor(new Gateway()
-                    .type(Gateway.TypeEnum.GATEWAY)
-                    .url(cdkGatewayBaseUrl)
-                    .user(cdkGatewayUser)
-                    .password(cdkGatewayPassword)
-                    .virtualCluster(vClusterName)))), null);
+                .apiVersion("v2")
+                .kind(KafkaClusterKind.KAFKA_CLUSTER)
+                .metadata(new KafkaClusterMetadata().name(vClusterName))
+                .spec(new KafkaClusterSpec()
+                        .displayName(displayName)
+                        .bootstrapServers("localhost:6969")
+                        .properties(Map.of(
+                                "security.protocol", "SSL",
+                                "ssl.truststore.location", "/var/lib/conduktor/certs/" + adminUser + ".truststore.jks",
+                                "ssl.truststore.password", "conduktor",
+                                "ssl.keystore.location", "/var/lib/conduktor/certs/" + adminUser + ".keystore.jks",
+                                "ssl.keystore.password", "conduktor",
+                                "ssl.key.password", "conduktor"
+                        ))
+                        .kafkaFlavor(new KafkaFlavor(new Gateway()
+                                .type(Gateway.TypeEnum.GATEWAY)
+                                .url(cdkGatewayBaseUrl)
+                                .user(cdkGatewayUser)
+                                .password(cdkGatewayPassword)
+                                .virtualCluster(vClusterName)))), null);
         log.info("KafkaCluster/{} created in Console", vClusterName);
     }
 
@@ -453,11 +448,11 @@ public class SetupGateway {
             throws org.openapitools.client.ApiException {
         for (TopicDef topic : topics) {
             createTopic(
-                vClusterName,
-                topic.name,
-                topic.partitions,
-                topic.replicationFactor,
-                topic.config
+                    vClusterName,
+                    topic.name,
+                    topic.partitions,
+                    topic.replicationFactor,
+                    topic.config
             );
         }
     }
@@ -469,30 +464,30 @@ public class SetupGateway {
         // Convert CRD ACLs to Kafka ACLs
         for (AclDef aclDef : acls) {
             List<Operation> ops = aclDef.operations.stream()
-                .map(Operation::valueOf)
-                .toList();
+                    .map(Operation::valueOf)
+                    .toList();
 
             kafkaAcls.add(new KafkaServiceAccountACL()
-                .type(aclDef.type)
-                .name(aclDef.name)
-                .patternType(aclDef.patternType)
-                .operations(ops)
-                .host(aclDef.host)
-                .permission(aclDef.permission));
+                    .type(aclDef.type)
+                    .name(aclDef.name)
+                    .patternType(aclDef.patternType)
+                    .operations(ops)
+                    .host(aclDef.host)
+                    .permission(aclDef.permission));
         }
 
         // Create Console ServiceAccount
         serviceAccountApi.createOrUpdateServiceAccountV1(vClusterName,
-            new ServiceAccountResourceV1()
-                .apiVersion("v1")
-                .kind(ServiceAccountKind.SERVICE_ACCOUNT)
-                .metadata(new ServiceAccountMetadata()
-                    .name(serviceName)
-                    .cluster(vClusterName))
-                .spec(new ServiceAccountSpec()
-                    .authorization(new ServiceAccountAuthorization(new KAFKAACL()
-                        .type(KAFKAACL.TypeEnum.KAFKA_ACL)
-                        .acls(kafkaAcls)))), null);
+                new ServiceAccountResourceV1()
+                        .apiVersion("v1")
+                        .kind(ServiceAccountKind.SERVICE_ACCOUNT)
+                        .metadata(new ServiceAccountMetadata()
+                                .name(serviceName)
+                                .cluster(vClusterName))
+                        .spec(new ServiceAccountSpec()
+                                .authorization(new ServiceAccountAuthorization(new KAFKAACL()
+                                        .type(KAFKAACL.TypeEnum.KAFKA_ACL)
+                                        .acls(kafkaAcls)))), null);
         log.info("ServiceAccount/{} created in Console", serviceName);
     }
 
@@ -509,14 +504,14 @@ public class SetupGateway {
         // 3. Upsert Gateway ServiceAccount for the service (mTLS)
         log.info("Upserting Gateway ServiceAccount: {}", serviceName);
         upsertServiceAccount(new External()
-            .kind("GatewayServiceAccount")
-            .apiVersion("gateway/v2")
-            .metadata(new ExternalMetadata()
-                .vCluster(vClusterName)
-                .name(serviceName))
-            .spec(new ExternalSpec()
-                .type("EXTERNAL")
-                .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
+                .kind("GatewayServiceAccount")
+                .apiVersion("gateway/v2")
+                .metadata(new ExternalMetadata()
+                        .vCluster(vClusterName)
+                        .name(serviceName))
+                .spec(new ExternalSpec()
+                        .type("EXTERNAL")
+                        .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         log.info("GatewayServiceAccount/{} upserted", serviceName);
 
         // 4. Create topics

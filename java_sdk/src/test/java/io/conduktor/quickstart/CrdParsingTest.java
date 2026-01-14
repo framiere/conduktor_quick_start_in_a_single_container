@@ -95,8 +95,8 @@ class CrdParsingTest {
         assertThat(result).isNotNull();
         assertThat(result.spec.serviceName).isEqualTo("minimal-service");
         assertThat(result.spec.virtualClusterId).isEqualTo("test-cluster");
-        assertThat(result.spec.topics).isNull();
-        assertThat(result.spec.acls).isNull();
+        assertThat(result.spec.topics).isEmpty();
+        assertThat(result.spec.acls).isEmpty();
     }
 
     @Test
@@ -121,7 +121,7 @@ class CrdParsingTest {
         assertThat(result.spec.topics).hasSize(1);
         assertThat(result.spec.topics.get(0).name).isEqualTo("test.topic");
         assertThat(result.spec.topics.get(0).partitions).isEqualTo(6);
-        assertThat(result.spec.acls).isNull();
+        assertThat(result.spec.acls).isEmpty();
     }
 
     @Test
@@ -144,7 +144,7 @@ class CrdParsingTest {
 
         assertThat(result).isNotNull();
         assertThat(result.spec.serviceName).isEqualTo("acl-only-service");
-        assertThat(result.spec.topics).isNull();
+        assertThat(result.spec.topics).isEmpty();
         assertThat(result.spec.acls).hasSize(1);
         assertThat(result.spec.acls.get(0).name).isEqualTo("external.topic");
         assertThat(result.spec.acls.get(0).operations).containsExactly("READ");
