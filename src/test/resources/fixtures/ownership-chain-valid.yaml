@@ -1,0 +1,68 @@
+---
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: orders-app
+  namespace: default
+spec:
+  name: orders-app
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: prod-cluster
+  namespace: default
+spec:
+  clusterId: prod-cluster
+  applicationServiceRef: orders-app
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: orders-sa
+  namespace: default
+spec:
+  name: orders
+  dn:
+    - "CN=orders-sa,OU=TEST,O=EXAMPLE,L=CITY,C=US"
+  clusterRef: prod-cluster
+  applicationServiceRef: orders-app
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-events
+  namespace: default
+spec:
+  name: orders.events
+  partitions: 6
+  replicationFactor: 3
+  serviceRef: orders-sa
+  applicationServiceRef: orders-app
+  config: {}
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-dlq
+  namespace: default
+spec:
+  name: orders.dlq
+  partitions: 3
+  replicationFactor: 3
+  serviceRef: orders-sa
+  applicationServiceRef: orders-app
+  config: {}
+---
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: orders-read
+  namespace: default
+spec:
+  serviceRef: orders-sa
+  topicRef: orders-events
+  operations:
+    - READ
+    - DESCRIBE
+  applicationServiceRef: orders-app

@@ -1,0 +1,86 @@
+# App1 with its resources
+---
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: app1
+  namespace: default
+spec:
+  name: app1
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: vc1
+  namespace: default
+spec:
+  clusterId: vc1
+  applicationServiceRef: app1
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: sa-app1
+  namespace: default
+spec:
+  name: app1-sa
+  dn:
+    - "CN=sa-app1,OU=TEST,O=EXAMPLE"
+  clusterRef: vc1
+  applicationServiceRef: app1
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-events
+  namespace: default
+spec:
+  name: orders.events
+  partitions: 3
+  replicationFactor: 3
+  serviceRef: sa-app1
+  applicationServiceRef: app1
+  config: {}
+---
+# App2 with its resources
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: app2
+  namespace: default
+spec:
+  name: app2
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: vc2
+  namespace: default
+spec:
+  clusterId: vc2
+  applicationServiceRef: app2
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: sa-app2
+  namespace: default
+spec:
+  name: app2-sa
+  dn:
+    - "CN=sa-app2,OU=TEST,O=EXAMPLE"
+  clusterRef: vc2
+  applicationServiceRef: app2
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: payments-events
+  namespace: default
+spec:
+  name: payments.events
+  partitions: 3
+  replicationFactor: 3
+  serviceRef: sa-app2
+  applicationServiceRef: app2
+  config: {}
