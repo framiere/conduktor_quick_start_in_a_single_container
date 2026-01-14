@@ -12,15 +12,49 @@ import org.openapitools.client.ApiClient;
 import org.openapitools.client.Configuration;
 import org.openapitools.client.api.CliKafkaClusterConsoleV22Api;
 import org.openapitools.client.api.CliServiceAccountSelfServeV111Api;
+import org.openapitools.client.api.CliTopicKafkaV212Api;
 import org.openapitools.client.model.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SetupGateway {
+
+    // CRD Data Model POJOs
+    static class MessagingDeclaration {
+        public String apiVersion;
+        public String kind;
+        public Metadata metadata;
+        public Spec spec;
+    }
+
+    static class Metadata {
+        public String name;
+        public String namespace;
+    }
+
+    static class Spec {
+        public String serviceName;
+        public String virtualClusterId;
+        public List<TopicDef> topics;
+        public List<AclDef> acls;
+    }
+
+    static class TopicDef {
+        public String name;
+        public Integer partitions;
+        public Integer replicationFactor;
+        public Map<String, String> config;
+    }
+
+    static class AclDef {
+        public String topic;
+        public List<String> operations;
+    }
 
     // Configuration
     private final String cdkBaseUrl;
@@ -38,10 +72,39 @@ public class SetupGateway {
 
     private final OkHttpClient httpClient;
     private final Gson gson;
+    private String bearerToken;
 
     // Console SDK clients
     private CliKafkaClusterConsoleV22Api kafkaClusterApi;
     private CliServiceAccountSelfServeV111Api serviceAccountApi;
+    private CliTopicKafkaV212Api topicApi;
+
+    private static final String CRD = """
+            apiVersion: messaging.example.com/v1
+            kind: MessagingDeclaration
+            metadata:
+              name: orders-service
+              namespace: orders
+            spec:
+              serviceName: orders-service
+              virtualClusterId: prod-cluster
+              topics:
+                - name: orders.events
+                  partitions: 12
+                  replicationFactor: 3
+                  config:
+                    retention.ms: "604800000"
+                    cleanup.policy: "delete"
+                - name: orders.deadletter
+                  partitions: 3
+              acls:
+                - topic: orders.events
+                  operations: [READ, WRITE]
+                - topic: orders.deadletter
+                  operations: [READ, WRITE]
+                - topic: inventory.updates
+                  operations: [READ]
+            """;
 
     // Gateway SDK clients
     private CliVirtualClusterGatewayV27Api virtualClusterApi;
@@ -111,6 +174,9 @@ public class SetupGateway {
 
         // vCluster 2: demo-acl (ACL enabled)
         setupDemoAclVCluster();
+
+        // Process CRD
+        processCRD(CRD);
 
         System.out.println();
         System.out.println("Setup complete!");
@@ -189,6 +255,8 @@ public class SetupGateway {
             token = jsonResponse.get("access_token").getAsString();
         }
 
+        this.bearerToken = token;
+
         // Initialize Console SDK clients with Bearer token
         ApiClient apiClient = Configuration.getDefaultApiClient();
         apiClient.setBasePath(cdkBaseUrl);
@@ -196,6 +264,7 @@ public class SetupGateway {
 
         kafkaClusterApi = new CliKafkaClusterConsoleV22Api(apiClient);
         serviceAccountApi = new CliServiceAccountSelfServeV111Api(apiClient);
+        topicApi = new CliTopicKafkaV212Api(apiClient);
 
         System.out.println("Authenticated.");
     }
@@ -213,6 +282,24 @@ public class SetupGateway {
                     """.formatted(certDir, user, certDir, user));
         }
         System.out.println("Created: " + propsFile);
+    }
+
+    private void createTopic(String clusterName, String topicName,
+                             int partitions, Integer replicationFactor,
+                             Map<String, String> configs) throws org.openapitools.client.ApiException {
+        TopicResourceV2 topicResource = new TopicResourceV2()
+                .apiVersion("v2")
+                .kind(TopicKind.TOPIC)
+                .metadata(new TopicMetadata()
+                        .name(topicName)
+                        .cluster(clusterName))
+                .spec(new TopicSpec()
+                        .partitions(partitions)
+                        .replicationFactor(replicationFactor != null ? replicationFactor : 1)
+                        .configs(configs));
+
+        topicApi.createOrUpdateTopicV2(clusterName, topicResource, null);
+        System.out.println("Topic/" + topicName + " created");
     }
 
     // Workaround for SDK response deserialization bug
@@ -382,5 +469,217 @@ public class SetupGateway {
                                                 .permission(AclPermissionTypeForAccessControlEntry.ALLOW)
                                 ))))), null);
         System.out.println("ServiceAccount/" + vClusterAclUser + " created in Console");
+    }
+
+    // CRD Processing Methods
+
+    MessagingDeclaration parseYaml(String crdYaml) {
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
+            new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
+        );
+        MessagingDeclaration crd = yaml.load(crdYaml);
+
+        // Validate required fields
+        if (crd.spec == null) {
+            throw new IllegalArgumentException("Invalid CRD format: missing spec");
+        }
+        if (crd.spec.serviceName == null || crd.spec.serviceName.isBlank()) {
+            throw new IllegalArgumentException("Invalid CRD format: missing required field serviceName");
+        }
+        if (crd.spec.virtualClusterId == null || crd.spec.virtualClusterId.isBlank()) {
+            throw new IllegalArgumentException("Invalid CRD format: missing required field virtualClusterId");
+        }
+
+        return crd;
+    }
+
+    private boolean vClusterExists(String vClusterName) throws ApiException {
+        try {
+            virtualClusterApi.getAVirtualCluster(vClusterName);
+            return true;
+        } catch (ApiException e) {
+            if (e.getCode() == 404) {
+                return false;
+            }
+            throw e;
+        }
+    }
+
+    private void createGatewayServiceAccount(String vClusterName, String serviceName) throws ApiException {
+        upsertServiceAccount(new External()
+            .kind("GatewayServiceAccount")
+            .apiVersion("gateway/v2")
+            .metadata(new ExternalMetadata()
+                .vCluster(vClusterName)
+                .name(serviceName))
+            .spec(new ExternalSpec()
+                .type("EXTERNAL")
+                .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
+        System.out.println("GatewayServiceAccount/" + serviceName + " created");
+    }
+
+    private void createVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
+            throws IOException, org.openapitools.client.ApiException, ApiException {
+        VirtualClusterSpec spec = new VirtualClusterSpec();
+
+        String adminUser;
+        if (hasAcls) {
+            adminUser = serviceName + "-admin";
+            spec.aclEnabled(true).superUsers(List.of(adminUser));
+        } else {
+            adminUser = serviceName;
+            spec.aclMode("KAFKA_API").superUsers(List.of(serviceName));
+        }
+
+        upsertVirtualCluster(new VirtualCluster()
+            .kind("VirtualCluster")
+            .apiVersion("gateway/v2")
+            .metadata(new VirtualClusterMetadata().name(vClusterName))
+            .spec(spec));
+        System.out.println("VirtualCluster/" + vClusterName + " created");
+
+        // Create admin service account
+        System.out.println("Creating admin service account: " + adminUser + "...");
+        upsertServiceAccount(new External()
+            .kind("GatewayServiceAccount")
+            .apiVersion("gateway/v2")
+            .metadata(new ExternalMetadata()
+                .vCluster(vClusterName)
+                .name(adminUser))
+            .spec(new ExternalSpec()
+                .type("EXTERNAL")
+                .externalNames(List.of("CN=" + adminUser + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
+        System.out.println("GatewayServiceAccount/" + adminUser + " created");
+
+        generateSslProperties(adminUser);
+
+        // Add to Console
+        addVClusterToConsole(vClusterName, adminUser, hasAcls);
+    }
+
+    private void addVClusterToConsole(String vClusterName, String adminUser, boolean aclEnabled)
+            throws org.openapitools.client.ApiException {
+        System.out.println("Adding vCluster " + vClusterName + " to Console...");
+
+        String displayName = vClusterName + " (mTLS" + (aclEnabled ? " + ACL" : "") + ")";
+
+        kafkaClusterApi.createOrUpdateKafkaClusterV2(new KafkaClusterResourceV2()
+            .apiVersion("v2")
+            .kind(KafkaClusterKind.KAFKA_CLUSTER)
+            .metadata(new KafkaClusterMetadata().name(vClusterName))
+            .spec(new KafkaClusterSpec()
+                .displayName(displayName)
+                .bootstrapServers("localhost:6969")
+                .properties(Map.of(
+                    "security.protocol", "SSL",
+                    "ssl.truststore.location", "/var/lib/conduktor/certs/" + adminUser + ".truststore.jks",
+                    "ssl.truststore.password", "conduktor",
+                    "ssl.keystore.location", "/var/lib/conduktor/certs/" + adminUser + ".keystore.jks",
+                    "ssl.keystore.password", "conduktor",
+                    "ssl.key.password", "conduktor"
+                ))
+                .kafkaFlavor(new KafkaFlavor(new Gateway()
+                    .type(Gateway.TypeEnum.GATEWAY)
+                    .url(cdkGatewayBaseUrl)
+                    .user(cdkGatewayUser)
+                    .password(cdkGatewayPassword)
+                    .virtualCluster(vClusterName)))), null);
+        System.out.println("KafkaCluster/" + vClusterName + " created in Console");
+    }
+
+    private void createTopicsFromCRD(String vClusterName, List<TopicDef> topics)
+            throws org.openapitools.client.ApiException {
+        for (TopicDef topic : topics) {
+            createTopic(
+                vClusterName,
+                topic.name,
+                topic.partitions != null ? topic.partitions : 1,
+                topic.replicationFactor,
+                topic.config != null ? topic.config : Map.of()
+            );
+        }
+    }
+
+    private void createAclsFromCRD(String vClusterName, String serviceName, List<AclDef> acls)
+            throws org.openapitools.client.ApiException {
+        List<KafkaServiceAccountACL> kafkaAcls = new ArrayList<>();
+
+        // Convert CRD ACLs to Kafka ACLs
+        for (AclDef aclDef : acls) {
+            List<Operation> ops = aclDef.operations.stream()
+                .map(Operation::valueOf)
+                .toList();
+
+            kafkaAcls.add(new KafkaServiceAccountACL()
+                .type(AclResourceType.TOPIC)
+                .name(aclDef.topic)
+                .patternType(ResourcePatternType.LITERAL)
+                .operations(ops)
+                .host("*")
+                .permission(AclPermissionTypeForAccessControlEntry.ALLOW));
+        }
+
+        // Add consumer group ACL
+        kafkaAcls.add(new KafkaServiceAccountACL()
+            .type(AclResourceType.CONSUMER_GROUP)
+            .name(serviceName + "-")
+            .patternType(ResourcePatternType.PREFIXED)
+            .operations(List.of(Operation.READ))
+            .host("*")
+            .permission(AclPermissionTypeForAccessControlEntry.ALLOW));
+
+        // Create Console ServiceAccount
+        serviceAccountApi.createOrUpdateServiceAccountV1(vClusterName,
+            new ServiceAccountResourceV1()
+                .apiVersion("v1")
+                .kind(ServiceAccountKind.SERVICE_ACCOUNT)
+                .metadata(new ServiceAccountMetadata()
+                    .name(serviceName)
+                    .cluster(vClusterName))
+                .spec(new ServiceAccountSpec()
+                    .authorization(new ServiceAccountAuthorization(new KAFKAACL()
+                        .type(KAFKAACL.TypeEnum.KAFKA_ACL)
+                        .acls(kafkaAcls)))), null);
+        System.out.println("ServiceAccount/" + serviceName + " created in Console");
+    }
+
+    private void processCRD(String crdYaml) throws Exception {
+        // 1. Parse CRD
+        MessagingDeclaration crd = parseYaml(crdYaml);
+        String serviceName = crd.spec.serviceName;
+        String vClusterName = crd.spec.virtualClusterId;
+
+        System.out.println();
+        System.out.println("Processing CRD for service: " + serviceName);
+
+        // 2. Ensure vCluster exists
+        if (!vClusterExists(vClusterName)) {
+            System.out.println("VirtualCluster " + vClusterName + " not found, creating...");
+            boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
+            createVClusterFromCRD(vClusterName, hasAcls, serviceName);
+        } else {
+            System.out.println("VirtualCluster " + vClusterName + " already exists");
+        }
+
+        // 3. Create Gateway ServiceAccount (always for mTLS)
+        System.out.println("Creating Gateway ServiceAccount: " + serviceName);
+        createGatewayServiceAccount(vClusterName, serviceName);
+
+        // 4. Create topics
+        if (crd.spec.topics != null && !crd.spec.topics.isEmpty()) {
+            System.out.println("Creating topics...");
+            createTopicsFromCRD(vClusterName, crd.spec.topics);
+        }
+
+        // 5. Create Console ServiceAccount with ACLs (only if ACLs defined)
+        if (crd.spec.acls != null && !crd.spec.acls.isEmpty()) {
+            System.out.println("Creating Console ServiceAccount with ACLs: " + serviceName);
+            createAclsFromCRD(vClusterName, serviceName, crd.spec.acls);
+        }
+
+        // 6. Generate SSL properties
+        generateSslProperties(serviceName);
+
+        System.out.println("Service " + serviceName + " setup complete");
     }
 }
