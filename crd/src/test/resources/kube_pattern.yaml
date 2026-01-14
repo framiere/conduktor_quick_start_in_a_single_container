@@ -1,0 +1,197 @@
+# VirtualCluster CR - represents a Conduktor virtual cluster
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: prod-cluster
+  namespace: orders
+spec:
+  clusterId: prod-cluster
+---
+# ServiceAccount CR - represents a service identity
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: orders-service-sa
+  namespace: orders
+spec:
+  name: orders-service
+---
+# MessagingService CR - ties together service account and cluster
+apiVersion: messaging.example.com/v1
+kind: MessagingService
+metadata:
+  name: orders-service
+  namespace: orders
+spec:
+  serviceAccountRef: orders-service-sa
+  clusterRef: prod-cluster
+---
+# Topic CR - references parent service
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-events
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  name: orders.events
+  partitions: 12
+  replicationFactor: 3
+  config:
+    retention.ms: "604800000"
+    cleanup.policy: "delete"
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-deadletter
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  name: orders.deadletter
+  partitions: 3
+  replicationFactor: 3
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: inventory-updates
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  name: inventory.updates
+  partitions: 6
+  replicationFactor: 3
+---
+# ACL CR - references parent service and Topic CR
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: orders-events-rw
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  topicRef: orders-events
+  operations: [READ, WRITE]
+---
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: orders-deadletter-rw
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  topicRef: orders-deadletter
+  operations: [READ, WRITE]
+---
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: inventory-updates-read
+  namespace: orders
+spec:
+  serviceRef: orders-service
+  topicRef: inventory-updates
+  operations: [READ]
+---
+# Additional examples from original crd.yaml
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: demo
+spec:
+  clusterId: demo
+---
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: demo-acl
+spec:
+  clusterId: demo-acl
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-admin-sa
+spec:
+  name: demo-admin
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingService
+metadata:
+  name: demo-admin
+spec:
+  serviceAccountRef: demo-admin-sa
+  clusterRef: demo
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-acl-admin-sa
+spec:
+  name: demo-acl-admin
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingService
+metadata:
+  name: demo-acl-admin
+spec:
+  serviceAccountRef: demo-acl-admin-sa
+  clusterRef: demo-acl
+---
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: demo-acl-user-sa
+spec:
+  name: demo-acl-user
+---
+apiVersion: messaging.example.com/v1
+kind: MessagingService
+metadata:
+  name: demo-acl-user
+spec:
+  serviceAccountRef: demo-acl-user-sa
+  clusterRef: demo-acl
+---
+# Topic CR for demo-acl-user
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: click-topic
+spec:
+  serviceRef: demo-acl-user
+  name: click
+  partitions: 6
+  replicationFactor: 3
+---
+# ConsumerGroup CR
+apiVersion: messaging.example.com/v1
+kind: ConsumerGroup
+metadata:
+  name: myconsumer-group
+spec:
+  serviceRef: demo-acl-user
+  name: myconsumer-
+  patternType: PREFIXED
+---
+# ACL for Topic
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: demo-acl-user-click-read
+spec:
+  serviceRef: demo-acl-user
+  topicRef: click-topic
+  operations: [READ]
+---
+# ACL for ConsumerGroup
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: demo-acl-user-consumer-read
+spec:
+  serviceRef: demo-acl-user
+  consumerGroupRef: myconsumer-group
+  operations: [READ]
