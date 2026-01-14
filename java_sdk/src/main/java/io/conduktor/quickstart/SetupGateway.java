@@ -10,6 +10,8 @@ import io.conduktor.gateway.client.model.*;
 import jakarta.validation.*;
 import jakarta.validation.constraints.*;
 import okhttp3.*;
+import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.common.config.TopicConfig;
 import org.openapitools.client.ApiClient;
 import org.openapitools.client.Configuration;
 import org.openapitools.client.api.CliKafkaClusterConsoleV22Api;
@@ -30,8 +32,14 @@ public class SetupGateway {
     private static final Logger log = LoggerFactory.getLogger(SetupGateway.class);
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-    // CRD Data Model POJOs
-    static class MessagingDeclaration {
+    // CRD Data Model POJOs - Base Classes
+    static class Metadata {
+        public String name;
+        public String namespace;
+    }
+
+    // VirtualCluster CR
+    static class VirtualClusterCR {
         @NotBlank(message = "apiVersion must not be empty")
         public String apiVersion;
 
@@ -44,31 +52,82 @@ public class SetupGateway {
 
         @Valid
         @NotNull(message = "spec must not be null")
-        public Spec spec;
+        public VirtualClusterSpec spec;
     }
 
-    static class Metadata {
+    static class VirtualClusterSpec {
+        @NotBlank(message = "clusterId must not be empty")
+        public String clusterId;
+    }
+
+    // ServiceAccount CR
+    static class ServiceAccountCR {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
+
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public ServiceAccountSpec spec;
+    }
+
+    static class ServiceAccountSpec {
+        @NotBlank(message = "service account name must not be empty")
         public String name;
-        public String namespace;
     }
 
-    static class Spec {
-        @NotBlank(message = "serviceName must not be empty")
-        public String serviceName;
+    // MessagingService CR
+    static class MessagingServiceCR {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
 
-        @NotBlank(message = "virtualClusterId must not be empty")
-        public String virtualClusterId;
-
-        @Valid
-        @Size(max = 10, message = "topics list must not exceed 10 items")
-        public List<TopicDef> topics = List.of();
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
 
         @Valid
-        @Size(max = 10, message = "acls list must not exceed 10 items")
-        public List<AclDef> acls = List.of();
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public MessagingServiceSpec spec;
     }
 
-    static class TopicDef {
+    static class MessagingServiceSpec {
+        @NotBlank(message = "serviceAccountRef must not be empty")
+        public String serviceAccountRef;
+
+        @NotBlank(message = "clusterRef must not be empty")
+        public String clusterRef;
+    }
+
+    // Topic CR
+    static class TopicCR {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
+
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public TopicSpec spec;
+    }
+
+    static class TopicSpec {
+        @NotBlank(message = "serviceRef must not be empty")
+        public String serviceRef;
+
         @NotBlank(message = "topic name must not be empty")
         public String name;
 
@@ -85,19 +144,61 @@ public class SetupGateway {
         public Map<String, String> config = Map.of();
     }
 
-    static class AclDef {
-        @NotNull
-        public AclResourceType type = AclResourceType.TOPIC;
+    // ConsumerGroup CR
+    static class ConsumerGroupCR {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
 
-        @NotBlank(message = "acl name must not be empty")
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public ConsumerGroupSpec spec;
+    }
+
+    static class ConsumerGroupSpec {
+        @NotBlank(message = "serviceRef must not be empty")
+        public String serviceRef;
+
+        @NotBlank(message = "consumer group name must not be empty")
         public String name;
+
+        @NotNull
+        public ResourcePatternType patternType = ResourcePatternType.LITERAL;
+    }
+
+    // ACL CR
+    static class AclCR {
+        @NotBlank(message = "apiVersion must not be empty")
+        public String apiVersion;
+
+        @NotBlank(message = "kind must not be empty")
+        public String kind;
+
+        @Valid
+        @NotNull(message = "metadata must not be null")
+        public Metadata metadata;
+
+        @Valid
+        @NotNull(message = "spec must not be null")
+        public AclSpec spec;
+    }
+
+    static class AclSpec {
+        @NotBlank(message = "serviceRef must not be empty")
+        public String serviceRef;
+
+        public String topicRef;
+        public String consumerGroupRef;
 
         @NotNull
         @Size(min = 1, max = 10, message = "operations list must have between 1 and 10 items")
         public List<String> operations = List.of("READ", "WRITE", "DESCRIBE");
-
-        @NotNull
-        public ResourcePatternType patternType = ResourcePatternType.LITERAL;
 
         @NotBlank(message = "host must not be empty")
         public String host = "*";
@@ -127,66 +228,203 @@ public class SetupGateway {
     private CliTopicKafkaV212Api topicApi;
 
     private static final String CRDS = """
+            # VirtualCluster CR - represents a Conduktor virtual cluster
             apiVersion: messaging.example.com/v1
-            kind: MessagingDeclaration
+            kind: VirtualCluster
             metadata:
-              name: demo-admin
+              name: prod-cluster
+              namespace: orders
             spec:
-              serviceName: demo-admin
-              virtualClusterId: demo
+              clusterId: prod-cluster
             ---
+            # ServiceAccount CR - represents a service identity
             apiVersion: messaging.example.com/v1
-            kind: MessagingDeclaration
+            kind: ServiceAccount
             metadata:
-              name: demo-acl-admin
+              name: orders-service-sa
+              namespace: orders
             spec:
-              serviceName: demo-acl-admin
-              virtualClusterId: demo-acl
+              name: orders-service
             ---
+            # MessagingService CR - ties together service account and cluster
             apiVersion: messaging.example.com/v1
-            kind: MessagingDeclaration
-            metadata:
-              name: demo-acl-user
-            spec:
-              serviceName: demo-acl-user
-              virtualClusterId: demo-acl
-              acls:
-                - type: TOPIC
-                  name: click
-                  patternType: PREFIXED
-                  operations: [READ]
-                - type: CONSUMER_GROUP
-                  name: myconsumer-
-                  patternType: PREFIXED
-                  operations: [READ]
-            ---
-            apiVersion: messaging.example.com/v1
-            kind: MessagingDeclaration
+            kind: MessagingService
             metadata:
               name: orders-service
               namespace: orders
             spec:
-              serviceName: orders-service
-              virtualClusterId: prod-cluster
-              topics:
-                - name: orders.events
-                  partitions: 12
-                  replicationFactor: 3
-                  config:
-                    retention.ms: "604800000"
-                    cleanup.policy: "delete"
-                - name: orders.deadletter
-                  partitions: 3
-              acls:
-                - type: TOPIC
-                  name: orders.events
-                  operations: [READ, WRITE]
-                - type: TOPIC
-                  name: orders.deadletter
-                  operations: [READ, WRITE]
-                - type: TOPIC
-                  name: inventory.updates
-                  operations: [READ]
+              serviceAccountRef: orders-service-sa
+              clusterRef: prod-cluster
+            ---
+            # Topic CR - references parent service
+            apiVersion: messaging.example.com/v1
+            kind: Topic
+            metadata:
+              name: orders-events
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              name: orders.events
+              partitions: 12
+              replicationFactor: 3
+              config:
+                retention.ms: "604800000"
+                cleanup.policy: "delete"
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: Topic
+            metadata:
+              name: orders-deadletter
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              name: orders.deadletter
+              partitions: 3
+              replicationFactor: 3
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: Topic
+            metadata:
+              name: inventory-updates
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              name: inventory.updates
+              partitions: 6
+              replicationFactor: 3
+            ---
+            # ACL CR - references parent service and Topic CR
+            apiVersion: messaging.example.com/v1
+            kind: ACL
+            metadata:
+              name: orders-events-rw
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              topicRef: orders-events
+              operations: [READ, WRITE]
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: ACL
+            metadata:
+              name: orders-deadletter-rw
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              topicRef: orders-deadletter
+              operations: [READ, WRITE]
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: ACL
+            metadata:
+              name: inventory-updates-read
+              namespace: orders
+            spec:
+              serviceRef: orders-service
+              topicRef: inventory-updates
+              operations: [READ]
+            ---
+            # Additional examples from original crd.yaml
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: VirtualCluster
+            metadata:
+              name: demo
+            spec:
+              clusterId: demo
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: VirtualCluster
+            metadata:
+              name: demo-acl
+            spec:
+              clusterId: demo-acl
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: ServiceAccount
+            metadata:
+              name: demo-admin-sa
+            spec:
+              name: demo-admin
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingService
+            metadata:
+              name: demo-admin
+            spec:
+              serviceAccountRef: demo-admin-sa
+              clusterRef: demo
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: ServiceAccount
+            metadata:
+              name: demo-acl-admin-sa
+            spec:
+              name: demo-acl-admin
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingService
+            metadata:
+              name: demo-acl-admin
+            spec:
+              serviceAccountRef: demo-acl-admin-sa
+              clusterRef: demo-acl
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: ServiceAccount
+            metadata:
+              name: demo-acl-user-sa
+            spec:
+              name: demo-acl-user
+            ---
+            apiVersion: messaging.example.com/v1
+            kind: MessagingService
+            metadata:
+              name: demo-acl-user
+            spec:
+              serviceAccountRef: demo-acl-user-sa
+              clusterRef: demo-acl
+            ---
+            # Topic CR for demo-acl-user
+            apiVersion: messaging.example.com/v1
+            kind: Topic
+            metadata:
+              name: click-topic
+            spec:
+              serviceRef: demo-acl-user
+              name: click
+              partitions: 6
+              replicationFactor: 3
+            ---
+            # ConsumerGroup CR
+            apiVersion: messaging.example.com/v1
+            kind: ConsumerGroup
+            metadata:
+              name: myconsumer-group
+            spec:
+              serviceRef: demo-acl-user
+              name: myconsumer-
+              patternType: PREFIXED
+            ---
+            # ACL for Topic
+            apiVersion: messaging.example.com/v1
+            kind: ACL
+            metadata:
+              name: demo-acl-user-click-read
+            spec:
+              serviceRef: demo-acl-user
+              topicRef: click-topic
+              operations: [READ]
+            ---
+            # ACL for ConsumerGroup
+            apiVersion: messaging.example.com/v1
+            kind: ACL
+            metadata:
+              name: demo-acl-user-consumer-read
+            spec:
+              serviceRef: demo-acl-user
+              consumerGroupRef: myconsumer-group
+              operations: [READ]
             """;
 
     // Gateway SDK clients
@@ -251,18 +489,13 @@ public class SetupGateway {
         // Authenticate and initialize Console SDK clients
         authenticate();
 
-        log.info("Setting up vClusters with mTLS: {}, {}", vCluster, vClusterAcl);
+        log.info("Setting up vClusters with mTLS using new six-CR pattern");
 
         // Parse all CRDs
-        List<MessagingDeclaration> crds = parseAllCrds(CRDS);
+        ParsedCRs crds = parseAllCrds(CRDS);
 
-        // Scan all CRDs to determine which vClusters need ACL support
-        scanForAclRequirements(crds);
-
-        // Process each CRD
-        for (MessagingDeclaration crd : crds) {
-            processCRD(crd);
-        }
+        // Process CRs in dependency order
+        processCRs(crds);
 
         log.info("Setup complete!");
     }
@@ -380,7 +613,7 @@ public class SetupGateway {
                 .metadata(new TopicMetadata()
                         .name(topicName)
                         .cluster(clusterName))
-                .spec(new TopicSpec()
+                .spec(new org.openapitools.client.model.TopicSpec()
                         .partitions(partitions)
                         .replicationFactor(replicationFactor)
                         .configs(configs));
@@ -408,19 +641,75 @@ public class SetupGateway {
     }
 
     /**
-     * Scan all CRDs to determine which vClusters require ACL support.
-     * A vCluster needs ACLs if ANY CRD referencing it defines ACLs.
+     * Process all CRs in dependency order:
+     * 1. VirtualClusters and ServiceAccounts (foundation)
+     * 2. MessagingServices (bind service account to cluster)
+     * 3. Topics and ConsumerGroups (resources)
+     * 4. ACLs (access control)
      */
-    private void scanForAclRequirements(List<MessagingDeclaration> crds) {
-        for (MessagingDeclaration crd : crds) {
-            String vClusterName = crd.spec.virtualClusterId;
-            boolean hasAcls = crd.spec.acls != null && !crd.spec.acls.isEmpty();
+    private void processCRs(ParsedCRs crds) throws Exception {
+        // Build lookup maps for reference resolution
+        Map<String, VirtualClusterCR> vClusterMap = crds.virtualClusters.stream()
+                .collect(java.util.stream.Collectors.toMap(vc -> vc.metadata.name, vc -> vc));
 
-            if (hasAcls) {
-                vClustersRequiringAcls.add(vClusterName);
-                log.debug("vCluster {} requires ACL support (detected from service {})",
-                        vClusterName, crd.spec.serviceName);
+        Map<String, ServiceAccountCR> serviceAccountMap = crds.serviceAccounts.stream()
+                .collect(java.util.stream.Collectors.toMap(sa -> sa.metadata.name, sa -> sa));
+
+        Map<String, MessagingServiceCR> messagingServiceMap = crds.messagingServices.stream()
+                .collect(java.util.stream.Collectors.toMap(ms -> ms.metadata.name, ms -> ms));
+
+        Map<String, TopicCR> topicMap = crds.topics.stream()
+                .collect(java.util.stream.Collectors.toMap(t -> t.metadata.name, t -> t));
+
+        Map<String, ConsumerGroupCR> consumerGroupMap = crds.consumerGroups.stream()
+                .collect(java.util.stream.Collectors.toMap(cg -> cg.metadata.name, cg -> cg));
+
+        // Scan for ACL requirements to determine which vClusters need ACL support
+        scanForAclRequirements(crds, messagingServiceMap, vClusterMap);
+
+        // Process MessagingServices (creates vClusters, service accounts, and generates SSL properties)
+        for (MessagingServiceCR msgService : crds.messagingServices) {
+            processMessagingService(msgService, serviceAccountMap, vClusterMap);
+        }
+
+        // Process Topics
+        for (TopicCR topic : crds.topics) {
+            processTopic(topic, messagingServiceMap, serviceAccountMap, vClusterMap);
+        }
+
+        // Process ConsumerGroups (no-op for now, just register them)
+        for (ConsumerGroupCR consumerGroup : crds.consumerGroups) {
+            log.info("ConsumerGroup/{} registered", consumerGroup.metadata.name);
+        }
+
+        // Process ACLs
+        for (AclCR acl : crds.acls) {
+            processAcl(acl, messagingServiceMap, serviceAccountMap, vClusterMap, topicMap, consumerGroupMap);
+        }
+    }
+
+    /**
+     * Scan for ACL requirements to determine which vClusters need ACL support.
+     */
+    private void scanForAclRequirements(ParsedCRs crds,
+                                        Map<String, MessagingServiceCR> messagingServiceMap,
+                                        Map<String, VirtualClusterCR> vClusterMap) {
+        for (AclCR acl : crds.acls) {
+            // Resolve MessagingService -> VirtualCluster
+            MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
+            if (msgService == null) {
+                log.warn("ACL {} references unknown MessagingService {}", acl.metadata.name, acl.spec.serviceRef);
+                continue;
             }
+
+            VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+            if (vCluster == null) {
+                log.warn("MessagingService {} references unknown VirtualCluster {}",
+                        msgService.metadata.name, msgService.spec.clusterRef);
+                continue;
+            }
+
+            vClustersRequiringAcls.add(vCluster.spec.clusterId);
         }
 
         if (!vClustersRequiringAcls.isEmpty()) {
@@ -430,84 +719,115 @@ public class SetupGateway {
 
     // CRD Processing Methods
 
+    // Container for all parsed CRs
+    static class ParsedCRs {
+        public List<VirtualClusterCR> virtualClusters = new ArrayList<>();
+        public List<ServiceAccountCR> serviceAccounts = new ArrayList<>();
+        public List<MessagingServiceCR> messagingServices = new ArrayList<>();
+        public List<TopicCR> topics = new ArrayList<>();
+        public List<ConsumerGroupCR> consumerGroups = new ArrayList<>();
+        public List<AclCR> acls = new ArrayList<>();
+    }
+
     /**
      * Parse and validate multiple CRD documents from a multi-document YAML string.
-     * This method is type-safe and validates each document against bean validation constraints.
+     * This method handles multiple CR kinds and validates each document against bean validation constraints.
      *
      * @param multiDocYaml Multi-document YAML string containing CRD definitions
-     * @return List of validated MessagingDeclaration objects
-     * @throws IllegalArgumentException if any document fails validation or is not a valid MessagingDeclaration
+     * @return ParsedCRs object containing all parsed and validated CRs grouped by type
+     * @throws IllegalArgumentException if any document fails validation or has unknown kind
      */
-    List<MessagingDeclaration> parseAllCrds(String multiDocYaml) {
-        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
-        );
+    ParsedCRs parseAllCrds(String multiDocYaml) {
+        ParsedCRs result = new ParsedCRs();
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.LoaderOptions());
 
-        List<MessagingDeclaration> crds = new ArrayList<>();
         int documentIndex = 0;
-
         for (Object doc : yaml.loadAll(multiDocYaml)) {
             documentIndex++;
 
-            // Type safety: verify the document is actually a MessagingDeclaration
-            if (!(doc instanceof MessagingDeclaration)) {
+            if (!(doc instanceof Map)) {
+                continue; // Skip non-map documents (e.g., comments)
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> docMap = (Map<String, Object>) doc;
+            String kind = (String) docMap.get("kind");
+
+            if (kind == null || kind.isEmpty()) {
+                throw new IllegalArgumentException("Document #" + documentIndex + " missing 'kind' field");
+            }
+
+            try {
+                switch (kind) {
+                    case "VirtualCluster" -> {
+                        VirtualClusterCR cr = parseAndValidate(docMap, VirtualClusterCR.class, documentIndex);
+                        result.virtualClusters.add(cr);
+                    }
+                    case "ServiceAccount" -> {
+                        ServiceAccountCR cr = parseAndValidate(docMap, ServiceAccountCR.class, documentIndex);
+                        result.serviceAccounts.add(cr);
+                    }
+                    case "MessagingService" -> {
+                        MessagingServiceCR cr = parseAndValidate(docMap, MessagingServiceCR.class, documentIndex);
+                        result.messagingServices.add(cr);
+                    }
+                    case "Topic" -> {
+                        TopicCR cr = parseAndValidate(docMap, TopicCR.class, documentIndex);
+                        result.topics.add(cr);
+                    }
+                    case "ConsumerGroup" -> {
+                        ConsumerGroupCR cr = parseAndValidate(docMap, ConsumerGroupCR.class, documentIndex);
+                        result.consumerGroups.add(cr);
+                    }
+                    case "ACL" -> {
+                        AclCR cr = parseAndValidate(docMap, AclCR.class, documentIndex);
+                        result.acls.add(cr);
+                    }
+                    default -> throw new IllegalArgumentException(
+                            "Document #" + documentIndex + " has unknown kind: " + kind
+                    );
+                }
+            } catch (Exception e) {
                 throw new IllegalArgumentException(
-                        "Document #" + documentIndex + " is not a valid MessagingDeclaration. Got: " +
-                                (doc != null ? doc.getClass().getName() : "null")
+                        "Failed to parse document #" + documentIndex + " (kind: " + kind + "): " + e.getMessage(),
+                        e
                 );
             }
-
-            MessagingDeclaration crd = (MessagingDeclaration) doc;
-
-            // Validate using bean validation
-            java.util.Set<ConstraintViolation<MessagingDeclaration>> violations = validator.validate(crd);
-            if (!violations.isEmpty()) {
-                StringBuilder errorMsg = new StringBuilder("CRD validation failed for document #" + documentIndex);
-                if (crd.metadata != null && crd.metadata.name != null) {
-                    errorMsg.append(" (").append(crd.metadata.name).append(")");
-                }
-                errorMsg.append(":\n");
-
-                for (ConstraintViolation<MessagingDeclaration> violation : violations) {
-                    errorMsg.append("  - ").append(violation.getPropertyPath())
-                            .append(": ").append(violation.getMessage()).append("\n");
-                }
-                throw new IllegalArgumentException(errorMsg.toString());
-            }
-
-            crds.add(crd);
         }
 
-        if (crds.isEmpty()) {
-            throw new IllegalArgumentException("No valid CRD documents found in YAML");
-        }
-
-        return crds;
+        return result;
     }
 
-    MessagingDeclaration parseYaml(String crdYaml) {
+    /**
+     * Parse a map into a specific CR type and validate it.
+     */
+    private <T> T parseAndValidate(Map<String, Object> docMap, Class<T> crClass, int documentIndex) {
+        // Convert map to YAML string and parse it into the target class
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-                new org.yaml.snakeyaml.constructor.Constructor(MessagingDeclaration.class, new org.yaml.snakeyaml.LoaderOptions())
+                new org.yaml.snakeyaml.constructor.Constructor(crClass, new org.yaml.snakeyaml.LoaderOptions())
         );
-        MessagingDeclaration crd = yaml.load(crdYaml);
+        String yamlStr = new org.yaml.snakeyaml.Yaml().dump(docMap);
+        T cr = yaml.load(yamlStr);
 
         // Validate using bean validation
-        java.util.Set<ConstraintViolation<MessagingDeclaration>> violations = validator.validate(crd);
+        java.util.Set<ConstraintViolation<T>> violations = validator.validate(cr);
         if (!violations.isEmpty()) {
-            StringBuilder errorMsg = new StringBuilder("CRD validation failed:\n");
-            for (ConstraintViolation<MessagingDeclaration> violation : violations) {
+            StringBuilder errorMsg = new StringBuilder("CRD validation failed for document #" + documentIndex);
+            errorMsg.append(":\n");
+
+            for (ConstraintViolation<T> violation : violations) {
                 errorMsg.append("  - ").append(violation.getPropertyPath())
                         .append(": ").append(violation.getMessage()).append("\n");
             }
             throw new IllegalArgumentException(errorMsg.toString());
         }
 
-        return crd;
+        return cr;
     }
 
     private void upsertVClusterFromCRD(String vClusterName, boolean hasAcls, String serviceName)
             throws IOException, org.openapitools.client.ApiException, ApiException, InterruptedException {
-        VirtualClusterSpec spec = new VirtualClusterSpec();
+        io.conduktor.gateway.client.model.VirtualClusterSpec spec = new io.conduktor.gateway.client.model.VirtualClusterSpec();
 
         String adminUser;
         if (hasAcls) {
@@ -520,10 +840,10 @@ public class SetupGateway {
         }
 
         log.info("Upserting VirtualCluster: {}", vClusterName);
-        upsertVirtualCluster(new VirtualCluster()
+        upsertVirtualCluster(new io.conduktor.gateway.client.model.VirtualCluster()
                 .kind("VirtualCluster")
                 .apiVersion("gateway/v2")
-                .metadata(new VirtualClusterMetadata().name(vClusterName))
+                .metadata(new io.conduktor.gateway.client.model.VirtualClusterMetadata().name(vClusterName))
                 .spec(spec));
         log.info("VirtualCluster/{} upserted", vClusterName);
 
@@ -600,22 +920,6 @@ public class SetupGateway {
         Thread.sleep(10000);
     }
 
-    private void createTopicsFromCRD(String vClusterName, List<TopicDef> topics)
-            throws org.openapitools.client.ApiException, InterruptedException {
-        // Wait for Console to be ready to handle operations on this vCluster
-        waitForConsoleReady(vClusterName);
-
-        for (TopicDef topic : topics) {
-            createTopic(
-                    vClusterName,
-                    topic.name,
-                    topic.partitions,
-                    topic.replicationFactor,
-                    topic.config
-            );
-        }
-    }
-
     private void waitForConsoleReady(String vClusterName) throws InterruptedException {
         log.info("Waiting for Console to be ready for vCluster {}...", vClusterName);
         // Give Console additional time to establish connection and index the cluster
@@ -623,63 +927,45 @@ public class SetupGateway {
         log.info("Proceeding with operations on vCluster {}", vClusterName);
     }
 
-    private void createAclsFromCRD(String vClusterName, String serviceName, List<AclDef> acls)
-            throws org.openapitools.client.ApiException, InterruptedException {
-        // Wait for Console to be ready to handle operations on this vCluster
-        waitForConsoleReady(vClusterName);
+    /**
+     * Process a MessagingService CR - creates vCluster, service accounts, and generates SSL properties
+     */
+    private void processMessagingService(MessagingServiceCR msgService,
+                                         Map<String, ServiceAccountCR> serviceAccountMap,
+                                         Map<String, VirtualClusterCR> vClusterMap) throws Exception {
+        String msgServiceName = msgService.metadata.name;
+        log.info("Processing MessagingService: {}", msgServiceName);
 
-        List<KafkaServiceAccountACL> kafkaAcls = new ArrayList<>();
-
-        // Convert CRD ACLs to Kafka ACLs
-        for (AclDef aclDef : acls) {
-            List<Operation> ops = aclDef.operations.stream()
-                    .map(Operation::valueOf)
-                    .toList();
-
-            kafkaAcls.add(new KafkaServiceAccountACL()
-                    .type(aclDef.type)
-                    .name(aclDef.name)
-                    .patternType(aclDef.patternType)
-                    .operations(ops)
-                    .host(aclDef.host)
-                    .permission(aclDef.permission));
+        // Resolve references
+        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
+        if (serviceAccount == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgServiceName + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
+            );
         }
 
-        // Create Console ServiceAccount
-        serviceAccountApi.createOrUpdateServiceAccountV1(vClusterName,
-                new ServiceAccountResourceV1()
-                        .apiVersion("v1")
-                        .kind(ServiceAccountKind.SERVICE_ACCOUNT)
-                        .metadata(new ServiceAccountMetadata()
-                                .name(serviceName)
-                                .cluster(vClusterName))
-                        .spec(new ServiceAccountSpec()
-                                .authorization(new ServiceAccountAuthorization(new KAFKAACL()
-                                        .type(KAFKAACL.TypeEnum.KAFKA_ACL)
-                                        .acls(kafkaAcls)))), null);
-        log.info("ServiceAccount/{} created in Console", serviceName);
-    }
+        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+        if (vCluster == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgServiceName + " references unknown VirtualCluster: " + msgService.spec.clusterRef
+            );
+        }
 
-    private void processCRD(MessagingDeclaration crd) throws Exception {
-        String serviceName = crd.spec.serviceName;
-        String vClusterName = crd.spec.virtualClusterId;
+        String serviceName = serviceAccount.spec.name;
+        String vClusterName = vCluster.spec.clusterId;
 
-        log.info("Processing CRD for service: {}", serviceName);
-
-        // 2. Upsert vCluster (only if it doesn't already exist in Console)
-        // Use pre-computed ACL requirement (considers ALL CRDs for this vCluster)
+        // Check if vCluster needs ACL support
         boolean vClusterRequiresAcls = vClustersRequiringAcls.contains(vClusterName);
         boolean vClusterExistsInConsole = vClusterExistsInConsole(vClusterName);
 
         if (!vClusterExistsInConsole) {
             upsertVClusterFromCRD(vClusterName, vClusterRequiresAcls, serviceName);
         } else {
-            // vCluster already exists - wait for Console to be ready
             log.info("vCluster {} already exists, ensuring Console connection is ready", vClusterName);
             Thread.sleep(5000);
         }
 
-        // 3. Upsert Gateway ServiceAccount for the service (mTLS)
+        // Upsert Gateway ServiceAccount for the service (mTLS)
         log.info("Upserting Gateway ServiceAccount: {}", serviceName);
         upsertServiceAccount(new External()
                 .kind("GatewayServiceAccount")
@@ -692,21 +978,153 @@ public class SetupGateway {
                         .externalNames(List.of("CN=" + serviceName + ",OU=TEST,O=CONDUKTOR,L=LONDON,C=UK"))));
         log.info("GatewayServiceAccount/{} upserted", serviceName);
 
-        // 4. Create topics
-        if (crd.spec.topics != null && !crd.spec.topics.isEmpty()) {
-            log.info("Creating topics...");
-            createTopicsFromCRD(vClusterName, crd.spec.topics);
-        }
-
-        // 5. Create Console ServiceAccount with ACLs (only if ACLs defined)
-        if (crd.spec.acls != null && !crd.spec.acls.isEmpty()) {
-            log.info("Creating Console ServiceAccount with ACLs: {}", serviceName);
-            createAclsFromCRD(vClusterName, serviceName, crd.spec.acls);
-        }
-
-        // 6. Generate SSL properties
+        // Generate SSL properties
         generateSslProperties(serviceName);
 
-        log.info("Service {} setup complete", serviceName);
+        log.info("MessagingService {} setup complete", msgServiceName);
+    }
+
+    /**
+     * Process a Topic CR - creates the topic in the vCluster
+     */
+    private void processTopic(TopicCR topic,
+                              Map<String, MessagingServiceCR> messagingServiceMap,
+                              Map<String, ServiceAccountCR> serviceAccountMap,
+                              Map<String, VirtualClusterCR> vClusterMap) throws Exception {
+        String topicName = topic.metadata.name;
+        log.info("Processing Topic: {}", topicName);
+
+        // Resolve references: Topic -> MessagingService -> VirtualCluster
+        MessagingServiceCR msgService = messagingServiceMap.get(topic.spec.serviceRef);
+        if (msgService == null) {
+            throw new IllegalArgumentException(
+                    "Topic " + topicName + " references unknown MessagingService: " + topic.spec.serviceRef
+            );
+        }
+
+        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+        if (vCluster == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef
+            );
+        }
+
+        String vClusterName = vCluster.spec.clusterId;
+
+        // Wait for Console to be ready
+        waitForConsoleReady(vClusterName);
+
+        // Create topic
+        createTopic(
+                vClusterName,
+                topic.spec.name,
+                topic.spec.partitions,
+                topic.spec.replicationFactor,
+                topic.spec.config
+        );
+    }
+
+    /**
+     * Process an ACL CR - creates the ACL in the Console
+     */
+    private void processAcl(AclCR acl,
+                            Map<String, MessagingServiceCR> messagingServiceMap,
+                            Map<String, ServiceAccountCR> serviceAccountMap,
+                            Map<String, VirtualClusterCR> vClusterMap,
+                            Map<String, TopicCR> topicMap,
+                            Map<String, ConsumerGroupCR> consumerGroupMap) throws Exception {
+        String aclName = acl.metadata.name;
+        log.info("Processing ACL: {}", aclName);
+
+        // Resolve references: ACL -> MessagingService -> ServiceAccount + VirtualCluster
+        MessagingServiceCR msgService = messagingServiceMap.get(acl.spec.serviceRef);
+        if (msgService == null) {
+            throw new IllegalArgumentException(
+                    "ACL " + aclName + " references unknown MessagingService: " + acl.spec.serviceRef
+            );
+        }
+
+        ServiceAccountCR serviceAccount = serviceAccountMap.get(msgService.spec.serviceAccountRef);
+        if (serviceAccount == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgService.metadata.name + " references unknown ServiceAccount: " + msgService.spec.serviceAccountRef
+            );
+        }
+
+        VirtualClusterCR vCluster = vClusterMap.get(msgService.spec.clusterRef);
+        if (vCluster == null) {
+            throw new IllegalArgumentException(
+                    "MessagingService " + msgService.metadata.name + " references unknown VirtualCluster: " + msgService.spec.clusterRef
+            );
+        }
+
+        String serviceName = serviceAccount.spec.name;
+        String vClusterName = vCluster.spec.clusterId;
+
+        // Determine ACL type and resource name
+        AclResourceType aclType;
+        String resourceName;
+        ResourcePatternType patternType;
+
+        if (acl.spec.topicRef != null) {
+            // Topic ACL
+            TopicCR topic = topicMap.get(acl.spec.topicRef);
+            if (topic == null) {
+                throw new IllegalArgumentException(
+                        "ACL " + aclName + " references unknown Topic: " + acl.spec.topicRef
+                );
+            }
+            aclType = AclResourceType.TOPIC;
+            resourceName = topic.spec.name;
+            patternType = ResourcePatternType.LITERAL;
+        } else if (acl.spec.consumerGroupRef != null) {
+            // ConsumerGroup ACL
+            ConsumerGroupCR consumerGroup = consumerGroupMap.get(acl.spec.consumerGroupRef);
+            if (consumerGroup == null) {
+                throw new IllegalArgumentException(
+                        "ACL " + aclName + " references unknown ConsumerGroup: " + acl.spec.consumerGroupRef
+                );
+            }
+            aclType = AclResourceType.CONSUMER_GROUP;
+            resourceName = consumerGroup.spec.name;
+            patternType = consumerGroup.spec.patternType;
+        } else {
+            throw new IllegalArgumentException(
+                    "ACL " + aclName + " must reference either topicRef or consumerGroupRef"
+            );
+        }
+
+        // Wait for Console to be ready
+        waitForConsoleReady(vClusterName);
+
+        // Convert operations to Kafka operations
+        List<Operation> ops = acl.spec.operations.stream()
+                .map(Operation::valueOf)
+                .toList();
+
+        // Create the ACL via Console ServiceAccount
+        List<KafkaServiceAccountACL> kafkaAcls = List.of(
+                new KafkaServiceAccountACL()
+                        .type(aclType)
+                        .name(resourceName)
+                        .patternType(patternType)
+                        .operations(ops)
+                        .host(acl.spec.host)
+                        .permission(acl.spec.permission)
+        );
+
+        // Create or update Console ServiceAccount with this ACL
+        serviceAccountApi.createOrUpdateServiceAccountV1(vClusterName,
+                new ServiceAccountResourceV1()
+                        .apiVersion("v1")
+                        .kind(ServiceAccountKind.SERVICE_ACCOUNT)
+                        .metadata(new org.openapitools.client.model.ServiceAccountMetadata()
+                                .name(serviceName)
+                                .cluster(vClusterName))
+                        .spec(new org.openapitools.client.model.ServiceAccountSpec()
+                                .authorization(new ServiceAccountAuthorization(new KAFKAACL()
+                                        .type(KAFKAACL.TypeEnum.KAFKA_ACL)
+                                        .acls(kafkaAcls)))), null);
+        log.info("ACL/{} created for ServiceAccount/{}", aclName, serviceName);
     }
 }
