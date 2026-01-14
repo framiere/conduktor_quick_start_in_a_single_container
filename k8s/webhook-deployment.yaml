@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-operator-webhook
+  namespace: operator-system
+spec:
+  replicas: 2  # HA setup
+  selector:
+    matchLabels:
+      app: messaging-operator-webhook
+  template:
+    metadata:
+      labels:
+        app: messaging-operator-webhook
+    spec:
+      containers:
+        - name: webhook
+          image: messaging-operator-webhook:latest
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          env:
+            - name: WEBHOOK_PORT
+              value: "8443"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8443
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8443
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
