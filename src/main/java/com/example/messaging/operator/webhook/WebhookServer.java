@@ -43,7 +43,7 @@ public class WebhookServer {
     }
 
     public void stop() {
-        server.stop(0);
+        server.stop(5);
         log.info("Webhook server stopped");
     }
 
@@ -72,8 +72,8 @@ public class WebhookServer {
                 return;
             }
 
-            try {
-                AdmissionReview review = objectMapper.readValue(exchange.getRequestBody(), AdmissionReview.class);
+            try (var requestBody = exchange.getRequestBody()) {
+                AdmissionReview review = objectMapper.readValue(requestBody, AdmissionReview.class);
 
                 if (review.getRequest() == null) {
                     sendResponse(exchange, 400, "{\"error\": \"Missing request\"}");
@@ -92,8 +92,8 @@ public class WebhookServer {
                 log.info("Validation result: {}", admissionResponse.isAllowed() ? "ALLOWED" : "DENIED");
 
             } catch (Exception e) {
-                log.error("Error processing webhook request: {}", e.getMessage());
-                sendResponse(exchange, 500, "{\"error\": \"" + e.getMessage() + "\"}");
+                log.error("Error processing webhook request", e);
+                sendResponse(exchange, 500, "{\"error\": \"Internal server error\"}");
             }
         }
 
