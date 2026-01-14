@@ -1,12 +1,12 @@
 package com.example.messaging.operator.webhook;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.junit.jupiter.api.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("WebhookServer Integration Tests")
 class WebhookServerTest {
@@ -53,7 +53,8 @@ class WebhookServerTest {
     @Test
     @DisplayName("should validate Topic UPDATE and deny ownership change")
     void testValidateTopicUpdate() throws Exception {
-        String admissionReviewJson = """
+        String admissionReviewJson =
+                """
         {
           "apiVersion": "admission.k8s.io/v1",
           "kind": "AdmissionReview",
@@ -91,8 +92,7 @@ class WebhookServerTest {
         }
         """;
 
-        RequestBody body = RequestBody.create(admissionReviewJson,
-                MediaType.parse("application/json"));
+        RequestBody body = RequestBody.create(admissionReviewJson, MediaType.parse("application/json"));
 
         Request request = new Request.Builder()
                 .url("http://localhost:" + port + "/validate/topic")
@@ -107,8 +107,7 @@ class WebhookServerTest {
 
             assertThat(review.getResponse()).isNotNull();
             assertThat(review.getResponse().isAllowed()).isFalse();
-            assertThat(review.getResponse().getStatus().getMessage())
-                    .contains("Cannot change applicationServiceRef");
+            assertThat(review.getResponse().getStatus().getMessage()).contains("Cannot change applicationServiceRef");
         }
     }
 }

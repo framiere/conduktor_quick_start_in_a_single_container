@@ -1,16 +1,15 @@
 package com.example.messaging.operator.webhook;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.util.ArrayList;
 import okhttp3.*;
 import org.junit.jupiter.api.*;
-
-import java.util.ArrayList;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * End-to-end integration test simulating K8s API server requests
@@ -22,7 +21,7 @@ class WebhookIntegrationTest {
     private static CRDStore store;
     private static OkHttpClient httpClient;
     private static ObjectMapper mapper;
-    private static final int PORT = 18443;  // Different port for integration tests
+    private static final int PORT = 18443; // Different port for integration tests
 
     @BeforeAll
     static void setUpAll() throws Exception {
@@ -53,7 +52,7 @@ class WebhookIntegrationTest {
     void testBlockTopicOwnershipTransfer() throws Exception {
         // Simulate UPDATE request from K8s API server
         Topic oldTopic = createTopic("my-topic", "app-service-1");
-        Topic newTopic = createTopic("my-topic", "hacker-service");  // Ownership change
+        Topic newTopic = createTopic("my-topic", "hacker-service"); // Ownership change
 
         AdmissionReview review = new AdmissionReview();
         AdmissionRequest request = new AdmissionRequest();
@@ -102,8 +101,8 @@ class WebhookIntegrationTest {
         Topic oldTopic = createTopic("my-topic", "app-service-1");
         oldTopic.getSpec().setPartitions(3);
 
-        Topic newTopic = createTopic("my-topic", "app-service-1");  // Same owner
-        newTopic.getSpec().setPartitions(6);  // Just changing partitions
+        Topic newTopic = createTopic("my-topic", "app-service-1"); // Same owner
+        newTopic.getSpec().setPartitions(6); // Just changing partitions
 
         AdmissionReview review = new AdmissionReview();
         AdmissionRequest request = new AdmissionRequest();

@@ -1,18 +1,17 @@
 package com.example.messaging.operator.it.scenario;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.crd.ApplicationService;
 import com.example.messaging.operator.crd.Topic;
 import com.example.messaging.operator.crd.VirtualCluster;
 import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Scenario tests for reconciliation event publishing and listener integration.
@@ -29,9 +28,9 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Create ApplicationService
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("test-app")
-            .appName("test-app")
-            .createIn(k8sClient);
+                .name("test-app")
+                .appName("test-app")
+                .createIn(k8sClient);
 
         store.create("ApplicationService", "default", app);
 
@@ -63,9 +62,9 @@ public class ReconciliationIT extends ScenarioITBase {
     void testUpdateTriggersReconciliationEvents() {
         // Setup: Create resource first
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("test-app")
-            .appName("test-app")
-            .createIn(k8sClient);
+                .name("test-app")
+                .appName("test-app")
+                .createIn(k8sClient);
         store.create("ApplicationService", "default", app);
 
         // Setup: Event listener after initial create
@@ -96,9 +95,9 @@ public class ReconciliationIT extends ScenarioITBase {
     void testDeleteTriggersReconciliationEvents() {
         // Setup: Create resource first
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("test-app")
-            .appName("test-app")
-            .createIn(k8sClient);
+                .name("test-app")
+                .appName("test-app")
+                .createIn(k8sClient);
         store.create("ApplicationService", "default", app);
 
         // Setup: Event listener after initial create
@@ -132,9 +131,9 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Setup: Create an ApplicationService but NOT the ServiceAccount it references
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("test-app")
-            .appName("test-app")
-            .createIn(k8sClient);
+                .name("test-app")
+                .appName("test-app")
+                .createIn(k8sClient);
         store.create("ApplicationService", "default", app);
 
         // Clear events from setup
@@ -142,11 +141,11 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Try to create Topic with non-existent ServiceAccount (should fail validation)
         Topic topic = TestDataBuilder.topic()
-            .name("orphan-topic")
-            .topicName("orphan.topic")
-            .ownedBy(app)
-            .serviceRef("nonexistent-sa")  // This ServiceAccount doesn't exist
-            .build();
+                .name("orphan-topic")
+                .topicName("orphan.topic")
+                .ownedBy(app)
+                .serviceRef("nonexistent-sa") // This ServiceAccount doesn't exist
+                .build();
 
         // This should trigger validation failure
         try {
@@ -169,7 +168,8 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(afterEvent.getOperation()).isEqualTo(ReconciliationEvent.Operation.CREATE);
         assertThat(afterEvent.getResourceKind()).isEqualTo("Topic");
         assertThat(afterEvent.isSuccess()).isFalse();
-        assertThat(afterEvent.getResult()).isIn(ReconciliationEvent.Result.FAILURE, ReconciliationEvent.Result.VALIDATION_ERROR);
+        assertThat(afterEvent.getResult())
+                .isIn(ReconciliationEvent.Result.FAILURE, ReconciliationEvent.Result.VALIDATION_ERROR);
         assertThat(afterEvent.getMessage()).isNotNull();
     }
 
@@ -187,9 +187,9 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Create, update, and delete a resource
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("multi-listener-app")
-            .appName("multi-listener-app")
-            .createIn(k8sClient);
+                .name("multi-listener-app")
+                .appName("multi-listener-app")
+                .createIn(k8sClient);
 
         store.create("ApplicationService", "default", app);
 
@@ -241,17 +241,17 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Action: Create complete ownership chain
         ApplicationService app = TestDataBuilder.applicationService()
-            .name("metadata-app")
-            .appName("metadata-app")
-            .createIn(k8sClient);
+                .name("metadata-app")
+                .appName("metadata-app")
+                .createIn(k8sClient);
         store.create("ApplicationService", "default", app);
 
         VirtualCluster vc = TestDataBuilder.virtualCluster()
-            .name("metadata-vc")
-            .clusterId("metadata-cluster")
-            .applicationServiceRef("metadata-app")
-            .ownedBy(app)
-            .createIn(k8sClient);
+                .name("metadata-vc")
+                .clusterId("metadata-cluster")
+                .applicationServiceRef("metadata-app")
+                .ownedBy(app)
+                .createIn(k8sClient);
         store.create("VirtualCluster", "default", vc);
 
         // Verify: Each resource type triggers correct events
@@ -259,8 +259,8 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Find ApplicationService events
         List<ReconciliationEvent> appEvents = receivedEvents.stream()
-            .filter(e -> e.getResourceKind().equals("ApplicationService"))
-            .toList();
+                .filter(e -> e.getResourceKind().equals("ApplicationService"))
+                .toList();
 
         assertThat(appEvents).hasSize(2);
         assertThat(appEvents.get(0).getResourceName()).isEqualTo("metadata-app");
@@ -268,8 +268,8 @@ public class ReconciliationIT extends ScenarioITBase {
 
         // Find VirtualCluster events
         List<ReconciliationEvent> vcEvents = receivedEvents.stream()
-            .filter(e -> e.getResourceKind().equals("VirtualCluster"))
-            .toList();
+                .filter(e -> e.getResourceKind().equals("VirtualCluster"))
+                .toList();
 
         assertThat(vcEvents).hasSize(2);
         assertThat(vcEvents.get(0).getResourceName()).isEqualTo("metadata-vc");

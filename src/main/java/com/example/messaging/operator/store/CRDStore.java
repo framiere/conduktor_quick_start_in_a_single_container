@@ -5,12 +5,11 @@ import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.events.ReconciliationEventPublisher;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.example.messaging.operator.validation.ValidationResult;
-import lombok.Getter;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 /**
  * In-memory CRD store simulating etcd behavior with event publishing and ownership enforcement.
@@ -24,10 +23,11 @@ import java.util.stream.Collectors;
 public class CRDStore {
     private final Map<String, Map<String, Object>> store = new ConcurrentHashMap<>();
     private final AtomicLong resourceVersionCounter = new AtomicLong(1);
+
     @Getter
     private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
-    private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
+    private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 
     private String getKey(String kind, String namespace, String name) {
         return String.format("%s/%s/%s", kind, namespace, name);
@@ -95,10 +95,7 @@ public class CRDStore {
             setResourceVersion(resource, String.valueOf(version));
             setUid(resource, UUID.randomUUID().toString());
 
-
-            store.put(key, Map.of(
-                    "resource", resource,
-                    "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()
@@ -199,9 +196,7 @@ public class CRDStore {
             long version = resourceVersionCounter.getAndIncrement();
             setResourceVersion(resource, String.valueOf(version));
 
-            store.put(key, Map.of(
-                    "resource", resource,
-                    "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()
@@ -295,7 +290,8 @@ public class CRDStore {
     public boolean delete(String kind, String namespace, String name, String requestingAppService) {
         // Get resource before deletion to extract appService
         Object existingResource = get(kind, namespace, name);
-        String appService = existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
+        String appService =
+                existingResource != null ? getApplicationServiceRef(existingResource) : requestingAppService;
 
         // Publish BEFORE event
         ReconciliationEvent event1 = ReconciliationEvent.builder()
@@ -311,8 +307,11 @@ public class CRDStore {
 
         try {
             // OWNERSHIP ENFORCEMENT: Validate only owner can delete
-            if (existingResource != null && requestingAppService != null && !(existingResource instanceof ApplicationService)) {
-                ValidationResult validationResult = ownershipValidator.validateDelete(existingResource, requestingAppService);
+            if (existingResource != null
+                    && requestingAppService != null
+                    && !(existingResource instanceof ApplicationService)) {
+                ValidationResult validationResult =
+                        ownershipValidator.validateDelete(existingResource, requestingAppService);
                 if (!validationResult.isValid()) {
                     String validationMessage = validationResult.getMessage();
                     ReconciliationEvent event = ReconciliationEvent.builder()

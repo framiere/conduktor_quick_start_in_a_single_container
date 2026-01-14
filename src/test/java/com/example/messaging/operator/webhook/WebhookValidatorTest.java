@@ -1,17 +1,16 @@
 package com.example.messaging.operator.webhook;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("WebhookValidator Tests")
 class WebhookValidatorTest {
@@ -50,10 +49,10 @@ class WebhookValidatorTest {
         newTopic.getMetadata().setName("test-topic");
         newTopic.getMetadata().setNamespace("default");
         TopicCRSpec newSpec = new TopicCRSpec();
-        newSpec.setApplicationServiceRef("app-service-1");  // SAME owner
+        newSpec.setApplicationServiceRef("app-service-1"); // SAME owner
         newSpec.setServiceRef("sa-1");
         newSpec.setName("test.topic");
-        newSpec.setPartitions(6);  // Changed partitions
+        newSpec.setPartitions(6); // Changed partitions
         newSpec.setReplicationFactor(3);
         newTopic.setSpec(newSpec);
 
@@ -91,7 +90,7 @@ class WebhookValidatorTest {
         newTopic.setMetadata(new ObjectMeta());
         newTopic.getMetadata().setName("test-topic");
         TopicCRSpec newSpec = new TopicCRSpec();
-        newSpec.setApplicationServiceRef("hacker-service");  // DIFFERENT owner
+        newSpec.setApplicationServiceRef("hacker-service"); // DIFFERENT owner
         newSpec.setServiceRef("sa-1");
         newSpec.setName("test.topic");
         newSpec.setPartitions(3);
@@ -131,7 +130,7 @@ class WebhookValidatorTest {
         newVc.getMetadata().setName("vc-1");
         VirtualClusterSpec newSpec = new VirtualClusterSpec();
         newSpec.setClusterId("cluster-1");
-        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newSpec.setApplicationServiceRef("hacker-app"); // Changed!
         newVc.setSpec(newSpec);
 
         AdmissionRequest request = new AdmissionRequest();
@@ -163,7 +162,7 @@ class WebhookValidatorTest {
         newSa.getMetadata().setName("sa-1");
         ServiceAccountSpec newSpec = new ServiceAccountSpec();
         newSpec.setName("service-1");
-        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newSpec.setApplicationServiceRef("hacker-app"); // Changed!
         newSpec.setClusterRef("cluster-1");
         newSa.setSpec(newSpec);
 
@@ -195,7 +194,7 @@ class WebhookValidatorTest {
         newAcl.setMetadata(new ObjectMeta());
         newAcl.getMetadata().setName("acl-1");
         AclCRSpec newSpec = new AclCRSpec();
-        newSpec.setApplicationServiceRef("hacker-app");  // Changed!
+        newSpec.setApplicationServiceRef("hacker-app"); // Changed!
         newSpec.setServiceRef("sa-1");
         newSpec.setTopicRef("topic-1");
         newAcl.setSpec(newSpec);

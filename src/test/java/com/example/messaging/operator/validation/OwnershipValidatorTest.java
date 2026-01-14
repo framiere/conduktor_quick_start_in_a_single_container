@@ -1,14 +1,12 @@
 package com.example.messaging.operator.validation;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.store.CRDStore;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import org.junit.jupiter.api.*;
-
 import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Unit tests for OwnershipValidator.
@@ -103,9 +101,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ApplicationService")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("ApplicationService").contains("does not exist");
         }
 
         @Test
@@ -119,9 +115,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("VirtualCluster")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("VirtualCluster").contains("does not exist");
         }
 
         @Test
@@ -165,9 +159,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(topic, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ServiceAccount")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("ServiceAccount").contains("does not exist");
         }
 
         @Test
@@ -177,7 +169,8 @@ class OwnershipValidatorTest {
             store.create("ApplicationService", NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create("ApplicationService", NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
             store.create("VirtualCluster", NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
-            store.create("ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(
+                    "ServiceAccount", NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create Topic referencing APP_SERVICE
             Topic topic = buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE);
@@ -212,9 +205,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(acl, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("ServiceAccount")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("ServiceAccount").contains("does not exist");
         }
     }
 
@@ -261,8 +252,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateUpdate(existing, updated);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("must have applicationServiceRef");
+            assertThat(result.getMessage()).contains("must have applicationServiceRef");
         }
 
         @Test
@@ -274,8 +264,7 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateUpdate(existing, updated);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage())
-                    .contains("must have applicationServiceRef");
+            assertThat(result.getMessage()).contains("must have applicationServiceRef");
         }
 
         @Test
@@ -425,9 +414,11 @@ class OwnershipValidatorTest {
 
         ServiceAccountSpec spec = new ServiceAccountSpec();
         spec.setName(name.replace("-sa", ""));
-        spec.setDn(new ArrayList<>() {{
-            add("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US");
-        }});
+        spec.setDn(new ArrayList<>() {
+            {
+                add("CN=" + name + ",OU=TEST,O=EXAMPLE,L=CITY,C=US");
+            }
+        });
         spec.setClusterRef(clusterRef);
         spec.setApplicationServiceRef(appServiceRef);
         sa.setSpec(spec);

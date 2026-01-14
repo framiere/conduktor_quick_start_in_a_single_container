@@ -1,11 +1,10 @@
 package com.example.messaging.operator.events;
 
+import java.time.Instant;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-
-import java.time.Instant;
 
 /**
  * Event emitted during CRD reconciliation operations.
@@ -35,25 +34,26 @@ public class ReconciliationEvent {
         NOT_FOUND
     }
 
-    @NonNull
-    private final Phase phase;
-    @NonNull
-    private final Operation operation;
-    @NonNull
-    private final String resourceKind;
-    @NonNull
-    private final String resourceName;
-    @NonNull
-    private final String resourceNamespace;
+    @NonNull private final Phase phase;
+
+    @NonNull private final Operation operation;
+
+    @NonNull private final String resourceKind;
+
+    @NonNull private final String resourceName;
+
+    @NonNull private final String resourceNamespace;
+
     private final String applicationService;
+
     @Builder.Default
     private final Instant timestamp = Instant.now();
+
     private Result result;
     private String message;
     private String reason;
     private Long resourceVersion;
     private String errorDetails;
-
 
     public String getResourceReference() {
         return String.format("%s/%s/%s", resourceKind, resourceNamespace, resourceName);
@@ -100,5 +100,4 @@ public class ReconciliationEvent {
 
         return sb.toString();
     }
-
 }

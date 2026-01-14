@@ -16,8 +16,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Version("v1")
 @ShortNames({"md", "msgdecl"})
 @Plural("messagingdeclarations")
-public class MessagingDeclaration
-        extends CustomResource<MessagingDeclarationSpec, MessagingDeclarationStatus>
+public class MessagingDeclaration extends CustomResource<MessagingDeclarationSpec, MessagingDeclarationStatus>
         implements Namespaced {
 
     @Override

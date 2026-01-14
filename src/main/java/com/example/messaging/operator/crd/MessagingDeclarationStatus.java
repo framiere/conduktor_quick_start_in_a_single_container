@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.sundr.builder.annotations.Buildable;
-import lombok.Data;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 /**
  * Status of a Messaging Declaration CR.
@@ -45,7 +44,6 @@ public class MessagingDeclarationStatus {
     @JsonProperty("conditions")
     @JsonPropertyDescription("Kubernetes conditions")
     private List<Condition> conditions = new ArrayList<>();
-
 
     /**
      * Possible CR states during reconciliation.

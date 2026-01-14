@@ -1,10 +1,10 @@
 package com.example.messaging.operator.webhook;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("AdmissionReview DTO Tests")
 class AdmissionReviewTest {
@@ -14,7 +14,8 @@ class AdmissionReviewTest {
     @Test
     @DisplayName("should deserialize AdmissionReview with UPDATE request")
     void testDeserializeUpdateRequest() throws Exception {
-        String json = """
+        String json =
+                """
         {
           "apiVersion": "admission.k8s.io/v1",
           "kind": "AdmissionReview",

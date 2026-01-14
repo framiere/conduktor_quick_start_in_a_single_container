@@ -2,7 +2,6 @@ package com.example.messaging.operator.it.base;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import java.io.InputStream;
 import java.util.List;
 
@@ -28,12 +27,12 @@ public class FixtureLoader {
                 throw new IllegalArgumentException("Fixture not found: " + path);
             }
 
-            return client.load(stream)
-                .get().stream()
-                .filter(type::isInstance)
-                .map(type::cast)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No resource of type " + type.getSimpleName() + " found in " + path));
+            return client.load(stream).get().stream()
+                    .filter(type::isInstance)
+                    .map(type::cast)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No resource of type " + type.getSimpleName() + " found in " + path));
         } catch (Exception e) {
             if (e instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) e;

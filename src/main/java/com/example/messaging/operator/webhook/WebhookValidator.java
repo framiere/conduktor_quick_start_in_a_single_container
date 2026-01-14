@@ -37,7 +37,12 @@ public class WebhookValidator {
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error("Validation error for {} {}/{}: {}", request.getOperation(), request.getNamespace(), request.getName(), e.getMessage());
+            log.error(
+                    "Validation error for {} {}/{}: {}",
+                    request.getOperation(),
+                    request.getNamespace(),
+                    request.getName(),
+                    e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Internal validation error: " + e.getMessage());
         }
     }
@@ -56,7 +61,8 @@ public class WebhookValidator {
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error("Error validating UPDATE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
+            log.error(
+                    "Error validating UPDATE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Failed to validate update: " + e.getMessage());
         }
     }
@@ -65,14 +71,16 @@ public class WebhookValidator {
         try {
             T resource = objectMapper.convertValue(request.getOldObject(), resourceClass);
 
-            String requestingUser = request.getUserInfo() != null ? request.getUserInfo().getUsername() : "unknown";
+            String requestingUser =
+                    request.getUserInfo() != null ? request.getUserInfo().getUsername() : "unknown";
 
             log.info("DELETE request for {}/{} by user {}", request.getNamespace(), request.getName(), requestingUser);
 
             return AdmissionResponse.allowed(request.getUid());
 
         } catch (Exception e) {
-            log.error("Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
+            log.error(
+                    "Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
             return AdmissionResponse.denied(request.getUid(), "Failed to validate delete: " + e.getMessage());
         }
     }

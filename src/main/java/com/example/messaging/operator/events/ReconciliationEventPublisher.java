@@ -1,10 +1,9 @@
 package com.example.messaging.operator.events;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Publisher for reconciliation events following observer pattern.
@@ -30,7 +29,9 @@ public class ReconciliationEventPublisher {
      */
     public void addListener(ReconciliationEventListener listener) {
         listeners.add(listener);
-        logger.info("Registered reconciliation event listener: {}", listener.getClass().getSimpleName());
+        logger.info(
+                "Registered reconciliation event listener: {}",
+                listener.getClass().getSimpleName());
     }
 
     /**
@@ -38,7 +39,8 @@ public class ReconciliationEventPublisher {
      */
     public void removeListener(ReconciliationEventListener listener) {
         listeners.remove(listener);
-        logger.info("Removed reconciliation event listener: {}", listener.getClass().getSimpleName());
+        logger.info(
+                "Removed reconciliation event listener: {}", listener.getClass().getSimpleName());
     }
 
     /**
@@ -47,14 +49,16 @@ public class ReconciliationEventPublisher {
     public void publish(ReconciliationEvent event) {
         if (auditLoggingEnabled) {
             if (event.getPhase() == ReconciliationEvent.Phase.BEFORE) {
-                logger.info("RECONCILIATION_START: {} {} {}/{}",
+                logger.info(
+                        "RECONCILIATION_START: {} {} {}/{}",
                         event.getOperation(),
                         event.getResourceKind(),
                         event.getResourceNamespace(),
                         event.getResourceName());
             } else {
                 String resultIndicator = event.isSuccess() ? "SUCCESS" : "FAILED";
-                logger.info("RECONCILIATION_END: {} {} {}/{} - {} {}",
+                logger.info(
+                        "RECONCILIATION_END: {} {} {}/{} - {} {}",
                         event.getOperation(),
                         event.getResourceKind(),
                         event.getResourceNamespace(),
@@ -68,8 +72,11 @@ public class ReconciliationEventPublisher {
             try {
                 listener.onEvent(event);
             } catch (Exception e) {
-                logger.error("Error in reconciliation event listener {}: {}",
-                        listener.getClass().getSimpleName(), e.getMessage(), e);
+                logger.error(
+                        "Error in reconciliation event listener {}: {}",
+                        listener.getClass().getSimpleName(),
+                        e.getMessage(),
+                        e);
             }
         }
     }

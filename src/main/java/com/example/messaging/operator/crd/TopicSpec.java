@@ -7,9 +7,8 @@ import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Pattern;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 /**
  * Specification for a Kafka topic to be created and owned by this CR.

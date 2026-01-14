@@ -6,10 +6,9 @@ import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Pattern;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 /**
  * Specification of a Messaging Declaration.
@@ -39,5 +38,4 @@ public class MessagingDeclarationSpec {
     @JsonProperty("acls")
     @JsonPropertyDescription("ACL declarations")
     private List<AclSpec> acls = new ArrayList<>();
-
 }

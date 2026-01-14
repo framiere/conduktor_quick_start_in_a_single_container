@@ -4,7 +4,6 @@ import com.example.messaging.operator.crd.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import java.util.*;
 
 /**
@@ -330,7 +329,8 @@ public class TestDataBuilder {
         private String consumerGroupRef;
         private List<AclCRSpec.Operation> operations = new ArrayList<>();
         private String host = "*";
-        private AclCRSpec.AclPermissionTypeForAccessControlEntry permission = AclCRSpec.AclPermissionTypeForAccessControlEntry.ALLOW;
+        private AclCRSpec.AclPermissionTypeForAccessControlEntry permission =
+                AclCRSpec.AclPermissionTypeForAccessControlEntry.ALLOW;
         private String applicationServiceRef;
         private List<OwnerReference> owners = new ArrayList<>();
 

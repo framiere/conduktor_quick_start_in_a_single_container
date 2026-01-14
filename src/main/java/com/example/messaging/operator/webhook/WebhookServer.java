@@ -5,13 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Kubernetes ValidatingWebhook HTTP server using Java's built-in HttpServer.
@@ -79,7 +78,11 @@ public class WebhookServer {
                     return;
                 }
 
-                log.info("Validating {} operation on {} in namespace {}", review.getRequest().getOperation(), review.getRequest().getName(), review.getRequest().getNamespace());
+                log.info(
+                        "Validating {} operation on {} in namespace {}",
+                        review.getRequest().getOperation(),
+                        review.getRequest().getName(),
+                        review.getRequest().getNamespace());
 
                 AdmissionResponse admissionResponse = validator.validate(review.getRequest(), resourceClass);
                 review.setResponse(admissionResponse);

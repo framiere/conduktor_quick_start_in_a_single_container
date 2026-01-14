@@ -1,9 +1,9 @@
 package com.example.messaging.operator.validation;
 
+import static org.assertj.core.api.Assertions.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * Unit tests for ValidationResult value object.
@@ -52,7 +52,8 @@ class ValidationResultTest {
     @Test
     @DisplayName("should handle multiline error messages")
     void testMultilineErrorMessage() {
-        String multilineMessage = """
+        String multilineMessage =
+                """
                 Validation failed:
                 - ApplicationService 'foo' does not exist
                 - VirtualCluster 'bar' is owned by different service
@@ -124,8 +125,6 @@ class ValidationResultTest {
         ValidationResult result = ValidationResult.invalid(longErrorMessage);
 
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage())
-                .isEqualTo(longErrorMessage)
-                .hasSizeGreaterThan(5000);
+        assertThat(result.getMessage()).isEqualTo(longErrorMessage).hasSizeGreaterThan(5000);
     }
 }

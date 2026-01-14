@@ -1,12 +1,12 @@
 package com.example.messaging.operator.it.component;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ComponentITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
 import com.example.messaging.operator.validation.ValidationResult;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Component integration tests for OwnershipValidator with Kubernetes mock server.
@@ -117,15 +117,14 @@ public class OwnershipValidatorIT extends ComponentITBase {
                 .name("test-sa")
                 .saName("test-sa")
                 .clusterRef("test-cluster")
-                .applicationServiceRef("app2")  // Different owner!
+                .applicationServiceRef("app2") // Different owner!
                 .build();
 
         ValidationResult result = ownershipValidator.validateCreate(sa, "default");
 
         // Verify validation fails
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage())
-                .contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
+        assertThat(result.getMessage()).contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
     }
 
     @Test
@@ -163,7 +162,7 @@ public class OwnershipValidatorIT extends ComponentITBase {
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
-                .applicationServiceRef("app2")  // Attempting ownership change
+                .applicationServiceRef("app2") // Attempting ownership change
                 .build();
 
         ValidationResult result = ownershipValidator.validateUpdate(existingCluster, updatedCluster);
@@ -204,8 +203,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         VirtualCluster updatedCluster = TestDataBuilder.virtualCluster()
                 .namespace("default")
                 .name("test-cluster")
-                .clusterId("updated-cluster-id")  // Changed spec
-                .applicationServiceRef("test-app")  // Same owner
+                .clusterId("updated-cluster-id") // Changed spec
+                .applicationServiceRef("test-app") // Same owner
                 .build();
 
         ValidationResult result = ownershipValidator.validateUpdate(existingCluster, updatedCluster);

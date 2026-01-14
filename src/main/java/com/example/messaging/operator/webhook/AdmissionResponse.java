@@ -2,16 +2,14 @@ package com.example.messaging.operator.webhook;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdmissionResponse {
 
     @JsonProperty("uid")
-    private String uid;  // Must match request uid
+    private String uid; // Must match request uid
 
     @JsonProperty("allowed")
     private boolean allowed;

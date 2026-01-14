@@ -1,18 +1,5 @@
 package com.example.messaging.operator.crd;
 
-import com.example.messaging.operator.events.ReconciliationEvent;
-import com.example.messaging.operator.events.ReconciliationEventPublisher;
-import com.example.messaging.operator.store.CRDStore;
-import com.example.messaging.operator.validation.OwnershipValidator;
-import com.example.messaging.operator.validation.ValidationResult;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import org.junit.jupiter.api.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.example.messaging.operator.crd.AclCRSpec.Operation.ALTER;
 import static com.example.messaging.operator.crd.AclCRSpec.Operation.DESCRIBE;
 import static com.example.messaging.operator.crd.AclCRSpec.Operation.READ;
@@ -21,6 +8,18 @@ import static com.example.messaging.operator.events.ReconciliationEvent.Operatio
 import static com.example.messaging.operator.events.ReconciliationEvent.Phase.*;
 import static com.example.messaging.operator.events.ReconciliationEvent.Result.*;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.example.messaging.operator.events.ReconciliationEvent;
+import com.example.messaging.operator.events.ReconciliationEventPublisher;
+import com.example.messaging.operator.store.CRDStore;
+import com.example.messaging.operator.validation.OwnershipValidator;
+import com.example.messaging.operator.validation.ValidationResult;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.*;
 
 /**
  * Comprehensive reconciliation tests for CRD lifecycle management.
@@ -96,8 +95,7 @@ class CrdReconciliationTest {
         @DisplayName("should create VirtualCluster with ownership validation")
         void testCreateVirtualClusterWithValidation() {
             // Setup: Create ApplicationService
-            crdStore.create("ApplicationService", TEST_NAMESPACE,
-                    buildApplicationService(OWNER_APP_SERVICE));
+            crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
 
             // BEFORE STATE
             List<VirtualCluster> beforeState = crdStore.list("VirtualCluster", TEST_NAMESPACE);
@@ -118,14 +116,11 @@ class CrdReconciliationTest {
             // AFTER STATE
             List<VirtualCluster> afterState = crdStore.list("VirtualCluster", TEST_NAMESPACE);
 
-            assertThat(afterState)
-                    .hasSize(1)
-                    .first()
-                    .satisfies(vc -> {
-                        assertThat(vc.getSpec().getClusterId()).isEqualTo("prod-cluster");
-                        assertThat(vc.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
-                        assertThat(vc.getMetadata().getResourceVersion()).isEqualTo("2");
-                    });
+            assertThat(afterState).hasSize(1).first().satisfies(vc -> {
+                assertThat(vc.getSpec().getClusterId()).isEqualTo("prod-cluster");
+                assertThat(vc.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
+                assertThat(vc.getMetadata().getResourceVersion()).isEqualTo("2");
+            });
         }
 
         @Test
@@ -142,9 +137,7 @@ class CrdReconciliationTest {
                     .as("Validation should fail when ApplicationService doesn't exist")
                     .isFalse();
 
-            assertThat(result.getMessage())
-                    .contains("ApplicationService")
-                    .contains("does not exist");
+            assertThat(result.getMessage()).contains("ApplicationService").contains("does not exist");
 
             // AFTER STATE: Nothing should be created
             List<VirtualCluster> afterState = crdStore.list("VirtualCluster", TEST_NAMESPACE);
@@ -155,13 +148,12 @@ class CrdReconciliationTest {
         @DisplayName("should create ServiceAccount with complete ownership chain validation")
         void testCreateServiceAccountWithOwnershipChain() {
             // Setup ownership chain
-            crdStore.create("ApplicationService", TEST_NAMESPACE,
-                    buildApplicationService(OWNER_APP_SERVICE));
-            crdStore.create("VirtualCluster", TEST_NAMESPACE,
-                    buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
+            crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
+            crdStore.create("VirtualCluster", TEST_NAMESPACE, buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            assertThat(crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE)).isEmpty();
+            assertThat(crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE))
+                    .isEmpty();
 
             // CREATE OPERATION
             ServiceAccount sa = buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE);
@@ -178,29 +170,24 @@ class CrdReconciliationTest {
             // AFTER STATE
             List<ServiceAccount> afterState = crdStore.list("ServiceAccount", TEST_NAMESPACE);
 
-            assertThat(afterState)
-                    .hasSize(1)
-                    .first()
-                    .satisfies(serviceAccount -> {
-                        assertThat(serviceAccount.getSpec().getDn())
-                                .hasSize(2)
-                                .contains("CN=orders-service-sa,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
-                        assertThat(serviceAccount.getSpec().getClusterRef()).isEqualTo("prod-cluster");
-                        assertThat(serviceAccount.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
-                        assertThat(serviceAccount.getMetadata().getResourceVersion()).isEqualTo("3");
-                    });
+            assertThat(afterState).hasSize(1).first().satisfies(serviceAccount -> {
+                assertThat(serviceAccount.getSpec().getDn())
+                        .hasSize(2)
+                        .contains("CN=orders-service-sa,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+                assertThat(serviceAccount.getSpec().getClusterRef()).isEqualTo("prod-cluster");
+                assertThat(serviceAccount.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
+                assertThat(serviceAccount.getMetadata().getResourceVersion()).isEqualTo("3");
+            });
         }
 
         @Test
         @DisplayName("should reject ServiceAccount with mismatched owner in VirtualCluster")
         void testRejectServiceAccountWithOwnershipMismatch() {
             // Setup: ApplicationServices and VirtualCluster owned by different service
-            crdStore.create("ApplicationService", TEST_NAMESPACE,
-                    buildApplicationService(OWNER_APP_SERVICE));
-            crdStore.create("ApplicationService", TEST_NAMESPACE,
-                    buildApplicationService(DIFFERENT_APP_SERVICE));
-            crdStore.create("VirtualCluster", TEST_NAMESPACE,
-                    buildVirtualCluster("prod-cluster", DIFFERENT_APP_SERVICE));
+            crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
+            crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(DIFFERENT_APP_SERVICE));
+            crdStore.create(
+                    "VirtualCluster", TEST_NAMESPACE, buildVirtualCluster("prod-cluster", DIFFERENT_APP_SERVICE));
 
             // Try to create ServiceAccount claiming wrong owner
             ServiceAccount sa = buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE);
@@ -240,14 +227,11 @@ class CrdReconciliationTest {
             // AFTER STATE
             List<Topic> afterState = crdStore.list("Topic", TEST_NAMESPACE);
 
-            assertThat(afterState)
-                    .hasSize(1)
-                    .first()
-                    .satisfies(t -> {
-                        assertThat(t.getSpec().getName()).isEqualTo("orders.events");
-                        assertThat(t.getSpec().getServiceRef()).isEqualTo("orders-service-sa");
-                        assertThat(t.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
-                    });
+            assertThat(afterState).hasSize(1).first().satisfies(t -> {
+                assertThat(t.getSpec().getName()).isEqualTo("orders.events");
+                assertThat(t.getSpec().getServiceRef()).isEqualTo("orders-service-sa");
+                assertThat(t.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
+            });
         }
 
         @Test
@@ -276,8 +260,8 @@ class CrdReconciliationTest {
         void testCreateACLWithOwnershipValidation() {
             // Setup
             setupCompleteOwnershipChain();
-            crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             assertThat(crdStore.<ACL>list("ACL", TEST_NAMESPACE)).isEmpty();
@@ -295,14 +279,11 @@ class CrdReconciliationTest {
             // AFTER STATE
             List<ACL> afterState = crdStore.list("ACL", TEST_NAMESPACE);
 
-            assertThat(afterState)
-                    .hasSize(1)
-                    .first()
-                    .satisfies(a -> {
-                        assertThat(a.getSpec().getTopicRef()).isEqualTo("orders-events");
-                        assertThat(a.getSpec().getOperations()).contains(READ, WRITE);
-                        assertThat(a.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
-                    });
+            assertThat(afterState).hasSize(1).first().satisfies(a -> {
+                assertThat(a.getSpec().getTopicRef()).isEqualTo("orders-events");
+                assertThat(a.getSpec().getOperations()).contains(READ, WRITE);
+                assertThat(a.getSpec().getApplicationServiceRef()).isEqualTo(OWNER_APP_SERVICE);
+            });
         }
     }
 
@@ -315,8 +296,8 @@ class CrdReconciliationTest {
         void testUpdateTopicPartitions() {
             // Setup
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             Topic beforeState = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
@@ -332,16 +313,15 @@ class CrdReconciliationTest {
             // AFTER STATE
             Topic afterState = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
 
-            assertThat(afterState)
-                    .satisfies(t -> {
-                        assertThat(t.getSpec().getPartitions())
-                                .as("Partitions should be updated")
-                                .isEqualTo(24);
-                        assertThat(t.getMetadata().getResourceVersion())
-                                .as("Resource version should increment")
-                                .isEqualTo("5")
-                                .isNotEqualTo(beforeResourceVersion);
-                    });
+            assertThat(afterState).satisfies(t -> {
+                assertThat(t.getSpec().getPartitions())
+                        .as("Partitions should be updated")
+                        .isEqualTo(24);
+                assertThat(t.getMetadata().getResourceVersion())
+                        .as("Resource version should increment")
+                        .isEqualTo("5")
+                        .isNotEqualTo(beforeResourceVersion);
+            });
         }
 
         @Test
@@ -349,8 +329,8 @@ class CrdReconciliationTest {
         void testRejectOwnershipChange() {
             // Setup
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             Topic beforeState = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
@@ -399,15 +379,14 @@ class CrdReconciliationTest {
 
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult result = validator.validateUpdate(
-                    crdStore.get("ServiceAccount", TEST_NAMESPACE, "orders-service-sa"),
-                    beforeState
-            );
+                    crdStore.get("ServiceAccount", TEST_NAMESPACE, "orders-service-sa"), beforeState);
 
             assertThat(result.isValid())
                     .as("Update should be allowed when owner is unchanged")
                     .isTrue();
 
-            ServiceAccount updated = crdStore.update("ServiceAccount", TEST_NAMESPACE, "orders-service-sa", beforeState);
+            ServiceAccount updated =
+                    crdStore.update("ServiceAccount", TEST_NAMESPACE, "orders-service-sa", beforeState);
 
             // AFTER STATE
             ServiceAccount afterState = crdStore.get("ServiceAccount", TEST_NAMESPACE, "orders-service-sa");
@@ -416,8 +395,7 @@ class CrdReconciliationTest {
                     .hasSize(3)
                     .contains("CN=orders-service-tertiary,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
 
-            assertThat(afterState.getMetadata().getResourceVersion())
-                    .isNotEqualTo(beforeResourceVersion);
+            assertThat(afterState.getMetadata().getResourceVersion()).isNotEqualTo(beforeResourceVersion);
         }
 
         @Test
@@ -425,9 +403,11 @@ class CrdReconciliationTest {
         void testUpdateACLOperations() {
             // Setup
             setupCompleteOwnershipChain();
-            crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
-            ACL acl = crdStore.create("ACL", TEST_NAMESPACE,
+            crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            ACL acl = crdStore.create(
+                    "ACL",
+                    TEST_NAMESPACE,
                     buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE));
 
             // BEFORE STATE
@@ -439,10 +419,8 @@ class CrdReconciliationTest {
             beforeState.getSpec().getOperations().add(ALTER);
 
             OwnershipValidator validator = new OwnershipValidator(crdStore);
-            ValidationResult result = validator.validateUpdate(
-                    crdStore.get("ACL", TEST_NAMESPACE, "orders-events-rw"),
-                    beforeState
-            );
+            ValidationResult result =
+                    validator.validateUpdate(crdStore.get("ACL", TEST_NAMESPACE, "orders-events-rw"), beforeState);
 
             assertThat(result.isValid()).isTrue();
 
@@ -470,27 +448,21 @@ class CrdReconciliationTest {
         void testDeleteTopic() {
             // Setup
             setupCompleteOwnershipChain();
-            crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             List<Topic> beforeState = crdStore.list("Topic", TEST_NAMESPACE);
-            assertThat(beforeState)
-                    .as("BEFORE: Topic should exist")
-                    .hasSize(1);
+            assertThat(beforeState).as("BEFORE: Topic should exist").hasSize(1);
 
             // DELETE OPERATION
             boolean deleted = crdStore.delete("Topic", TEST_NAMESPACE, "orders-events");
 
-            assertThat(deleted)
-                    .as("Delete operation should succeed")
-                    .isTrue();
+            assertThat(deleted).as("Delete operation should succeed").isTrue();
 
             // AFTER STATE
             List<Topic> afterState = crdStore.list("Topic", TEST_NAMESPACE);
-            assertThat(afterState)
-                    .as("AFTER: Topic should be removed")
-                    .isEmpty();
+            assertThat(afterState).as("AFTER: Topic should be removed").isEmpty();
 
             Topic retrieved = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
             assertThat(retrieved)
@@ -503,10 +475,9 @@ class CrdReconciliationTest {
         void testRejectUnauthorizedDelete() {
             // Setup
             setupCompleteOwnershipChain();
-            crdStore.create("ApplicationService", TEST_NAMESPACE,
-                    buildApplicationService(DIFFERENT_APP_SERVICE));
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(DIFFERENT_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // ATTEMPT UNAUTHORIZED DELETE
             OwnershipValidator validator = new OwnershipValidator(crdStore);
@@ -523,9 +494,7 @@ class CrdReconciliationTest {
 
             // AFTER STATE: Resource should still exist
             Topic afterState = crdStore.get("Topic", TEST_NAMESPACE, "orders-events");
-            assertThat(afterState)
-                    .as("Resource should not be deleted")
-                    .isNotNull();
+            assertThat(afterState).as("Resource should not be deleted").isNotNull();
         }
 
         @Test
@@ -533,8 +502,8 @@ class CrdReconciliationTest {
         void testAllowAuthorizedDelete() {
             // Setup
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             assertThat(crdStore.<Topic>list("Topic", TEST_NAMESPACE)).hasSize(1);
@@ -559,9 +528,11 @@ class CrdReconciliationTest {
         void testDeleteACL() {
             // Setup
             setupCompleteOwnershipChain();
-            crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
-            crdStore.create("ACL", TEST_NAMESPACE,
+            crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            crdStore.create(
+                    "ACL",
+                    TEST_NAMESPACE,
                     buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE));
 
             // BEFORE STATE
@@ -587,17 +558,29 @@ class CrdReconciliationTest {
         void testCascadeDeleteStateTransitions() {
             // Setup complete hierarchy
             setupCompleteOwnershipChain();
-            crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
-            crdStore.create("ACL", TEST_NAMESPACE,
+            crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            crdStore.create(
+                    "ACL",
+                    TEST_NAMESPACE,
                     buildACL("orders-events-rw", "orders-service-sa", "orders-events", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             Map<String, Integer> beforeCounts = new HashMap<>();
-            beforeCounts.put("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size());
-            beforeCounts.put("VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size());
-            beforeCounts.put("ServiceAccount", crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size());
-            beforeCounts.put("Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
+            beforeCounts.put(
+                    "ApplicationService",
+                    crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE)
+                            .size());
+            beforeCounts.put(
+                    "VirtualCluster",
+                    crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE)
+                            .size());
+            beforeCounts.put(
+                    "ServiceAccount",
+                    crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE)
+                            .size());
+            beforeCounts.put(
+                    "Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
             beforeCounts.put("ACL", crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
 
             assertThat(beforeCounts)
@@ -619,10 +602,20 @@ class CrdReconciliationTest {
 
             // AFTER STATE
             Map<String, Integer> afterCounts = new HashMap<>();
-            afterCounts.put("ApplicationService", crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE).size());
-            afterCounts.put("VirtualCluster", crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE).size());
-            afterCounts.put("ServiceAccount", crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE).size());
-            afterCounts.put("Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
+            afterCounts.put(
+                    "ApplicationService",
+                    crdStore.<ApplicationService>list("ApplicationService", TEST_NAMESPACE)
+                            .size());
+            afterCounts.put(
+                    "VirtualCluster",
+                    crdStore.<VirtualCluster>list("VirtualCluster", TEST_NAMESPACE)
+                            .size());
+            afterCounts.put(
+                    "ServiceAccount",
+                    crdStore.<ServiceAccount>list("ServiceAccount", TEST_NAMESPACE)
+                            .size());
+            afterCounts.put(
+                    "Topic", crdStore.<Topic>list("Topic", TEST_NAMESPACE).size());
             afterCounts.put("ACL", crdStore.<ACL>list("ACL", TEST_NAMESPACE).size());
 
             assertThat(afterCounts)
@@ -662,13 +655,11 @@ class CrdReconciliationTest {
             capturedEvents.clear(); // Clear setup events
 
             // CREATE OPERATION
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             // VERIFY EVENTS
-            assertThat(capturedEvents)
-                    .as("Should have BEFORE and AFTER events")
-                    .hasSize(2);
+            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
             assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
@@ -696,8 +687,8 @@ class CrdReconciliationTest {
         void testUpdateEventLifecycle() {
             // Setup
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
             capturedEvents.clear(); // Clear setup events
 
             // UPDATE OPERATION
@@ -705,9 +696,7 @@ class CrdReconciliationTest {
             Topic updated = crdStore.update("Topic", TEST_NAMESPACE, "orders-events", topic);
 
             // VERIFY EVENTS
-            assertThat(capturedEvents)
-                    .as("Should have BEFORE and AFTER events")
-                    .hasSize(2);
+            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
             assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
@@ -728,8 +717,8 @@ class CrdReconciliationTest {
         void testDeleteEventLifecycle() {
             // Setup
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
             capturedEvents.clear(); // Clear setup events
 
             // DELETE OPERATION
@@ -737,9 +726,7 @@ class CrdReconciliationTest {
 
             // VERIFY EVENTS
             assertThat(deleted).isTrue();
-            assertThat(capturedEvents)
-                    .as("Should have BEFORE and AFTER events")
-                    .hasSize(2);
+            assertThat(capturedEvents).as("Should have BEFORE and AFTER events").hasSize(2);
 
             ReconciliationEvent beforeEvent = capturedEvents.get(0);
             assertThat(beforeEvent.getPhase()).isEqualTo(BEFORE);
@@ -759,14 +746,14 @@ class CrdReconciliationTest {
         void testCreateFailureEvent() {
             // Setup - create a resource first
             setupCompleteOwnershipChain();
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
             capturedEvents.clear();
 
             // CREATE OPERATION - should fail due to duplicate resource
             try {
-                Topic duplicate = crdStore.create("Topic", TEST_NAMESPACE,
-                        buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+                Topic duplicate = crdStore.create(
+                        "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
             } catch (Exception e) {
                 // Expected failure
             }
@@ -796,8 +783,8 @@ class CrdReconciliationTest {
             capturedEvents.clear();
 
             // CREATE
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
             assertThat(capturedEvents).hasSize(2); // BEFORE + AFTER
 
             // UPDATE
@@ -811,20 +798,20 @@ class CrdReconciliationTest {
 
             // VERIFY FULL LIFECYCLE
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getPhase() == BEFORE)
-                    .count())
+                            .filter(e -> e.getPhase() == BEFORE)
+                            .count())
                     .as("Should have 3 BEFORE events")
                     .isEqualTo(3);
 
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getPhase() == AFTER)
-                    .count())
+                            .filter(e -> e.getPhase() == AFTER)
+                            .count())
                     .as("Should have 3 AFTER events")
                     .isEqualTo(3);
 
             assertThat(capturedEvents.stream()
-                    .filter(e -> e.getResult() == SUCCESS)
-                    .count())
+                            .filter(e -> e.getResult() == SUCCESS)
+                            .count())
                     .as("All operations should be successful")
                     .isEqualTo(3);
 
@@ -842,8 +829,8 @@ class CrdReconciliationTest {
             capturedEvents.clear();
 
             // CREATE
-            Topic topic = crdStore.create("Topic", TEST_NAMESPACE,
-                    buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
+            Topic topic = crdStore.create(
+                    "Topic", TEST_NAMESPACE, buildTopic("orders-events", "orders-service-sa", OWNER_APP_SERVICE));
 
             ReconciliationEvent afterCreate = capturedEvents.get(1);
             Long versionAfterCreate = afterCreate.getResourceVersion();
@@ -863,11 +850,11 @@ class CrdReconciliationTest {
 
     // Helper methods
     private void setupCompleteOwnershipChain() {
-        crdStore.create("ApplicationService", TEST_NAMESPACE,
-                buildApplicationService(OWNER_APP_SERVICE));
-        crdStore.create("VirtualCluster", TEST_NAMESPACE,
-                buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
-        crdStore.create("ServiceAccount", TEST_NAMESPACE,
+        crdStore.create("ApplicationService", TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
+        crdStore.create("VirtualCluster", TEST_NAMESPACE, buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
+        crdStore.create(
+                "ServiceAccount",
+                TEST_NAMESPACE,
                 buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE));
     }
 
@@ -906,10 +893,12 @@ class CrdReconciliationTest {
 
         ServiceAccountSpec spec = new ServiceAccountSpec();
         spec.setName(name.replace("-sa", ""));
-        spec.setDn(new ArrayList<>() {{
-            add("CN=" + name + ",OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
-            add("CN=" + name + "-backup,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
-        }});
+        spec.setDn(new ArrayList<>() {
+            {
+                add("CN=" + name + ",OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+                add("CN=" + name + "-backup,OU=ORDERS,O=EXAMPLE,L=CITY,C=US");
+            }
+        });
         spec.setClusterRef(clusterRef);
         spec.setApplicationServiceRef(appServiceRef);
         sa.setSpec(spec);
@@ -943,10 +932,12 @@ class CrdReconciliationTest {
         AclCRSpec spec = new AclCRSpec();
         spec.setServiceRef(serviceRef);
         spec.setTopicRef(topicRef);
-        spec.setOperations(new ArrayList<>() {{
-            add(READ);
-            add(WRITE);
-        }});
+        spec.setOperations(new ArrayList<>() {
+            {
+                add(READ);
+                add(WRITE);
+            }
+        });
         spec.setApplicationServiceRef(appServiceRef);
         acl.setSpec(spec);
 

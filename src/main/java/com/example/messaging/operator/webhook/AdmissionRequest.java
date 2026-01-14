@@ -2,9 +2,8 @@ package com.example.messaging.operator.webhook;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 /**
  * Kubernetes AdmissionRequest
@@ -18,7 +17,7 @@ public class AdmissionRequest {
     private String uid;
 
     @JsonProperty("operation")
-    private String operation;  // CREATE, UPDATE, DELETE
+    private String operation; // CREATE, UPDATE, DELETE
 
     @JsonProperty("namespace")
     private String namespace;

@@ -1,13 +1,12 @@
 package com.example.messaging.operator.it.component;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.it.base.ComponentITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 /**
  * Component integration tests for CRDStore with Kubernetes mock server.
@@ -25,7 +24,8 @@ public class CRDStoreIT extends ComponentITBase {
                 .createIn(k8sClient);
 
         // Verify resource exists in K8s
-        ApplicationService fromK8s = k8sClient.resources(ApplicationService.class)
+        ApplicationService fromK8s = k8sClient
+                .resources(ApplicationService.class)
                 .inNamespace("default")
                 .withName("test-app")
                 .get();
@@ -114,9 +114,7 @@ public class CRDStoreIT extends ComponentITBase {
         assertThat(topics)
                 .extracting(t -> t.getMetadata().getName())
                 .containsExactlyInAnyOrder("topic-1", "topic-2", "topic-3");
-        assertThat(topics)
-                .extracting(t -> t.getSpec().getPartitions())
-                .containsExactlyInAnyOrder(3, 6, 9);
+        assertThat(topics).extracting(t -> t.getSpec().getPartitions()).containsExactlyInAnyOrder(3, 6, 9);
     }
 
     @Test
