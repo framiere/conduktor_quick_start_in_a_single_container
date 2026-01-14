@@ -111,7 +111,10 @@ class WebhookValidatorTest {
 
         assertThat(response.isAllowed())
                 .isFalse();
-        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef").contains("app-service-1").contains("hacker-service");
+        assertThat(response.getStatus().getMessage())
+                .contains("Cannot change applicationServiceRef")
+                .contains("app-service-1")
+                .contains("hacker-service");
     }
 
     @Test
@@ -143,7 +146,8 @@ class WebhookValidatorTest {
 
         assertThat(response.isAllowed())
                 .isFalse();
-        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+        assertThat(response.getStatus().getMessage())
+                .contains("Cannot change applicationServiceRef");
     }
 
     @Test
@@ -177,7 +181,8 @@ class WebhookValidatorTest {
 
         assertThat(response.isAllowed())
                 .isFalse();
-        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+        assertThat(response.getStatus().getMessage())
+                .contains("Cannot change applicationServiceRef");
     }
 
     @Test
@@ -211,6 +216,7 @@ class WebhookValidatorTest {
 
         assertThat(response.isAllowed())
                 .isFalse();
-        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
+        assertThat(response.getStatus().getMessage())
+                .contains("Cannot change applicationServiceRef");
     }
 }
