@@ -64,6 +64,7 @@ export function DiagramNode({ children, color = 'blue', className = '' }) {
     orange: 'bg-orange-100 dark:bg-orange-900/50 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200',
     red: 'bg-red-100 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200',
     gray: 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200',
+    cyan: 'bg-cyan-100 dark:bg-cyan-900/50 border-cyan-300 dark:border-cyan-700 text-cyan-800 dark:text-cyan-200',
   }
 
   return (

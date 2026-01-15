@@ -1,4 +1,4 @@
-import { Boxes, Layers, Database, Users, Lock, MessageSquare } from 'lucide-react'
+import { Boxes, Layers, Database, Users, Lock, MessageSquare, Shield } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
@@ -67,10 +67,11 @@ spec:
     description: 'Kafka topic configuration with partitions and replication settings.',
     fields: [
       { name: 'name', type: 'string', required: true, description: 'Topic name' },
-      { name: 'partitions', type: 'integer', required: true, description: 'Number of partitions' },
-      { name: 'replicationFactor', type: 'integer', required: true, description: 'Replication factor' },
       { name: 'serviceRef', type: 'string', required: true, description: 'Reference to ServiceAccount' },
-      { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' }
+      { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
+      { name: 'partitions', type: 'integer', required: false, description: 'Number of partitions (default: 6)' },
+      { name: 'replicationFactor', type: 'integer', required: false, description: 'Replication factor (default: 3)' },
+      { name: 'config', type: 'Map<String,String>', required: false, description: 'Topic configuration key-value pairs' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
 kind: Topic
@@ -78,10 +79,13 @@ metadata:
   name: orders-topic
 spec:
   name: orders
+  serviceRef: team-a-sa
+  applicationServiceRef: team-a-app
   partitions: 3
   replicationFactor: 1
-  serviceRef: team-a-sa
-  applicationServiceRef: team-a-app`
+  config:
+    retention.ms: "604800000"
+    cleanup.policy: delete`
   },
   {
     name: 'ACL',
@@ -91,10 +95,11 @@ spec:
     fields: [
       { name: 'serviceRef', type: 'string', required: true, description: 'Reference to ServiceAccount' },
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
-      { name: 'topicRef', type: 'string', required: true, description: 'Reference to Topic' },
-      { name: 'consumerGroupRef', type: 'string', required: false, description: 'Reference to ConsumerGroup (optional)' },
-      { name: 'operations', type: 'string[]', required: true, description: 'Operations: READ, WRITE, etc.' },
-      { name: 'permission', type: 'string', required: true, description: 'ALLOW or DENY' }
+      { name: 'topicRef', type: 'string', required: false, description: 'Reference to Topic (mutually exclusive with consumerGroupRef)' },
+      { name: 'consumerGroupRef', type: 'string', required: false, description: 'Reference to ConsumerGroup (mutually exclusive with topicRef)' },
+      { name: 'operations', type: 'Operation[]', required: true, description: 'Operations: READ, WRITE, DESCRIBE, ALTER, etc.' },
+      { name: 'host', type: 'string', required: false, description: 'Host from which operations are allowed (default: "*")' },
+      { name: 'permission', type: 'Permission', required: false, description: 'ALLOW or DENY (default: ALLOW)' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
 kind: ACL
@@ -107,6 +112,7 @@ spec:
   operations:
     - READ
     - WRITE
+  host: "*"
   permission: ALLOW`
   },
   {
@@ -115,10 +121,10 @@ spec:
     color: 'gray',
     description: 'Consumer group configuration for coordinated message consumption.',
     fields: [
-      { name: 'name', type: 'string', required: true, description: 'Consumer group name' },
+      { name: 'name', type: 'string', required: true, description: 'Consumer group name or prefix' },
       { name: 'serviceRef', type: 'string', required: true, description: 'Reference to ServiceAccount' },
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
-      { name: 'patternType', type: 'string', required: true, description: 'LITERAL or PREFIX matching' }
+      { name: 'patternType', type: 'PatternType', required: false, description: 'LITERAL or PREFIXED matching (default: LITERAL)' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
 kind: ConsumerGroup
@@ -129,6 +135,36 @@ spec:
   serviceRef: team-a-sa
   applicationServiceRef: team-a-app
   patternType: LITERAL`
+  },
+  {
+    name: 'GatewayPolicy',
+    icon: Shield,
+    color: 'cyan',
+    description: 'Configures Conduktor Gateway interceptors for governance, security, and data quality policies.',
+    fields: [
+      { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
+      { name: 'clusterRef', type: 'string', required: true, description: 'Reference to KafkaCluster' },
+      { name: 'policyType', type: 'PolicyType', required: true, description: 'Type of policy (CreateTopicPolicy, SchemaValidation, FieldEncryption, etc.)' },
+      { name: 'priority', type: 'integer', required: true, description: 'Policy execution priority (lower = earlier)' },
+      { name: 'serviceAccountRef', type: 'string', required: false, description: 'Scope to specific ServiceAccount' },
+      { name: 'groupRef', type: 'string', required: false, description: 'Scope to specific ConsumerGroup' },
+      { name: 'config', type: 'Map<String,Object>', required: false, description: 'Policy-specific configuration' }
+    ],
+    yaml: `apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: topic-creation-policy
+spec:
+  applicationServiceRef: team-a-app
+  clusterRef: team-a-cluster
+  policyType: CreateTopicPolicy
+  priority: 1
+  config:
+    replicationFactor:
+      min: 3
+    numPartition:
+      min: 3
+      max: 100`
   }
 ]
 
@@ -136,7 +172,7 @@ export default function CRDPage() {
   return (
     <PageLayout
       title="Custom Resource Definitions"
-      subtitle="Deep dive into the 6 CRD types and their relationships"
+      subtitle="Deep dive into the 7 CRD types and their relationships"
       icon={Boxes}
       breadcrumb="CRDs"
       aphorism={{
@@ -186,6 +222,9 @@ export default function CRDPage() {
                 <DiagramNode color="gray">
                   <span className="font-bold">ConsumerGroup</span>
                 </DiagramNode>
+                <DiagramNode color="cyan">
+                  <span className="font-bold">GatewayPolicy</span>
+                </DiagramNode>
               </div>
             </div>
           </div>
@@ -207,6 +246,7 @@ export default function CRDPage() {
                 ${crd.color === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}
                 ${crd.color === 'red' ? 'bg-red-50 dark:bg-red-900/20' : ''}
                 ${crd.color === 'gray' ? 'bg-gray-50 dark:bg-gray-800' : ''}
+                ${crd.color === 'cyan' ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''}
               `}>
                 <div className={`
                   p-3 rounded-xl
@@ -216,6 +256,7 @@ export default function CRDPage() {
                   ${crd.color === 'orange' ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400' : ''}
                   ${crd.color === 'red' ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400' : ''}
                   ${crd.color === 'gray' ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : ''}
+                  ${crd.color === 'cyan' ? 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400' : ''}
                 `}>
                   <Icon size={28} />
                 </div>
