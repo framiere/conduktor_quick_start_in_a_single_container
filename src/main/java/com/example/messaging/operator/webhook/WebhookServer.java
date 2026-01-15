@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 public class WebhookServer {
     private static final Logger log = LoggerFactory.getLogger(WebhookServer.class);
 
-    private final HttpServer server;
+    private HttpServer server;
     private final WebhookValidator validator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -29,11 +29,24 @@ public class WebhookServer {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/health", new HealthHandler());
-        server.createContext("/validate/topic", new ValidationHandler(Topic.class));
-        server.createContext("/validate/acl", new ValidationHandler(ACL.class));
-        server.createContext("/validate/serviceaccount", new ValidationHandler(ServiceAccount.class));
-        server.createContext("/validate/virtualcluster", new ValidationHandler(VirtualCluster.class));
-        server.createContext("/validate/consumergroup", new ValidationHandler(ConsumerGroup.class));
+        registerValidationEndpoints(server);
+    }
+
+    public WebhookServer(WebhookValidator validator, HttpServer externalServer) {
+        this.validator = validator;
+        this.server = externalServer;
+    }
+
+    public void registerEndpoints() {
+        registerValidationEndpoints(server);
+    }
+
+    private void registerValidationEndpoints(HttpServer httpServer) {
+        httpServer.createContext("/validate/topic", new ValidationHandler(Topic.class));
+        httpServer.createContext("/validate/acl", new ValidationHandler(ACL.class));
+        httpServer.createContext("/validate/serviceaccount", new ValidationHandler(ServiceAccount.class));
+        httpServer.createContext("/validate/virtualcluster", new ValidationHandler(VirtualCluster.class));
+        httpServer.createContext("/validate/consumergroup", new ValidationHandler(ConsumerGroup.class));
     }
 
     public void start() {

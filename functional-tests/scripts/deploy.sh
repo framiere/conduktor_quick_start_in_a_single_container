@@ -82,11 +82,9 @@ build_docker() {
     info "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}..."
     cd "$PROJECT_ROOT"
 
-    # Check if Dockerfile exists
-    if [[ ! -f "Dockerfile" ]]; then
-        # Create a simple Dockerfile for the webhook
-        info "Creating Dockerfile for webhook..."
-        cat > Dockerfile.webhook <<'EOF'
+    # Always use a webhook-specific Dockerfile (project may have other Dockerfiles)
+    info "Creating Dockerfile for webhook..."
+    cat > Dockerfile.webhook <<'EOF'
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY target/*.jar app.jar
@@ -96,11 +94,8 @@ ENV TLS_CERT_PATH=/etc/webhook/certs/tls.crt
 ENV TLS_KEY_PATH=/etc/webhook/certs/tls.key
 ENTRYPOINT ["java", "-jar", "app.jar"]
 EOF
-        docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f Dockerfile.webhook .
-        rm -f Dockerfile.webhook
-    else
-        docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
-    fi
+    docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f Dockerfile.webhook .
+    rm -f Dockerfile.webhook
 
     success "Docker image built: ${IMAGE_NAME}:${IMAGE_TAG}"
 }
