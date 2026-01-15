@@ -152,31 +152,28 @@ export default function TestingPage() {
         <div className="mt-6">
           <h4 className="font-semibold mb-3">Example Test Code</h4>
           <CodeBlock
-            title="OwnershipValidatorTest.java"
+            title="CrdReconciliationTest.java"
             language="java"
             code={`@Test
-void shouldRejectTopicWithDifferentOwner() {
-    // Given
-    var appServiceA = TestDataBuilder.applicationService("team-a");
-    var appServiceB = TestDataBuilder.applicationService("team-b");
-    var serviceAccount = TestDataBuilder.serviceAccount("sa-1")
-        .withApplicationServiceRef("team-a");
+@DisplayName("should reject KafkaCluster creation with missing ApplicationService")
+void testRejectKafkaClusterWithMissingOwner() {
+    // BEFORE STATE: No ApplicationService exists
+    KafkaCluster vCluster = buildKafkaCluster("prod-cluster", "nonexistent-service");
 
-    store.create(appServiceA);
-    store.create(appServiceB);
-    store.create(serviceAccount);
+    // CREATE OPERATION should fail validation
+    OwnershipValidator validator = new OwnershipValidator(crdStore);
+    ValidationResult result = validator.validateCreate(vCluster, TEST_NAMESPACE);
 
-    var topic = TestDataBuilder.topic("orders")
-        .withServiceRef("sa-1")
-        .withApplicationServiceRef("team-b");  // Different owner!
-
-    // When
-    var result = validator.validate(topic, Operation.CREATE);
-
-    // Then
-    assertThat(result.isValid()).isFalse();
+    assertThat(result.isValid())
+        .as("Validation should fail when ApplicationService doesn't exist")
+        .isFalse();
     assertThat(result.getMessage())
-        .contains("different applicationServiceRef");
+        .contains("ApplicationService")
+        .contains("does not exist");
+
+    // AFTER STATE: Nothing should be created
+    List<KafkaCluster> afterState = crdStore.list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE);
+    assertThat(afterState).isEmpty();
 }`}
           />
         </div>
