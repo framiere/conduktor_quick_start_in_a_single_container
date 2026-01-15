@@ -111,8 +111,10 @@ generate_certs() {
     fi
 
     # Determine service name from Helm values
+    # When release name contains chart name, Helm fullname = release name
+    # So webhook service = release-name-webhook (not release-name-chart-name-webhook)
     local service_name
-    service_name="${RELEASE_NAME}-messaging-operator-webhook"
+    service_name="${RELEASE_NAME}-webhook"
 
     info "Generating TLS certificates..."
     NAMESPACE="$NAMESPACE" SERVICE_NAME="$service_name" "$SCRIPT_DIR/generate-certs.sh"
@@ -153,7 +155,7 @@ wait_for_ready() {
     info "Waiting for webhook deployment to be ready..."
 
     kubectl wait --for=condition=Available \
-        deployment/${RELEASE_NAME}-messaging-operator-webhook \
+        deployment/${RELEASE_NAME}-webhook \
         -n "$NAMESPACE" \
         --timeout=120s
 
@@ -166,26 +168,26 @@ verify_deployment() {
 
     # Check deployment
     local ready_replicas
-    ready_replicas=$(kubectl get deployment "${RELEASE_NAME}-messaging-operator-webhook" \
+    ready_replicas=$(kubectl get deployment "${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
 
     if [[ "$ready_replicas" -lt 1 ]]; then
         error "No ready replicas found"
-        kubectl describe deployment "${RELEASE_NAME}-messaging-operator-webhook" -n "$NAMESPACE"
+        kubectl describe deployment "${RELEASE_NAME}-webhook" -n "$NAMESPACE"
         return 1
     fi
 
     # Check endpoints
     local endpoints
-    endpoints=$(kubectl get endpoints "${RELEASE_NAME}-messaging-operator-webhook" \
+    endpoints=$(kubectl get endpoints "${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
 
     if [[ -z "$endpoints" ]]; then
         warn "No endpoints found yet, waiting..."
         sleep 5
-        endpoints=$(kubectl get endpoints "${RELEASE_NAME}-messaging-operator-webhook" \
+        endpoints=$(kubectl get endpoints "${RELEASE_NAME}-webhook" \
             -n "$NAMESPACE" \
             -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null || echo "")
     fi
@@ -203,7 +205,7 @@ verify_deployment() {
 
     # Check ValidatingWebhookConfiguration
     info "Checking ValidatingWebhookConfiguration..."
-    kubectl get validatingwebhookconfiguration "${RELEASE_NAME}-messaging-operator-webhook" -o name
+    kubectl get validatingwebhookconfiguration "${RELEASE_NAME}-webhook" -o name
 
     success "Deployment verification complete"
 }
