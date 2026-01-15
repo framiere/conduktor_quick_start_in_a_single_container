@@ -60,6 +60,10 @@ export default function BusinessPage() {
       subtitle="Understanding the operator from a business and stakeholder perspective"
       icon={Users}
       breadcrumb="Business"
+      aphorism={{
+        text: "Price is what you pay. Value is what you get.",
+        author: "Warren Buffett"
+      }}
     >
       {/* Value Proposition */}
       <Section title="Value Proposition" subtitle="Why organizations choose this operator">

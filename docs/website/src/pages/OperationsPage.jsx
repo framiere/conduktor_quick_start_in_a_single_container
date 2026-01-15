@@ -62,6 +62,10 @@ export default function OperationsPage() {
       subtitle="Deploy, monitor, and manage the operator in Kubernetes"
       icon={Server}
       breadcrumb="Operations"
+      aphorism={{
+        text: "It is not enough to do your best; you must know what to do, and then do your best.",
+        author: "W. Edwards Deming"
+      }}
     >
       {/* Deployment Architecture */}
       <Section title="Deployment Architecture" subtitle="How components are deployed in Kubernetes">

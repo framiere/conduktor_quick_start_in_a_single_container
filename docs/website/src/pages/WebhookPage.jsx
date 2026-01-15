@@ -29,6 +29,10 @@ export default function WebhookPage() {
       subtitle="Understanding the ValidatingAdmissionWebhook implementation"
       icon={Lock}
       breadcrumb="Webhook"
+      aphorism={{
+        text: "Quis custodiet ipsos custodes? (Who watches the watchmen?)",
+        author: "Juvenal"
+      }}
     >
       {/* What is it */}
       <Section title="What is a ValidatingWebhook?" subtitle="Kubernetes admission control explained">

@@ -139,6 +139,10 @@ export default function CRDPage() {
       subtitle="Deep dive into the 6 CRD types and their relationships"
       icon={Boxes}
       breadcrumb="CRDs"
+      aphorism={{
+        text: "The limits of my language mean the limits of my world.",
+        author: "Ludwig Wittgenstein"
+      }}
     >
       {/* Overview */}
       <Section title="CRD Overview" subtitle="All resources belong to the messaging.example.com/v1 API group">

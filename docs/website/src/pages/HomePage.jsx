@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   Building2, Shield, TestTube2, Code2, Server, Boxes, Network, Lock,
-  ArrowRight, Zap, Users, Database, GitBranch, Layers, CheckCircle2
+  ArrowRight, Zap, Users, Database, GitBranch, Layers, CheckCircle2, Quote
 } from 'lucide-react'
 import Card, { CardGrid } from '../components/Card'
 import CodeBlock from '../components/CodeBlock'
@@ -82,6 +82,15 @@ export default function HomePage() {
             >
               Quick Start
             </Link>
+          </div>
+          <div className="mt-12 flex items-start gap-3 max-w-2xl">
+            <Quote size={20} className="text-white/40 shrink-0 mt-1" />
+            <blockquote className="text-white/80 italic text-lg leading-relaxed">
+              We shape our tools, and thereafter our tools shape us.
+              <footer className="mt-2 text-white/60 text-sm not-italic">
+                — Marshall McLuhan
+              </footer>
+            </blockquote>
           </div>
         </div>
       </div>

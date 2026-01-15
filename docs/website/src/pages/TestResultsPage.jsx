@@ -156,6 +156,11 @@ function TestSuiteRow({ suite, isExpanded, onToggle }) {
   )
 }
 
+const aphorism = {
+  text: "In God we trust; all others must bring data.",
+  author: "W. Edwards Deming"
+}
+
 export default function TestResultsPage() {
   const [expandedSuites, setExpandedSuites] = useState(new Set())
   const [filter, setFilter] = useState('all')
@@ -192,6 +197,7 @@ export default function TestResultsPage() {
       subtitle={`Last run: ${new Date(summary.timestamp).toLocaleString()}`}
       icon={FlaskConical}
       breadcrumb="Test Results"
+      aphorism={aphorism}
     >
       {/* Summary Stats */}
       <Section title="Summary" subtitle="Overall test execution statistics">

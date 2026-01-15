@@ -232,6 +232,10 @@ export default function TestSetupPage() {
       subtitle="Everything you need to run E2E tests locally"
       icon={Wrench}
       breadcrumb="Test Setup"
+      aphorism={{
+        text: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+        author: "Abraham Lincoln"
+      }}
     >
       {/* Introduction */}
       <Section title="What You'll Set Up" subtitle="A complete local Kubernetes testing environment">

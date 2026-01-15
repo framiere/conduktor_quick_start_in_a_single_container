@@ -72,6 +72,10 @@ export default function SecurityPage() {
       subtitle="Multi-tenant isolation, mTLS authentication, and access control"
       icon={Shield}
       breadcrumb="Security"
+      aphorism={{
+        text: "The only truly secure system is one that is powered off, cast in a block of concrete and sealed in a lead-lined room with armed guards.",
+        author: "Gene Spafford"
+      }}
     >
       {/* Security Layers */}
       <Section title="Security Layers" subtitle="Defense in depth approach">

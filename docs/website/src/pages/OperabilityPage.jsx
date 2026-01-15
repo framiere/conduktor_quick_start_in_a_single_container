@@ -50,6 +50,10 @@ export default function OperabilityPage() {
       subtitle="Complete visibility into every operation through structured event logging"
       icon={Activity}
       breadcrumb="Operability"
+      aphorism={{
+        text: "What gets measured gets managed.",
+        author: "Peter Drucker"
+      }}
     >
       {/* Overview */}
       <Section title="Full Visibility" subtitle="Every operation is tracked and logged">

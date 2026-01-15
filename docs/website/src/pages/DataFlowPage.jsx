@@ -33,6 +33,10 @@ export default function DataFlowPage() {
       subtitle="Visualizing request lifecycle and event propagation"
       icon={Network}
       breadcrumb="Data Flow"
+      aphorism={{
+        text: "No man ever steps in the same river twice, for it is not the same river and he is not the same man.",
+        author: "Heraclitus"
+      }}
     >
       {/* Topic Creation Flow */}
       <Section title="Topic Creation Flow" subtitle="Step-by-step request lifecycle">

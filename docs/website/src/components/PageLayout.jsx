@@ -1,6 +1,6 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Quote } from 'lucide-react'
 
-export default function PageLayout({ title, subtitle, icon: Icon, children, breadcrumb }) {
+export default function PageLayout({ title, subtitle, icon: Icon, children, breadcrumb, aphorism }) {
   return (
     <div className="animate-fade-in">
       {/* Hero section */}
@@ -22,6 +22,19 @@ export default function PageLayout({ title, subtitle, icon: Icon, children, brea
             <h1 className="text-4xl lg:text-5xl font-bold">{title}</h1>
           </div>
           <p className="text-xl text-blue-100 max-w-2xl">{subtitle}</p>
+          {aphorism && (
+            <div className="mt-8 flex items-start gap-3 max-w-2xl">
+              <Quote size={20} className="text-white/40 shrink-0 mt-1" />
+              <blockquote className="text-white/80 italic text-lg leading-relaxed">
+                {aphorism.text}
+                {aphorism.author && (
+                  <footer className="mt-2 text-white/60 text-sm not-italic">
+                    — {aphorism.author}
+                  </footer>
+                )}
+              </blockquote>
+            </div>
+          )}
         </div>
       </div>
 

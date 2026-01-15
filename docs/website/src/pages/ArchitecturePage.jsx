@@ -20,6 +20,10 @@ export default function ArchitecturePage() {
       subtitle="Deep dive into system design, components, and how they interact"
       icon={Building2}
       breadcrumb="Architecture"
+      aphorism={{
+        text: "In architecture, the pride of man, his triumph over gravitation, his will to power, assume visible form. Architecture is a sort of oratory of power.",
+        author: "Friedrich Nietzsche"
+      }}
     >
       {/* High-Level Overview */}
       <Section title="System Overview" subtitle="How the operator fits into the Kubernetes ecosystem">

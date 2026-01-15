@@ -96,6 +96,10 @@ export default function TestingPage() {
       subtitle="Comprehensive test coverage across unit, integration, and E2E tests"
       icon={TestTube2}
       breadcrumb="Testing"
+      aphorism={{
+        text: "Program testing can be used to show the presence of bugs, but never to show their absence.",
+        author: "Edsger W. Dijkstra"
+      }}
     >
       {/* Test Statistics */}
       <Section title="Test Overview" subtitle="Current test coverage statistics">

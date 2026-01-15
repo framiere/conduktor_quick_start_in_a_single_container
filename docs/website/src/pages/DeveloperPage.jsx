@@ -52,6 +52,10 @@ export default function DeveloperPage() {
       subtitle="Build, compile, test, and contribute to the project"
       icon={Code2}
       breadcrumb="Developer"
+      aphorism={{
+        text: "Simplicity is the ultimate sophistication.",
+        author: "Leonardo da Vinci"
+      }}
     >
       {/* Quick Start */}
       <Section title="Quick Start" subtitle="Get up and running in 5 minutes">
