@@ -273,6 +273,9 @@ spec:
             - operations
             - serviceRef
             type: object
+            x-kubernetes-validations:
+            - rule: "(has(self.topicRef) && !has(self.consumerGroupRef)) || (!has(self.topicRef) && has(self.consumerGroupRef))"
+              message: "Exactly one of topicRef or consumerGroupRef must be specified"
           status:
             type: object
         type: object
