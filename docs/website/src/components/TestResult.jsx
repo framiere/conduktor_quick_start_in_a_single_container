@@ -95,7 +95,7 @@ export function TestSuite({ name, tests, stats }) {
   )
 }
 
-export function TestStats({ total, passed, failed, skipped, duration }) {
+export function TestStats({ total, passed, failed, skipped }) {
   const passRate = total > 0 ? Math.round((passed / total) * 100) : 0
 
   return (
