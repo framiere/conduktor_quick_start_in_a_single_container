@@ -3,6 +3,7 @@ import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import DiagramBox, { DiagramNode, DiagramArrow } from '../components/DiagramBox'
 import Section from '../components/Section'
+import CRDReferenceGraph from '../components/CRDReferenceGraph'
 
 const packages = [
   { name: 'crd', description: 'Custom Resource Definition classes with Fabric8 annotations', color: 'blue' },
@@ -71,129 +72,8 @@ export default function ArchitecturePage() {
       </Section>
 
       {/* CRD References */}
-      <Section title="CRD Reference Graph" subtitle="6 Custom Resource Definitions and their reference relationships">
-        <DiagramBox title="CRD Reference Graph">
-          <div className="py-4">
-            {/* Full SVG Graph */}
-            <svg viewBox="0 0 900 520" className="w-full h-auto" style={{minHeight: '500px'}}>
-              <defs>
-                <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6" />
-                </marker>
-                <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6" />
-                </marker>
-                <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#10B981" />
-                </marker>
-                <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#F59E0B" />
-                </marker>
-                <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                </marker>
-                <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#EF4444" />
-                </marker>
-              </defs>
-
-              {/* === NODES === */}
-
-              {/* ApplicationService - Top Center (Root) */}
-              <g transform="translate(450, 40)">
-                <rect x="-90" y="-25" width="180" height="50" rx="8" fill="#3B82F6" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">ApplicationService</text>
-                <text x="0" y="-35" textAnchor="middle" fill="#6B7280" fontSize="11">ROOT</text>
-              </g>
-
-              {/* KafkaCluster - Left Upper */}
-              <g transform="translate(150, 160)">
-                <rect x="-75" y="-25" width="150" height="50" rx="8" fill="#8B5CF6" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">KafkaCluster</text>
-              </g>
-
-              {/* ServiceAccount - Right Upper */}
-              <g transform="translate(600, 160)">
-                <rect x="-80" y="-25" width="160" height="50" rx="8" fill="#10B981" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">ServiceAccount</text>
-              </g>
-
-              {/* Topic - Left Bottom */}
-              <g transform="translate(120, 340)">
-                <rect x="-55" y="-25" width="110" height="50" rx="8" fill="#F59E0B" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">Topic</text>
-              </g>
-
-              {/* ConsumerGroup - Center Bottom */}
-              <g transform="translate(450, 340)">
-                <rect x="-80" y="-25" width="160" height="50" rx="8" fill="#6B7280" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">ConsumerGroup</text>
-              </g>
-
-              {/* ACL - Right Bottom */}
-              <g transform="translate(750, 340)">
-                <rect x="-45" y="-25" width="90" height="50" rx="8" fill="#EF4444" />
-                <text x="0" y="5" textAnchor="middle" fill="white" fontWeight="bold" fontSize="14">ACL</text>
-              </g>
-
-              {/* === ARROWS WITH LABELS === */}
-
-              {/* KafkaCluster → ApplicationService (applicationServiceRef) */}
-              <line x1="190" y1="135" x2="380" y2="65" stroke="#8B5CF6" strokeWidth="2" markerEnd="url(#arrow-purple)" />
-              <text x="270" y="90" fill="#8B5CF6" fontSize="10" fontStyle="italic">applicationServiceRef</text>
-
-              {/* ServiceAccount → ApplicationService (applicationServiceRef) */}
-              <line x1="560" y1="135" x2="490" y2="65" stroke="#10B981" strokeWidth="2" markerEnd="url(#arrow-green)" />
-              <text x="540" y="90" fill="#10B981" fontSize="10" fontStyle="italic">applicationServiceRef</text>
-
-              {/* ServiceAccount → KafkaCluster (clusterRef) */}
-              <line x1="520" y1="160" x2="230" y2="160" stroke="#10B981" strokeWidth="2" markerEnd="url(#arrow-green)" />
-              <text x="375" y="152" fill="#10B981" fontSize="10" fontStyle="italic">clusterRef</text>
-
-              {/* Topic → ServiceAccount (serviceRef) */}
-              <line x1="175" y1="330" x2="520" y2="185" stroke="#F59E0B" strokeWidth="2" markerEnd="url(#arrow-orange)" />
-              <text x="320" y="240" fill="#F59E0B" fontSize="10" fontStyle="italic">serviceRef</text>
-
-              {/* Topic → ApplicationService (applicationServiceRef) - dashed */}
-              <line x1="120" y1="315" x2="380" y2="65" stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="6,3" markerEnd="url(#arrow-orange)" />
-              <text x="200" y="175" fill="#F59E0B" fontSize="9" fontStyle="italic">applicationServiceRef</text>
-
-              {/* ConsumerGroup → ServiceAccount (serviceRef) */}
-              <line x1="510" y1="315" x2="580" y2="185" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrow-gray)" />
-              <text x="560" y="255" fill="#6B7280" fontSize="10" fontStyle="italic">serviceRef</text>
-
-              {/* ConsumerGroup → ApplicationService (applicationServiceRef) - dashed */}
-              <line x1="450" y1="315" x2="450" y2="65" stroke="#6B7280" strokeWidth="1.5" strokeDasharray="6,3" markerEnd="url(#arrow-gray)" />
-              <text x="455" y="200" fill="#6B7280" fontSize="9" fontStyle="italic">applicationServiceRef</text>
-
-              {/* ACL → ServiceAccount (serviceRef) */}
-              <line x1="720" y1="315" x2="650" y2="185" stroke="#EF4444" strokeWidth="2" markerEnd="url(#arrow-red)" />
-              <text x="700" y="255" fill="#EF4444" fontSize="10" fontStyle="italic">serviceRef</text>
-
-              {/* ACL → Topic (topicRef) - optional dashed */}
-              <line x1="705" y1="350" x2="175" y2="350" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="6,3" markerEnd="url(#arrow-red)" />
-              <text x="430" y="365" fill="#EF4444" fontSize="9" fontStyle="italic">topicRef (optional)</text>
-
-              {/* ACL → ConsumerGroup (consumerGroupRef) - optional dashed */}
-              <line x1="705" y1="370" x2="530" y2="370" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="6,3" markerEnd="url(#arrow-red)" />
-              <text x="610" y="385" fill="#EF4444" fontSize="9" fontStyle="italic">consumerGroupRef (optional)</text>
-
-              {/* ACL → ApplicationService (applicationServiceRef) - dashed */}
-              <line x1="780" y1="315" x2="530" y2="65" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="6,3" markerEnd="url(#arrow-red)" />
-              <text x="680" y="175" fill="#EF4444" fontSize="9" fontStyle="italic">applicationServiceRef</text>
-
-              {/* === LEGEND === */}
-              <g transform="translate(30, 440)">
-                <text x="0" y="0" fill="#374151" fontWeight="bold" fontSize="12">Legend:</text>
-                <line x1="0" y1="20" x2="40" y2="20" stroke="#374151" strokeWidth="2" />
-                <text x="50" y="24" fill="#6B7280" fontSize="11">Required reference</text>
-                <line x1="180" y1="20" x2="220" y2="20" stroke="#374151" strokeWidth="1.5" strokeDasharray="6,3" />
-                <text x="230" y="24" fill="#6B7280" fontSize="11">Optional reference</text>
-                <text x="400" y="24" fill="#6B7280" fontSize="11">All CRDs except ApplicationService have applicationServiceRef (ownership)</text>
-              </g>
-            </svg>
-          </div>
-        </DiagramBox>
+      <Section title="CRD Reference Graph" subtitle="6 Custom Resource Definitions and their reference relationships. Pan and zoom to explore.">
+        <CRDReferenceGraph />
 
         {/* Reference Table */}
         <div className="mt-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
