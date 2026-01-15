@@ -7,8 +7,6 @@ import {
   useNodesState,
   useEdgesState,
   Handle,
-  BaseEdge,
-  EdgeLabelRenderer,
   getSmoothStepPath,
 } from '@xyflow/react'
 import dagre from 'dagre'
@@ -122,9 +120,9 @@ function CRDNode({ data }) {
   )
 }
 
-// Custom edge with visible styling and labels
-function LabeledEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }) {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+// Custom edge with visible styling
+function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }) {
+  const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -136,11 +134,9 @@ function LabeledEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, t
 
   const edgeColor = data?.color || '#6B7280'
   const isRequired = data?.required !== false
-  const label = data?.label || ''
 
   return (
     <>
-      {/* The edge path */}
       <path
         id={id}
         d={edgePath}
@@ -150,39 +146,16 @@ function LabeledEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, t
         strokeDasharray={isRequired ? undefined : '8,4'}
         style={{ pointerEvents: 'stroke' }}
       />
-      {/* Arrow marker at the end */}
       <polygon
         points={`${targetX},${targetY - 2} ${targetX - 6},${targetY - 12} ${targetX + 6},${targetY - 12}`}
         fill={edgeColor}
       />
-      {/* Edge label */}
-      <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            background: 'white',
-            padding: '3px 8px',
-            borderRadius: '4px',
-            fontSize: '10px',
-            fontWeight: 600,
-            color: edgeColor,
-            border: `1px solid ${edgeColor}`,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            pointerEvents: 'all',
-            whiteSpace: 'nowrap',
-          }}
-          className="nodrag nopan"
-        >
-          {label}
-        </div>
-      </EdgeLabelRenderer>
     </>
   )
 }
 
 const nodeTypes = { crd: CRDNode }
-const edgeTypes = { labeled: LabeledEdge }
+const edgeTypes = { labeled: CustomEdge }
 
 // Dagre layout
 function getLayoutedElements(nodes, edges) {
