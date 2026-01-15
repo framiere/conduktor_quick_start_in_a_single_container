@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "messaging-operator.webhookServiceName" . }}
+  namespace: {{ include "messaging-operator.namespace" . }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      port: 443
+      targetPort: {{ .Values.webhook.port }}
+      protocol: TCP
+  selector:
+    {{- include "messaging-operator.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: webhook

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "messaging-operator.webhookServiceName" . }}
+  namespace: {{ include "messaging-operator.namespace" . }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.webhook.replicas }}
+  selector:
+    matchLabels:
+      {{- include "messaging-operator.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: webhook
+  template:
+    metadata:
+      labels:
+        {{- include "messaging-operator.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: webhook
+    spec:
+      containers:
+        - name: webhook
+          image: "{{ .Values.webhook.image.repository }}:{{ .Values.webhook.image.tag }}"
+          imagePullPolicy: {{ .Values.webhook.image.pullPolicy }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.webhook.port }}
+              protocol: TCP
+          env:
+            - name: WEBHOOK_PORT
+              value: "{{ .Values.webhook.port }}"
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/webhook/certs
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.webhook.healthCheck.path }}
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: {{ .Values.webhook.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webhook.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.webhook.healthCheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.webhook.healthCheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.webhook.healthCheck.path }}
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: {{ .Values.webhook.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webhook.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.webhook.healthCheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.webhook.healthCheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.webhook.resources | nindent 12 }}
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.tls.secretName }}

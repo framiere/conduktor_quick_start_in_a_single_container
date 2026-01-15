@@ -57,72 +57,72 @@
 
 ## Phase 2: Helm Kubernetes Resource Templates
 
-- [ ] Create namespace template `[FUNC_02 §2.1]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/namespace.yaml with namespace resource
-    - [ ] Include standard labels from helpers
-  - [ ] **Tests:**
-    - [ ] helmTemplateNamespaceShouldRenderOperatorSystem
-  - [ ] **Metadata:**
-    - Task duration: ~2 min
+- [x] Create namespace template `[FUNC_02 §2.1]`
+  - [x] **Objectives:**
+    - [x] Create templates/namespace.yaml with namespace resource
+    - [x] Include standard labels from helpers
+  - [x] **Tests:**
+    - [x] helmTemplateNamespaceShouldRenderOperatorSystem
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: <1s
 
-- [ ] Create webhook deployment template `[FUNC_02 §2.2]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/webhook-deployment.yaml
-    - [ ] Template replicas, image, resources from values
-    - [ ] Add TLS volume mount from secret
-    - [ ] Configure liveness and readiness probes with HTTPS
-    - [ ] Set WEBHOOK_PORT environment variable
-  - [ ] **Tests:**
-    - [ ] helmTemplateDeploymentShouldHaveCorrectReplicas
-    - [ ] helmTemplateDeploymentShouldMountTlsSecret
-    - [ ] helmTemplateDeploymentShouldHaveHealthProbes
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create webhook deployment template `[FUNC_02 §2.2]`
+  - [x] **Objectives:**
+    - [x] Create templates/webhook-deployment.yaml
+    - [x] Template replicas, image, resources from values
+    - [x] Add TLS volume mount from secret
+    - [x] Configure liveness and readiness probes with HTTPS
+    - [x] Set WEBHOOK_PORT environment variable
+  - [x] **Tests:**
+    - [x] helmTemplateDeploymentShouldHaveCorrectReplicas
+    - [x] helmTemplateDeploymentShouldMountTlsSecret
+    - [x] helmTemplateDeploymentShouldHaveHealthProbes
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use scheme: HTTPS for probes when container serves TLS
 
-- [ ] Create webhook service template `[FUNC_02 §2.3]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/webhook-service.yaml with ClusterIP type
-    - [ ] Map port 443 to targetPort 8443
-    - [ ] Use selector labels from helpers
-  - [ ] **Tests:**
-    - [ ] helmTemplateServiceShouldExposePort443
-  - [ ] **Metadata:**
-    - Task duration: ~2 min
+- [x] Create webhook service template `[FUNC_02 §2.3]`
+  - [x] **Objectives:**
+    - [x] Create templates/webhook-service.yaml with ClusterIP type
+    - [x] Map port 443 to targetPort 8443
+    - [x] Use selector labels from helpers
+  - [x] **Tests:**
+    - [x] helmTemplateServiceShouldExposePort443
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: <1s
 
-- [ ] Create TLS secret template `[FUNC_02 §2.4]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/tls-secret.yaml with conditional logic
-    - [ ] When tls.generate=true, create placeholder (replaced by script)
-    - [ ] When tls.generate=false, require tls.cert, tls.key, tls.caCert
-    - [ ] Set type: kubernetes.io/tls
-  - [ ] **Tests:**
-    - [ ] helmTemplateTlsSecretShouldRequireCertsWhenGenerateFalse
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create TLS secret template `[FUNC_02 §2.4]`
+  - [x] **Objectives:**
+    - [x] Create templates/tls-secret.yaml with conditional logic
+    - [x] When tls.generate=true, create placeholder (replaced by script)
+    - [x] When tls.generate=false, require tls.cert, tls.key, tls.caCert
+    - [x] Set type: kubernetes.io/tls
+  - [x] **Tests:**
+    - [x] helmTemplateTlsSecretShouldRequireCertsWhenGenerateFalse
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use Helm `required` function for mandatory values
 
-- [ ] Create ValidatingWebhookConfiguration template `[FUNC_02 §2.5]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/webhook-config.yaml
-    - [ ] Loop over webhookConfig.resources to generate webhook entries
-    - [ ] Configure rules for CREATE, UPDATE, DELETE operations
-    - [ ] Set failurePolicy and timeoutSeconds from values
-    - [ ] Add caBundle placeholder for script injection
-  - [ ] **Tests:**
-    - [ ] helmTemplateWebhookConfigShouldHave5Webhooks
-    - [ ] helmTemplateWebhookConfigShouldHaveFailurePolicyFail
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create ValidatingWebhookConfiguration template `[FUNC_02 §2.5]`
+  - [x] **Objectives:**
+    - [x] Create templates/webhook-config.yaml
+    - [x] Loop over webhookConfig.resources to generate webhook entries
+    - [x] Configure rules for CREATE, UPDATE, DELETE operations
+    - [x] Set failurePolicy and timeoutSeconds from values
+    - [x] Add caBundle placeholder for script injection
+  - [x] **Tests:**
+    - [x] helmTemplateWebhookConfigShouldHave5Webhooks
+    - [x] helmTemplateWebhookConfigShouldHaveFailurePolicyFail
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - ValidatingWebhookConfiguration is cluster-scoped (no namespace)
 
 ---
