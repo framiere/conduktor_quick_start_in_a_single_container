@@ -129,92 +129,92 @@
 
 ## Phase 3: CRD Templates
 
-- [ ] Create ApplicationService CRD `[FUNC_03 §3.1]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/applicationservice.yaml
-    - [ ] Define spec.name as required string field
-    - [ ] Add status subresource with phase and message
-    - [ ] Set scope: Namespaced with shortName appsvc
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdApplicationservicesShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create ApplicationService CRD `[FUNC_03 §3.1]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/applicationservice.yaml
+    - [x] Define spec.name as required string field
+    - [x] Add status subresource with phase and message
+    - [x] Set scope: Namespaced with shortName appsvc
+  - [x] **Tests:**
+    - [x] kubectlGetCrdApplicationservicesShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A (tested during deployment)
 
-- [ ] Create VirtualCluster CRD `[FUNC_03 §3.2]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/virtualcluster.yaml
-    - [ ] Define spec.clusterId and spec.applicationServiceRef as required
-    - [ ] Add status subresource
-    - [ ] Set shortName vc
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdVirtualclustersShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create VirtualCluster CRD `[FUNC_03 §3.2]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/virtualcluster.yaml
+    - [x] Define spec.clusterId and spec.applicationServiceRef as required
+    - [x] Add status subresource
+    - [x] Set shortName vc
+  - [x] **Tests:**
+    - [x] kubectlGetCrdVirtualclustersShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create ServiceAccount CRD `[FUNC_03 §3.3]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/serviceaccount.yaml
-    - [ ] Define spec.name, spec.dn (array), spec.clusterRef, spec.applicationServiceRef
-    - [ ] Add status subresource
-    - [ ] Set shortName sa
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdServiceaccountsShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create ServiceAccount CRD `[FUNC_03 §3.3]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/serviceaccount.yaml
+    - [x] Define spec.name, spec.dn (array), spec.clusterRef, spec.applicationServiceRef
+    - [x] Add status subresource
+    - [x] Set shortName sa
+  - [x] **Tests:**
+    - [x] kubectlGetCrdServiceaccountsShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create Topic CRD `[FUNC_03 §3.4]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/topic.yaml
-    - [ ] Define spec.name, spec.serviceRef, spec.applicationServiceRef as required
-    - [ ] Add spec.partitions (default 6), spec.replicationFactor (default 3)
-    - [ ] Add spec.config as additionalProperties map
-    - [ ] Add status subresource
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdTopicsShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~4 min
+- [x] Create Topic CRD `[FUNC_03 §3.4]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/topic.yaml
+    - [x] Define spec.name, spec.serviceRef, spec.applicationServiceRef as required
+    - [x] Add spec.partitions (default 6), spec.replicationFactor (default 3)
+    - [x] Add spec.config as additionalProperties map
+    - [x] Add status subresource
+  - [x] **Tests:**
+    - [x] kubectlGetCrdTopicsShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create ACL CRD `[FUNC_03 §3.5]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/acl.yaml
-    - [ ] Define spec.serviceRef, spec.applicationServiceRef as required
-    - [ ] Add spec.topicRef, spec.consumerGroupRef as optional
-    - [ ] Add spec.operations array with enum validation
-    - [ ] Add spec.host (default "*"), spec.permission (enum ALLOW/DENY)
-    - [ ] Add status subresource
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdAclsShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~4 min
+- [x] Create ACL CRD `[FUNC_03 §3.5]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/acl.yaml
+    - [x] Define spec.serviceRef, spec.applicationServiceRef as required
+    - [x] Add spec.topicRef, spec.consumerGroupRef as optional
+    - [x] Add spec.operations array with enum validation
+    - [x] Add spec.host (default "*"), spec.permission (enum ALLOW/DENY)
+    - [x] Add status subresource
+  - [x] **Tests:**
+    - [x] kubectlGetCrdAclsShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create ConsumerGroup CRD `[FUNC_03 §3.6]`
-  - [ ] **Objectives:**
-    - [ ] Create templates/crds/consumergroup.yaml
-    - [ ] Define spec.name, spec.serviceRef, spec.applicationServiceRef as required
-    - [ ] Add spec.patternType enum (LITERAL, PREFIXED) with default LITERAL
-    - [ ] Add status subresource
-    - [ ] Set shortName cg
-  - [ ] **Tests:**
-    - [ ] kubectlGetCrdConsumergroupsShouldExist
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create ConsumerGroup CRD `[FUNC_03 §3.6]`
+  - [x] **Objectives:**
+    - [x] Create templates/crds/consumergroup.yaml
+    - [x] Define spec.name, spec.serviceRef, spec.applicationServiceRef as required
+    - [x] Add spec.patternType enum (LITERAL, PREFIXED) with default LITERAL
+    - [x] Add status subresource
+    - [x] Set shortName cg
+  - [x] **Tests:**
+    - [x] kubectlGetCrdConsumergroupsShouldExist
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create Helm test pod `[FUNC_03 §3.7]`
-  - [ ] **Objectives:**
-    - [ ] Create tests/test-webhook-health.yaml
-    - [ ] Use busybox wget to check webhook health endpoint
-    - [ ] Add helm.sh/hook: test annotation
-    - [ ] Add hook-delete-policy: hook-succeeded
-  - [ ] **Tests:**
-    - [ ] helmTestShouldPassAfterDeployment
-  - [ ] **Metadata:**
-    - Task duration: ~2 min
+- [x] Create Helm test pod `[FUNC_03 §3.7]`
+  - [x] **Objectives:**
+    - [x] Create tests/test-webhook-health.yaml
+    - [x] Use busybox wget to check webhook health endpoint
+    - [x] Add helm.sh/hook: test annotation
+    - [x] Add hook-delete-policy: hook-succeeded
+  - [x] **Tests:**
+    - [x] helmTestShouldPassAfterDeployment
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
 ---

@@ -1,0 +1,82 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: acls.{{ .Values.apiGroup }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+spec:
+  group: {{ .Values.apiGroup }}
+  names:
+    kind: ACL
+    plural: acls
+    singular: acl
+  scope: Namespaced
+  versions:
+    - name: {{ .Values.apiVersion }}
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - serviceRef
+                - applicationServiceRef
+                - operations
+              properties:
+                serviceRef:
+                  type: string
+                  description: Reference to ServiceAccount CR
+                applicationServiceRef:
+                  type: string
+                  description: Reference to ApplicationService CR
+                topicRef:
+                  type: string
+                  description: Reference to Topic CR (mutually exclusive with consumerGroupRef)
+                consumerGroupRef:
+                  type: string
+                  description: Reference to ConsumerGroup CR (mutually exclusive with topicRef)
+                operations:
+                  type: array
+                  description: Kafka operations (READ, WRITE, DESCRIBE, etc.)
+                  items:
+                    type: string
+                    enum:
+                      - ALL
+                      - ALTER
+                      - ALTER_CONFIGS
+                      - CLUSTER_ACTION
+                      - CREATE
+                      - CREATE_TOKENS
+                      - DELETE
+                      - DESCRIBE
+                      - DESCRIBE_CONFIGS
+                      - DESCRIBE_TOKENS
+                      - IDEMPOTENT_WRITE
+                      - READ
+                      - UNKNOWN
+                      - WRITE
+                host:
+                  type: string
+                  description: Host from which operations are allowed
+                  default: "*"
+                permission:
+                  type: string
+                  description: Permission type (ALLOW or DENY)
+                  enum:
+                    - ALLOW
+                    - DENY
+                  default: ALLOW
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  description: Current phase of the resource
+                message:
+                  type: string
+                  description: Status message
+      subresources:
+        status: {}
