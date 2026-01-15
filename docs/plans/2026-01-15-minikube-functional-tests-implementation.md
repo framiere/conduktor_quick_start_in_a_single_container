@@ -39,18 +39,19 @@
   - [x] **Learning:**
     - Use pullPolicy: Never in Minikube to use locally-built images
 
-- [ ] Create Helm template helpers `[FUNC_01 §1.3]`
-  - [ ] **Objectives:**
-    - [ ] Create _helpers.tpl with name, fullname, labels, selectorLabels functions
-    - [ ] Add chart label helper for helm.sh/chart annotation
-    - [ ] Add webhookServiceName and namespace helpers
-  - [ ] **Tests:**
-    - [ ] helmTemplateShouldRenderLabelsCorrectly
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create Helm template helpers `[FUNC_01 §1.3]`
+  - [x] **Objectives:**
+    - [x] Create _helpers.tpl with name, fullname, labels, selectorLabels functions
+    - [x] Add chart label helper for helm.sh/chart annotation
+    - [x] Add webhookServiceName and namespace helpers
+  - [x] **Tests:**
+    - [x] helmTemplateShouldRenderLabelsCorrectly
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use nindent for proper YAML indentation in templates
+    - Added webhookServiceFQDN and webhookServiceFullFQDN for TLS SAN
 
 ---
 
