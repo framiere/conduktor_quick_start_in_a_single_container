@@ -76,19 +76,34 @@ public class WebhookValidator {
         }
     }
 
+    /**
+     * Validates DELETE requests. Resource must exist and be well-formed.
+     * Authorization is delegated to Kubernetes RBAC.
+     * TODO: Map K8s user to ApplicationService for ownership-based delete authorization.
+     */
     private <T> AdmissionResponse validateDelete(AdmissionRequest request, Class<T> resourceClass) {
         try {
+            if (request.getOldObject() == null) {
+                return denied(request.getUid(), "Resource not found");
+            }
+
             T resource = objectMapper.convertValue(request.getOldObject(), resourceClass);
+            if (resource == null) {
+                return denied(request.getUid(), "Failed to parse resource");
+            }
 
-            String requestingUser = request.getUserInfo() != null ? request.getUserInfo().getUsername() : "unknown";
+            String requestingUser = request.getUserInfo() != null
+                    ? request.getUserInfo().getUsername()
+                    : "unknown";
 
-            log.info("DELETE request for {}/{} by user {}", request.getNamespace(), request.getName(), requestingUser);
+            log.info("DELETE approved for {}/{} by user {} (auth delegated to K8s RBAC)",
+                    request.getNamespace(), request.getName(), requestingUser);
 
             return allowed(request.getUid());
 
         } catch (Exception e) {
             log.error("Error validating DELETE for {}/{}: {}", request.getNamespace(), request.getName(), e.getMessage());
-            return denied(request.getUid(), "Failed to validate delete: " + e.getMessage());
+            return denied(request.getUid(), "Failed to validate delete");
         }
     }
 }

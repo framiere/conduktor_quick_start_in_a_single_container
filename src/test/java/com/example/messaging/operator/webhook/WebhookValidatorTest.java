@@ -207,4 +207,51 @@ class WebhookValidatorTest {
         assertThat(response.isAllowed()).isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
+
+    @Test
+    @DisplayName("should allow DELETE for valid resource")
+    void testAllowDeleteValidResource() {
+        Topic topic = new Topic();
+        topic.setMetadata(new ObjectMeta());
+        topic.getMetadata().setName("test-topic");
+        topic.getMetadata().setNamespace("default");
+        TopicCRSpec spec = new TopicCRSpec();
+        spec.setApplicationServiceRef("app-service-1");
+        spec.setServiceRef("sa-1");
+        spec.setName("test.topic");
+        spec.setPartitions(3);
+        spec.setReplicationFactor(3);
+        topic.setSpec(spec);
+
+        AdmissionRequest request = new AdmissionRequest();
+        request.setUid("test-uid-delete");
+        request.setOperation("DELETE");
+        request.setNamespace("default");
+        request.setName("test-topic");
+        request.setOldObject(mapper.convertValue(topic, Map.class));
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUsername("test-user");
+        request.setUserInfo(userInfo);
+
+        AdmissionResponse response = validator.validate(request, Topic.class);
+
+        assertThat(response.isAllowed()).isTrue();
+        assertThat(response.getUid()).isEqualTo("test-uid-delete");
+    }
+
+    @Test
+    @DisplayName("should deny DELETE when resource not found")
+    void testDenyDeleteNullResource() {
+        AdmissionRequest request = new AdmissionRequest();
+        request.setUid("test-uid-delete-null");
+        request.setOperation("DELETE");
+        request.setNamespace("default");
+        request.setName("missing-topic");
+        request.setOldObject(null);
+
+        AdmissionResponse response = validator.validate(request, Topic.class);
+
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Resource not found");
+    }
 }
