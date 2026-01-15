@@ -72,8 +72,15 @@ const crdDefinitions = [
   },
 ]
 
-// Custom node with connection handles
+// Custom node with 3 connection handles on each side (top and bottom)
 function CRDNode({ data }) {
+  const handleStyle = {
+    width: 8,
+    height: 8,
+    background: data.color,
+    border: '2px solid white',
+  }
+
   return (
     <div
       style={{
@@ -86,17 +93,10 @@ function CRDNode({ data }) {
         position: 'relative',
       }}
     >
-      {/* Target handle (top) - where edges come IN */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{
-          background: data.color,
-          width: 10,
-          height: 10,
-          border: '2px solid white',
-        }}
-      />
+      {/* Target handles (top) - where edges come IN */}
+      <Handle type="target" position={Position.Top} id="top-left" style={{ ...handleStyle, left: '20%' }} />
+      <Handle type="target" position={Position.Top} id="top-center" style={{ ...handleStyle, left: '50%' }} />
+      <Handle type="target" position={Position.Top} id="top-right" style={{ ...handleStyle, left: '80%' }} />
 
       <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>
         {data.label}
@@ -105,17 +105,10 @@ function CRDNode({ data }) {
         {data.description}
       </div>
 
-      {/* Source handle (bottom) - where edges go OUT */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{
-          background: data.color,
-          width: 10,
-          height: 10,
-          border: '2px solid white',
-        }}
-      />
+      {/* Source handles (bottom) - where edges go OUT */}
+      <Handle type="source" position={Position.Bottom} id="bottom-left" style={{ ...handleStyle, left: '20%' }} />
+      <Handle type="source" position={Position.Bottom} id="bottom-center" style={{ ...handleStyle, left: '50%' }} />
+      <Handle type="source" position={Position.Bottom} id="bottom-right" style={{ ...handleStyle, left: '80%' }} />
     </div>
   )
 }
@@ -157,11 +150,68 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
 const nodeTypes = { crd: CRDNode }
 const edgeTypes = { labeled: CustomEdge }
 
-// Dagre layout
+// Assign handles to edges based on node positions to distribute connections
+function assignHandlesToEdges(edges, nodePositions) {
+  const result = edges.map((e) => ({ ...e }))
+
+  // Group edges by target node and assign target handles
+  const byTarget = {}
+  result.forEach((edge) => {
+    if (!byTarget[edge.target]) byTarget[edge.target] = []
+    byTarget[edge.target].push(edge)
+  })
+
+  Object.values(byTarget).forEach((targetEdges) => {
+    // Sort by source node x position (left to right)
+    targetEdges.sort((a, b) => nodePositions[a.source].x - nodePositions[b.source].x)
+    const handles = ['top-left', 'top-center', 'top-right']
+    const n = targetEdges.length
+    targetEdges.forEach((edge, i) => {
+      if (n === 1) {
+        edge.targetHandle = 'top-center'
+      } else if (n === 2) {
+        edge.targetHandle = i === 0 ? 'top-left' : 'top-right'
+      } else {
+        // Distribute evenly across 3 handles
+        const idx = Math.min(Math.floor((i * 3) / n), 2)
+        edge.targetHandle = handles[idx]
+      }
+    })
+  })
+
+  // Group edges by source node and assign source handles
+  const bySource = {}
+  result.forEach((edge) => {
+    if (!bySource[edge.source]) bySource[edge.source] = []
+    bySource[edge.source].push(edge)
+  })
+
+  Object.values(bySource).forEach((sourceEdges) => {
+    // Sort by target node x position (left to right)
+    sourceEdges.sort((a, b) => nodePositions[a.target].x - nodePositions[b.target].x)
+    const handles = ['bottom-left', 'bottom-center', 'bottom-right']
+    const n = sourceEdges.length
+    sourceEdges.forEach((edge, i) => {
+      if (n === 1) {
+        edge.sourceHandle = 'bottom-center'
+      } else if (n === 2) {
+        edge.sourceHandle = i === 0 ? 'bottom-left' : 'bottom-right'
+      } else {
+        // Distribute evenly across 3 handles
+        const idx = Math.min(Math.floor((i * 3) / n), 2)
+        edge.sourceHandle = handles[idx]
+      }
+    })
+  })
+
+  return result
+}
+
+// Dagre layout with handle assignment
 function getLayoutedElements(nodes, edges) {
   const g = new dagre.graphlib.Graph()
   g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({ rankdir: 'TB', nodesep: 80, ranksep: 100, marginx: 40, marginy: 40 })
+  g.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 120, marginx: 40, marginy: 40 })
 
   const nodeWidth = 180
   const nodeHeight = 65
@@ -171,27 +221,36 @@ function getLayoutedElements(nodes, edges) {
 
   dagre.layout(g)
 
+  // Build position map
+  const nodePositions = {}
   const layoutedNodes = nodes.map((node) => {
     const pos = g.node(node.id)
+    const position = { x: pos.x - nodeWidth / 2, y: pos.y - nodeHeight / 2 }
+    nodePositions[node.id] = position
     return {
       ...node,
-      position: { x: pos.x - nodeWidth / 2, y: pos.y - nodeHeight / 2 },
+      position,
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
     }
   })
 
-  return { nodes: layoutedNodes, edges }
+  // Assign handles to edges based on positions
+  const layoutedEdges = assignHandlesToEdges(edges, nodePositions)
+
+  return { nodes: layoutedNodes, edges: layoutedEdges }
 }
 
 export default function CRDReferenceGraph() {
-  const initialNodes = useMemo(() =>
-    crdDefinitions.map((crd) => ({
-      id: crd.id,
-      type: 'crd',
-      data: { label: crd.label, color: crd.color, description: crd.description },
-      position: { x: 0, y: 0 },
-    })), []
+  const initialNodes = useMemo(
+    () =>
+      crdDefinitions.map((crd) => ({
+        id: crd.id,
+        type: 'crd',
+        data: { label: crd.label, color: crd.color, description: crd.description },
+        position: { x: 0, y: 0 },
+      })),
+    []
   )
 
   const initialEdges = useMemo(() => {
@@ -219,7 +278,16 @@ export default function CRDReferenceGraph() {
   const [edges, , onEdgesChange] = useEdgesState(layoutedEdges)
 
   return (
-    <div style={{ width: '100%', height: '650px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative' }}>
+    <div
+      style={{
+        width: '100%',
+        height: '650px',
+        background: '#f8fafc',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        position: 'relative',
+      }}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -239,25 +307,31 @@ export default function CRDReferenceGraph() {
       </ReactFlow>
 
       {/* Legend */}
-      <div style={{
-        position: 'absolute',
-        bottom: 16,
-        left: 16,
-        background: 'white',
-        borderRadius: '8px',
-        padding: '12px 16px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        border: '1px solid #e2e8f0',
-        zIndex: 10,
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          left: 16,
+          background: 'white',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '1px solid #e2e8f0',
+          zIndex: 10,
+        }}
+      >
         <div style={{ fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: 8 }}>Legend</div>
         <div style={{ display: 'flex', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="30" height="4"><line x1="0" y1="2" x2="30" y2="2" stroke="#3B82F6" strokeWidth="3"/></svg>
+            <svg width="30" height="4">
+              <line x1="0" y1="2" x2="30" y2="2" stroke="#3B82F6" strokeWidth="3" />
+            </svg>
             <span style={{ fontSize: '11px', color: '#64748b' }}>Required</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="30" height="4"><line x1="0" y1="2" x2="30" y2="2" stroke="#94a3b8" strokeWidth="2" strokeDasharray="6,3"/></svg>
+            <svg width="30" height="4">
+              <line x1="0" y1="2" x2="30" y2="2" stroke="#94a3b8" strokeWidth="2" strokeDasharray="6,3" />
+            </svg>
             <span style={{ fontSize: '11px', color: '#64748b' }}>Optional</span>
           </div>
         </div>
