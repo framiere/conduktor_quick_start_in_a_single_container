@@ -217,7 +217,10 @@ function getLayoutedElements(nodes, edges) {
   const nodeHeight = 65
 
   nodes.forEach((node) => g.setNode(node.id, { width: nodeWidth, height: nodeHeight }))
-  edges.forEach((edge) => g.setEdge(edge.source, edge.target))
+  // Reverse edge direction for layout: parent nodes should be above children
+  // Our edges go child→parent, but dagre places sources above targets
+  // So we flip: target→source for layout, keeping visual edges unchanged
+  edges.forEach((edge) => g.setEdge(edge.target, edge.source))
 
   dagre.layout(g)
 
