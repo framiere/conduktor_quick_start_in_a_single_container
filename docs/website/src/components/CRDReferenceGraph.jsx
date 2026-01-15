@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import {
   ReactFlow,
   Background,
@@ -7,6 +7,9 @@ import {
   Position,
   useNodesState,
   useEdgesState,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
 } from '@xyflow/react'
 import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
@@ -75,20 +78,95 @@ const crdDefinitions = [
 function CRDNode({ data }) {
   return (
     <div
-      className="px-4 py-3 rounded-lg shadow-lg border-2 min-w-[160px]"
       style={{
+        padding: '12px 16px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: `2px solid ${data.color}`,
         backgroundColor: data.color,
-        borderColor: data.color,
+        minWidth: '160px',
       }}
     >
-      <div className="text-white font-bold text-sm text-center">{data.label}</div>
-      <div className="text-white/70 text-xs text-center mt-1">{data.description}</div>
+      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>
+        {data.label}
+      </div>
+      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
+        {data.description}
+      </div>
     </div>
+  )
+}
+
+// Custom edge with visible styling
+function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style }) {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 16,
+  })
+
+  const edgeColor = data?.color || '#6B7280'
+  const isRequired = data?.required !== false
+  const label = data?.label || ''
+
+  return (
+    <>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          stroke: edgeColor,
+          strokeWidth: isRequired ? 3 : 2,
+          strokeDasharray: isRequired ? undefined : '8,4',
+          ...style,
+        }}
+        markerEnd={`url(#arrow-${id})`}
+      />
+      <defs>
+        <marker
+          id={`arrow-${id}`}
+          markerWidth="12"
+          markerHeight="12"
+          refX="10"
+          refY="6"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path d="M0,0 L0,12 L12,6 z" fill={edgeColor} />
+        </marker>
+      </defs>
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            background: 'white',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontSize: '10px',
+            fontWeight: 500,
+            color: edgeColor,
+            border: `1px solid ${edgeColor}`,
+            pointerEvents: 'all',
+          }}
+        >
+          {label}
+        </div>
+      </EdgeLabelRenderer>
+    </>
   )
 }
 
 const nodeTypes = {
   crd: CRDNode,
+}
+
+const edgeTypes = {
+  custom: CustomEdge,
 }
 
 // Use dagre for automatic hierarchical layout
@@ -100,9 +178,9 @@ function getLayoutedElements(nodes, edges) {
   const nodeHeight = 70
 
   dagreGraph.setGraph({
-    rankdir: 'TB', // Top to bottom
-    nodesep: 80,
-    ranksep: 100,
+    rankdir: 'TB',
+    nodesep: 100,
+    ranksep: 120,
     marginx: 50,
     marginy: 50,
   })
@@ -134,7 +212,6 @@ function getLayoutedElements(nodes, edges) {
 }
 
 export default function CRDReferenceGraph() {
-  // Build initial nodes from definitions
   const initialNodes = useMemo(() =>
     crdDefinitions.map((crd) => ({
       id: crd.id,
@@ -148,7 +225,6 @@ export default function CRDReferenceGraph() {
     })), []
   )
 
-  // Build edges from reference definitions
   const initialEdges = useMemo(() => {
     const edges = []
     crdDefinitions.forEach((crd) => {
@@ -157,30 +233,11 @@ export default function CRDReferenceGraph() {
           id: `${crd.id}-${ref.target}-${index}`,
           source: crd.id,
           target: ref.target,
-          label: ref.label,
-          type: 'smoothstep',
-          animated: !ref.required,
-          style: {
-            stroke: ref.required ? crd.color : '#9CA3AF',
-            strokeWidth: ref.required ? 2 : 1.5,
-            strokeDasharray: ref.required ? undefined : '5,5',
-          },
-          labelStyle: {
-            fill: ref.required ? crd.color : '#6B7280',
-            fontSize: 10,
-            fontWeight: 500,
-          },
-          labelBgStyle: {
-            fill: 'white',
-            fillOpacity: 0.9,
-          },
-          labelBgPadding: [4, 2],
-          labelBgBorderRadius: 4,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: ref.required ? crd.color : '#9CA3AF',
-            width: 20,
-            height: 20,
+          type: 'custom',
+          data: {
+            label: ref.label,
+            color: crd.color,
+            required: ref.required,
           },
         })
       })
@@ -188,50 +245,58 @@ export default function CRDReferenceGraph() {
     return edges
   }, [])
 
-  // Apply dagre layout
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
     () => getLayoutedElements(initialNodes, initialEdges),
     [initialNodes, initialEdges]
   )
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
+  const [nodes, , onNodesChange] = useNodesState(layoutedNodes)
+  const [edges, , onEdgesChange] = useEdgesState(layoutedEdges)
 
   return (
-    <div className="w-full h-[600px] bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+    <div style={{ width: '100%', height: '600px', background: '#f9fafb', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', position: 'relative' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.3 }}
         minZoom={0.5}
         maxZoom={1.5}
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-        }}
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#d1d5db" gap={20} size={1} />
-        <Controls
-          className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg"
-          showInteractive={false}
-        />
+        <Controls showInteractive={false} />
       </ReactFlow>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-900 rounded-lg px-4 py-3 shadow-lg border border-gray-200 dark:border-gray-700">
-        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Legend</div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-0.5 bg-blue-500"></div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Required ref</span>
+      <div style={{
+        position: 'absolute',
+        bottom: '16px',
+        left: '16px',
+        background: 'white',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e5e7eb',
+        zIndex: 10,
+      }}>
+        <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Legend</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="32" height="3">
+              <line x1="0" y1="1.5" x2="32" y2="1.5" stroke="#3B82F6" strokeWidth="3" />
+            </svg>
+            <span style={{ fontSize: '11px', color: '#6b7280' }}>Required ref</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-0.5 bg-gray-400 border-dashed" style={{ borderTop: '2px dashed #9CA3AF' }}></div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Optional ref</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="32" height="3">
+              <line x1="0" y1="1.5" x2="32" y2="1.5" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="6,3" />
+            </svg>
+            <span style={{ fontSize: '11px', color: '#6b7280' }}>Optional ref</span>
           </div>
         </div>
       </div>
