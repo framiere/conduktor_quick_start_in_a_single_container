@@ -70,85 +70,148 @@ export default function ArchitecturePage() {
         </CardGrid>
       </Section>
 
-      {/* CRD Hierarchy */}
-      <Section title="CRD Hierarchy" subtitle="6 Custom Resource Definitions with strict ownership chain">
-        <DiagramBox title="Resource Ownership Tree">
-          <div className="py-8">
-            {/* Root Level */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <DiagramNode color="blue" className="px-8">
+      {/* CRD References */}
+      <Section title="CRD Reference Graph" subtitle="6 Custom Resource Definitions and their reference relationships">
+        <DiagramBox title="CRD References">
+          <div className="py-6">
+            {/* Graph layout with SVG arrows */}
+            <div className="relative min-h-[400px]">
+              {/* ApplicationService - Top Center */}
+              <div className="absolute left-1/2 top-0 -translate-x-1/2">
+                <DiagramNode color="blue" className="px-6">
                   <div className="font-bold">ApplicationService</div>
-                  <div className="text-xs opacity-70 mt-1">Root resource - no parent</div>
+                  <div className="text-xs opacity-70 mt-1">Root (no refs)</div>
                 </DiagramNode>
               </div>
-            </div>
 
-            {/* Connector lines */}
-            <div className="flex justify-center mb-2">
-              <div className="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
-            </div>
-            <div className="flex justify-center mb-2">
-              <div className="w-64 border-t-2 border-gray-300 dark:border-gray-600"></div>
-            </div>
-
-            {/* Level 2 */}
-            <div className="flex justify-center gap-16 mb-6">
-              <div className="flex flex-col items-center">
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
+              {/* KafkaCluster - Left */}
+              <div className="absolute left-[15%] top-[120px]">
                 <DiagramNode color="purple">
                   <div className="font-bold">KafkaCluster</div>
-                  <div className="text-xs opacity-70 mt-1">Owned by AppService</div>
+                  <div className="text-xs opacity-70 mt-1">applicationServiceRef</div>
                 </DiagramNode>
               </div>
-              <div className="flex flex-col items-center">
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
+
+              {/* ServiceAccount - Center */}
+              <div className="absolute left-1/2 top-[120px] -translate-x-1/2">
                 <DiagramNode color="green">
                   <div className="font-bold">ServiceAccount</div>
-                  <div className="text-xs opacity-70 mt-1">Refs KafkaCluster</div>
+                  <div className="text-xs opacity-70 mt-1">clusterRef, applicationServiceRef</div>
                 </DiagramNode>
               </div>
-            </div>
 
-            {/* Connector to Level 3 */}
-            <div className="flex justify-center mb-2">
-              <div className="ml-32 w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
-            </div>
-            <div className="flex justify-center mb-2 ml-32">
-              <div className="w-80 border-t-2 border-gray-300 dark:border-gray-600"></div>
-            </div>
-
-            {/* Level 3 */}
-            <div className="flex justify-center gap-8">
-              <div className="flex flex-col items-center">
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
+              {/* Topic - Left Bottom */}
+              <div className="absolute left-[10%] top-[260px]">
                 <DiagramNode color="orange">
                   <div className="font-bold">Topic</div>
-                  <div className="text-xs opacity-70 mt-1">Refs ServiceAccount</div>
+                  <div className="text-xs opacity-70 mt-1">serviceRef, applicationServiceRef</div>
                 </DiagramNode>
               </div>
-              <div className="flex flex-col items-center">
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
-                <DiagramNode color="red">
-                  <div className="font-bold">ACL</div>
-                  <div className="text-xs opacity-70 mt-1">Refs SA + Topic/CG</div>
-                </DiagramNode>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
+
+              {/* ConsumerGroup - Center Bottom */}
+              <div className="absolute left-1/2 top-[260px] -translate-x-1/2">
                 <DiagramNode color="gray">
                   <div className="font-bold">ConsumerGroup</div>
-                  <div className="text-xs opacity-70 mt-1">Refs ServiceAccount</div>
+                  <div className="text-xs opacity-70 mt-1">serviceRef, applicationServiceRef</div>
                 </DiagramNode>
               </div>
+
+              {/* ACL - Right Bottom */}
+              <div className="absolute right-[10%] top-[260px]">
+                <DiagramNode color="red">
+                  <div className="font-bold">ACL</div>
+                  <div className="text-xs opacity-70 mt-1">serviceRef, topicRef?, consumerGroupRef?</div>
+                </DiagramNode>
+              </div>
+
+              {/* SVG Arrows */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{zIndex: -1}}>
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
+                  </marker>
+                </defs>
+
+                {/* KafkaCluster → ApplicationService */}
+                <line x1="18%" y1="120" x2="42%" y2="50" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* ServiceAccount → ApplicationService */}
+                <line x1="50%" y1="120" x2="50%" y2="50" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* ServiceAccount → KafkaCluster */}
+                <line x1="42%" y1="140" x2="28%" y2="150" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* Topic → ServiceAccount */}
+                <line x1="18%" y1="260" x2="42%" y2="180" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* Topic → ApplicationService (dashed - all have this) */}
+                <line x1="12%" y1="260" x2="45%" y2="50" stroke="#6B7280" strokeWidth="1" strokeDasharray="4" markerEnd="url(#arrowhead)" />
+
+                {/* ConsumerGroup → ServiceAccount */}
+                <line x1="50%" y1="260" x2="50%" y2="180" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* ACL → ServiceAccount */}
+                <line x1="82%" y1="260" x2="58%" y2="180" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead)" />
+
+                {/* ACL → Topic (optional) */}
+                <line x1="75%" y1="280" x2="25%" y2="280" stroke="#6B7280" strokeWidth="1" strokeDasharray="4" markerEnd="url(#arrowhead)" />
+
+                {/* ACL → ConsumerGroup (optional) */}
+                <line x1="78%" y1="295" x2="58%" y2="295" stroke="#6B7280" strokeWidth="1" strokeDasharray="4" markerEnd="url(#arrowhead)" />
+              </svg>
             </div>
           </div>
         </DiagramBox>
 
+        {/* Reference Table */}
+        <div className="mt-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold">CRD</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">References</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Points To</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+              <tr>
+                <td className="px-6 py-3 font-medium">ApplicationService</td>
+                <td className="px-6 py-3 text-gray-500">—</td>
+                <td className="px-6 py-3 text-gray-500">Root resource</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">KafkaCluster</td>
+                <td className="px-6 py-3"><code className="text-sm">applicationServiceRef</code></td>
+                <td className="px-6 py-3">ApplicationService</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">ServiceAccount</td>
+                <td className="px-6 py-3"><code className="text-sm">clusterRef</code>, <code className="text-sm">applicationServiceRef</code></td>
+                <td className="px-6 py-3">KafkaCluster, ApplicationService</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">Topic</td>
+                <td className="px-6 py-3"><code className="text-sm">serviceRef</code>, <code className="text-sm">applicationServiceRef</code></td>
+                <td className="px-6 py-3">ServiceAccount, ApplicationService</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">ConsumerGroup</td>
+                <td className="px-6 py-3"><code className="text-sm">serviceRef</code>, <code className="text-sm">applicationServiceRef</code></td>
+                <td className="px-6 py-3">ServiceAccount, ApplicationService</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">ACL</td>
+                <td className="px-6 py-3"><code className="text-sm">serviceRef</code>, <code className="text-sm">topicRef?</code>, <code className="text-sm">consumerGroupRef?</code></td>
+                <td className="px-6 py-3">ServiceAccount, Topic (opt), ConsumerGroup (opt)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Key Rule:</strong> All resources in a hierarchy must reference the same ApplicationService.
-            This is enforced by the ValidatingWebhook at admission time, preventing cross-tenant access.
+            <strong>Validation Rule:</strong> All referenced resources must exist and belong to the same <code>applicationServiceRef</code>.
+            The ValidatingWebhook enforces this at admission time, preventing cross-tenant access.
           </p>
         </div>
       </Section>
