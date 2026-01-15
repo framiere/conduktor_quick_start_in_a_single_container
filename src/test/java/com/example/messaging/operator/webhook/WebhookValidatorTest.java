@@ -66,10 +66,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, Topic.class);
 
-        assertThat(response.isAllowed())
-                .isTrue();
-        assertThat(response.getUid())
-                .isEqualTo("test-uid");
+        assertThat(response.isAllowed()).isTrue();
+        assertThat(response.getUid()).isEqualTo("test-uid");
     }
 
     @Test
@@ -109,12 +107,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, Topic.class);
 
-        assertThat(response.isAllowed())
-                .isFalse();
-        assertThat(response.getStatus().getMessage())
-                .contains("Cannot change applicationServiceRef")
-                .contains("app-service-1")
-                .contains("hacker-service");
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef").contains("app-service-1").contains("hacker-service");
     }
 
     @Test
@@ -144,10 +138,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, VirtualCluster.class);
 
-        assertThat(response.isAllowed())
-                .isFalse();
-        assertThat(response.getStatus().getMessage())
-                .contains("Cannot change applicationServiceRef");
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 
     @Test
@@ -179,10 +171,8 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, ServiceAccount.class);
 
-        assertThat(response.isAllowed())
-                .isFalse();
-        assertThat(response.getStatus().getMessage())
-                .contains("Cannot change applicationServiceRef");
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 
     @Test
@@ -214,9 +204,7 @@ class WebhookValidatorTest {
 
         AdmissionResponse response = validator.validate(request, ACL.class);
 
-        assertThat(response.isAllowed())
-                .isFalse();
-        assertThat(response.getStatus().getMessage())
-                .contains("Cannot change applicationServiceRef");
+        assertThat(response.isAllowed()).isFalse();
+        assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");
     }
 }

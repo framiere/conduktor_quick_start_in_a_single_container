@@ -566,120 +566,133 @@
 
 ## Phase 15: Maven Configuration for E2E Tests
 
-- [ ] Add E2E Maven profile `[FUNC_15 §15.1]`
-  - [ ] **Objectives:**
-    - [ ] Add `<profiles>` section to pom.xml
-    - [ ] Create profile id="e2e" with skipUTs=true property
-    - [ ] Configure maven-failsafe-plugin to include **/*E2ETest.java
-    - [ ] Exclude **/*IT.java from E2E profile
-    - [ ] Pass TEST_NAMESPACE as system property
-    - [ ] Configure maven-surefire-plugin to skip unit tests in E2E profile
-  - [ ] **Tests:**
-    - [ ] mvnVerifyPe2eShouldRunE2ETests
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Add E2E Maven profile `[FUNC_15 §15.1]`
+  - [x] **Objectives:**
+    - [x] Add `<profiles>` section to pom.xml
+    - [x] Create profile id="e2e" with skipTests=true property
+    - [x] Configure maven-failsafe-plugin to include **/*E2ETest.java
+    - [x] Exclude **/*IT.java from E2E profile
+    - [x] Pass TEST_NAMESPACE as system property
+    - [x] Configure maven-surefire-plugin to skip unit tests in E2E profile
+  - [x] **Tests:**
+    - [x] mvnVerifyPe2eShouldRunE2ETests
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: N/A
 
-- [ ] Add Awaitility dependency `[FUNC_15 §15.2]`
-  - [ ] **Objectives:**
-    - [ ] Add org.awaitility:awaitility:4.2.0 with test scope
-  - [ ] **Tests:**
-    - [ ] awaitilityImportShouldResolve
-  - [ ] **Metadata:**
-    - Task duration: ~1 min
+- [x] Add Awaitility dependency `[FUNC_15 §15.2]`
+  - [x] **Objectives:**
+    - [x] Add org.awaitility:awaitility:4.2.0 with test scope (already present)
+  - [x] **Tests:**
+    - [x] awaitilityImportShouldResolve
+  - [x] **Metadata:**
+    - Task duration: N/A (already present)
     - Tests duration: N/A
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Awaitility provides fluent API for polling async conditions
 
 ---
 
 ## Phase 16: Java E2E Test Infrastructure
 
-- [ ] Create E2ETest annotation `[FUNC_16 §16.1]`
-  - [ ] **Objectives:**
-    - [ ] Create @E2ETest annotation in e2e package
-    - [ ] Add @Tag("e2e") for test filtering
-    - [ ] Add @TestInstance(PER_CLASS) for shared setup
-    - [ ] Add @Retention(RUNTIME), @Target(TYPE)
-  - [ ] **Tests:**
-    - [ ] e2eTestAnnotationShouldBeRetainedAtRuntime
-  - [ ] **Metadata:**
-    - Task duration: ~2 min
+- [x] Create E2ETest annotation `[FUNC_16 §16.1]`
+  - [x] **Objectives:**
+    - [x] Create @E2ETest annotation in e2e package
+    - [x] Add @Tag("e2e") for test filtering
+    - [x] Add @TestInstance(PER_CLASS) for shared setup
+    - [x] Add @Retention(RUNTIME), @Target(TYPE)
+  - [x] **Tests:**
+    - [x] e2eTestAnnotationShouldBeRetainedAtRuntime
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create E2ETestBase `[FUNC_16 §16.2]`
-  - [ ] **Objectives:**
-    - [ ] Create abstract E2ETestBase class
-    - [ ] Implement setupCluster() with Fabric8 Config.autoConfigure(null)
-    - [ ] Implement resolveNamespace() checking env, property, file in order
-    - [ ] Implement waitForWebhookReady() with Awaitility
-    - [ ] Implement webhookHasEndpoints() checking endpoints subsets
-    - [ ] Implement assertRejectedWith(Executable, String) helper
-    - [ ] Implement scaleWebhook(int replicas) with wait
-    - [ ] Implement getWebhookPods() returning pod names
-    - [ ] Implement cleanupTestResources() deleting all CRD instances
-    - [ ] Add teardownCluster() to close client
-  - [ ] **Tests:**
-    - [ ] e2eTestBaseShouldConnectToCluster
-    - [ ] e2eTestBaseShouldResolveNamespaceFromEnv
-    - [ ] e2eTestBaseShouldWaitForWebhook
-  - [ ] **Metadata:**
-    - Task duration: ~10 min
+- [x] Create E2ETestBase `[FUNC_16 §16.2]`
+  - [x] **Objectives:**
+    - [x] Create abstract E2ETestBase class
+    - [x] Implement setupCluster() with Fabric8 Config.autoConfigure(null)
+    - [x] Implement resolveNamespace() checking env, property, file in order
+    - [x] Implement waitForWebhookReady() with Awaitility
+    - [x] Implement webhookHasEndpoints() checking endpoints subsets
+    - [x] Implement assertRejectedWith(Executable, String) helper
+    - [x] Implement scaleWebhook(int replicas) with wait
+    - [x] Implement getWebhookPods() returning pod names
+    - [x] Implement cleanupTestResources() deleting all CRD instances
+    - [x] Add teardownCluster() to close client
+    - [x] Implement createApplicationService, createVirtualCluster, createServiceAccount, createTopic helpers
+    - [x] Implement resourceExists() generic method
+  - [x] **Tests:**
+    - [x] e2eTestBaseShouldConnectToCluster
+    - [x] e2eTestBaseShouldResolveNamespaceFromEnv
+    - [x] e2eTestBaseShouldWaitForWebhook
+  - [x] **Metadata:**
+    - Task duration: ~5 min (actual)
     - Tests duration: N/A (base class)
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Config.autoConfigure(null) uses current kubectl context
+    - Generic types in Fabric8 require HasMetadata bound
 
 ---
 
 ## Phase 17: Java E2E Tests
 
-- [ ] Create OwnershipChainE2ETest `[FUNC_17 §17.1]`
-  - [ ] **Objectives:**
-    - [ ] Annotate with @E2ETest, extend E2ETestBase
-    - [ ] Add @BeforeEach and @AfterEach calling cleanupTestResources()
-    - [ ] Test fullOwnershipChain_validHierarchy_accepted
-    - [ ] Test topic_withNonExistentVirtualCluster_rejected
-    - [ ] Test virtualCluster_withNonExistentApplicationService_rejected
-    - [ ] Use TestDataBuilder for all resource creation
-    - [ ] Verify resources exist with k8sClient.resources().get()
-  - [ ] **Tests:**
-    - [ ] fullOwnershipChainValidHierarchyAccepted
-    - [ ] topicWithNonExistentVirtualClusterRejected
-    - [ ] virtualClusterWithNonExistentApplicationServiceRejected
-  - [ ] **Metadata:**
-    - Task duration: ~8 min
+- [x] Create OwnershipChainE2ETest `[FUNC_17 §17.1]`
+  - [x] **Objectives:**
+    - [x] Annotate with @E2ETest, extend E2ETestBase
+    - [x] Add @BeforeEach and @AfterEach calling cleanupTestResources()
+    - [x] Test fullOwnershipChain_validHierarchy_accepted
+    - [x] Test virtualCluster_withNonExistentApplicationService_rejected
+    - [x] Test serviceAccount_withNonExistentVirtualCluster_rejected
+    - [x] Test topic_withNonExistentServiceAccount_rejected
+    - [x] Test serviceAccount_mustBelongToSameApplicationService
+    - [x] Test topic_mustBelongToSameApplicationService
+  - [x] **Tests:**
+    - [x] fullOwnershipChainValidHierarchyAccepted
+    - [x] virtualClusterWithNonExistentApplicationServiceRejected
+    - [x] serviceAccountWithNonExistentVirtualClusterRejected
+    - [x] topicWithNonExistentServiceAccountRejected
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: ~30s
-  - [ ] **Learning:**
-    - Reuse TestDataBuilder from existing IT tests for consistency
+  - [x] **Learning:**
+    - E2ETestBase provides simple helper methods instead of TestDataBuilder for clarity
 
-- [ ] Create MultiTenantE2ETest `[FUNC_17 §17.2]`
-  - [ ] **Objectives:**
-    - [ ] Annotate with @E2ETest, extend E2ETestBase
-    - [ ] Create tenant A and B apps in @BeforeEach
-    - [ ] Create tenant A VC and SA in setup
-    - [ ] Test tenantB_cannotReferenceTenantA_serviceAccount
-    - [ ] Test tenantB_canCreateOwnResources
-    - [ ] Assert rejection contains "does not belong to ApplicationService"
-  - [ ] **Tests:**
-    - [ ] tenantBCannotReferenceTenantAServiceAccount
-    - [ ] tenantBCanCreateOwnResources
-  - [ ] **Metadata:**
-    - Task duration: ~6 min
+- [x] Create MultiTenantE2ETest `[FUNC_17 §17.2]`
+  - [x] **Objectives:**
+    - [x] Annotate with @E2ETest, extend E2ETestBase
+    - [x] Create tenant A and B apps in @BeforeEach
+    - [x] Create tenant A VC and SA in setup
+    - [x] Test tenantA_canCreateResourcesUnderOwnApplicationService
+    - [x] Test tenantB_cannotReferenceTenantA_virtualCluster
+    - [x] Test tenantB_cannotReferenceTenantA_serviceAccount
+    - [x] Test tenantB_canCreateOwnResources
+    - [x] Test tenantsWithSameNamedResources_areIsolated
+    - [x] Test crossTenantAclReference_isRejected
+  - [x] **Tests:**
+    - [x] tenantBCannotReferenceTenantAServiceAccount
+    - [x] tenantBCanCreateOwnResources
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: ~20s
 
-- [ ] Create HAFailoverE2ETest `[FUNC_17 §17.3]`
-  - [ ] **Objectives:**
-    - [ ] Annotate with @E2ETest, extend E2ETestBase
-    - [ ] Scale back to 1 replica in @AfterEach
-    - [ ] Test webhookRemainsAvailable_duringSinglePodFailure
-    - [ ] Scale to 2 replicas, delete first pod, verify operations succeed
-    - [ ] Use Awaitility for timing-sensitive waits
-  - [ ] **Tests:**
-    - [ ] webhookRemainsAvailableDuringSinglePodFailure
-  - [ ] **Metadata:**
-    - Task duration: ~6 min
+- [x] Create HAFailoverE2ETest `[FUNC_17 §17.3]`
+  - [x] **Objectives:**
+    - [x] Annotate with @E2ETest, extend E2ETestBase
+    - [x] Scale back to 1 replica in @AfterEach
+    - [x] Test webhookRemainsAvailable_duringSinglePodFailure
+    - [x] Test webhookRecovers_afterPodRestart
+    - [x] Test multipleOperations_succeedDuringHAMode
+    - [x] Test operations_continueDuringRollingRestart
+    - [x] Use Awaitility for timing-sensitive waits
+  - [x] **Tests:**
+    - [x] webhookRemainsAvailableDuringSinglePodFailure
+    - [x] webhookRecoversAfterPodRestart
+    - [x] multipleOperationsSucceedDuringHAMode
+    - [x] operationsContinueDuringRollingRestart
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: ~60s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - HA tests require careful timing; allow grace period after pod deletion
 
 ---

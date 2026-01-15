@@ -43,10 +43,8 @@ class WebhookServerTest {
         Request request = new Request.Builder().url("http://localhost:" + port + "/health").get().build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            assertThat(response.code())
-                    .isEqualTo(OK.getCode());
-            assertThat(response.body().string())
-                    .isEqualTo("OK");
+            assertThat(response.code()).isEqualTo(OK.getCode());
+            assertThat(response.body().string()).isEqualTo("OK");
         }
     }
 
@@ -96,18 +94,14 @@ class WebhookServerTest {
         Request request = new Request.Builder().url("http://localhost:" + port + "/validate/topic").post(body).build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            assertThat(response.code())
-                    .isEqualTo(OK.getCode());
+            assertThat(response.code()).isEqualTo(OK.getCode());
 
             String responseBody = response.body().string();
             AdmissionReview review = mapper.readValue(responseBody, AdmissionReview.class);
 
-            assertThat(review.getResponse())
-                    .isNotNull();
-            assertThat(review.getResponse().isAllowed())
-                    .isFalse();
-            assertThat(review.getResponse().getStatus().getMessage())
-                    .contains("Cannot change applicationServiceRef");
+            assertThat(review.getResponse()).isNotNull();
+            assertThat(review.getResponse().isAllowed()).isFalse();
+            assertThat(review.getResponse().getStatus().getMessage()).contains("Cannot change applicationServiceRef");
         }
     }
 }

@@ -93,9 +93,7 @@ public class CRDStore {
             setResourceVersion(resource, String.valueOf(version));
             setUid(resource, UUID.randomUUID().toString());
 
-            store.put(key, Map.of(
-                    "resource", resource,
-                    "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()
@@ -196,9 +194,7 @@ public class CRDStore {
             long version = resourceVersionCounter.getAndIncrement();
             setResourceVersion(resource, String.valueOf(version));
 
-            store.put(key, Map.of(
-                    "resource", resource,
-                    "timestamp", System.currentTimeMillis()));
+            store.put(key, Map.of("resource", resource, "timestamp", System.currentTimeMillis()));
 
             // Publish AFTER SUCCESS event
             ReconciliationEvent event = ReconciliationEvent.builder()

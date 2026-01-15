@@ -34,17 +34,11 @@ class AdmissionReviewTest {
 
         AdmissionReview review = mapper.readValue(json, AdmissionReview.class);
 
-        assertThat(review.getApiVersion())
-                .isEqualTo("admission.k8s.io/v1");
-        assertThat(review.getKind())
-                .isEqualTo("AdmissionReview");
-        assertThat(review.getRequest().getUid())
-                .isEqualTo("test-uid-123");
-        assertThat(review.getRequest().getOperation())
-                .isEqualTo("UPDATE");
-        assertThat(review.getRequest().getNamespace())
-                .isEqualTo("default");
-        assertThat(review.getRequest().getUserInfo().getUsername())
-                .isEqualTo("test-user");
+        assertThat(review.getApiVersion()).isEqualTo("admission.k8s.io/v1");
+        assertThat(review.getKind()).isEqualTo("AdmissionReview");
+        assertThat(review.getRequest().getUid()).isEqualTo("test-uid-123");
+        assertThat(review.getRequest().getOperation()).isEqualTo("UPDATE");
+        assertThat(review.getRequest().getNamespace()).isEqualTo("default");
+        assertThat(review.getRequest().getUserInfo().getUsername()).isEqualTo("test-user");
     }
 }

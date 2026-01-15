@@ -4,17 +4,13 @@ import com.example.messaging.operator.crd.*;
 import lombok.Getter;
 
 /**
- * Enum representing all Custom Resource Definition (CRD) kinds supported by the operator.
- * Provides type-safe access to CRD kind identifiers and mapping between resource classes and kind names.
+ * Enum representing all Custom Resource Definition (CRD) kinds supported by the operator. Provides type-safe access to CRD kind identifiers and mapping between resource
+ * classes and kind names.
  */
 @Getter
 public enum CRDKind {
-    APPLICATION_SERVICE("ApplicationService", ApplicationService.class),
-    VIRTUAL_CLUSTER("VirtualCluster", VirtualCluster.class),
-    SERVICE_ACCOUNT("ServiceAccount", ServiceAccount.class),
-    TOPIC("Topic", Topic.class),
-    ACL("ACL", ACL.class),
-    CONSUMER_GROUP("ConsumerGroup", ConsumerGroup.class);
+    APPLICATION_SERVICE("ApplicationService", ApplicationService.class), VIRTUAL_CLUSTER("VirtualCluster", VirtualCluster.class), SERVICE_ACCOUNT("ServiceAccount",
+            ServiceAccount.class), TOPIC("Topic", Topic.class), ACL("ACL", ACL.class), CONSUMER_GROUP("ConsumerGroup", ConsumerGroup.class);
 
     private final String value;
     private final Class<?> resourceClass;

@@ -2,7 +2,6 @@ package com.example.messaging.operator.it.base;
 
 import com.example.messaging.operator.webhook.WebhookServer;
 import com.example.messaging.operator.webhook.WebhookValidator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 

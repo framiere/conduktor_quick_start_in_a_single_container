@@ -1,12 +1,10 @@
 package com.example.messaging.operator.validation;
 
 import com.example.messaging.operator.crd.*;
-import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.store.CRDStore;
 
 import static com.example.messaging.operator.store.CRDKind.*;
 import static com.example.messaging.operator.validation.ValidationResult.*;
-import static java.lang.String.format;
 
 /**
  * Validator for enforcing applicationService ownership rules. Ensures that: - Resources can only be modified by their owner applicationService - Referenced resources
