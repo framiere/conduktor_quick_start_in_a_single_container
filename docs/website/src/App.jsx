@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench
+  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw
 } from 'lucide-react'
 
 import './index.css'
@@ -21,6 +21,7 @@ import DataFlowPage from './pages/DataFlowPage'
 import TestResultsPage from './pages/TestResultsPage'
 import OperabilityPage from './pages/OperabilityPage'
 import TestSetupPage from './pages/TestSetupPage'
+import TransformationPage from './pages/TransformationPage'
 
 const perspectives = [
   { path: '/', name: 'Overview', icon: Home, description: 'Project introduction and quick start' },
@@ -33,6 +34,7 @@ const perspectives = [
   { path: '/developer', name: 'Developer', icon: Code2, description: 'Build, compile, and contribute' },
   { path: '/operations', name: 'Operations', icon: Server, description: 'Deploy and run in Kubernetes' },
   { path: '/crds', name: 'CRDs', icon: Boxes, description: 'Custom Resource Definitions' },
+  { path: '/transformation', name: 'Transformation', icon: RefreshCw, description: 'CRD to Conduktor Gateway format' },
   { path: '/webhook', name: 'Webhook', icon: Lock, description: 'Admission controller deep-dive' },
   { path: '/data-flow', name: 'Data Flow', icon: Network, description: 'Request lifecycle visualization' },
   { path: '/operability', name: 'Operability', icon: Activity, description: 'Logs, events, and audit trail' },
@@ -157,6 +159,7 @@ function App() {
                 <Route path="/developer" element={<DeveloperPage />} />
                 <Route path="/operations" element={<OperationsPage />} />
                 <Route path="/crds" element={<CRDPage />} />
+                <Route path="/transformation" element={<TransformationPage />} />
                 <Route path="/webhook" element={<WebhookPage />} />
                 <Route path="/data-flow" element={<DataFlowPage />} />
                 <Route path="/operability" element={<OperabilityPage />} />
