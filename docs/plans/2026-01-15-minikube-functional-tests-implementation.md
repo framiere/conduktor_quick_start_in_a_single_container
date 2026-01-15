@@ -12,18 +12,18 @@
 
 ## Phase 1: Project Structure & Helm Chart Foundation
 
-- [ ] Create directory structure `[FUNC_01 §1.1]`
-  - [ ] **Objectives:**
-    - [ ] Create functional-tests root directory
-    - [ ] Create helm/messaging-operator with templates/crds and tests subdirs
-    - [ ] Create scripts, bats, fixtures directories
-    - [ ] Create fixtures subdirs: valid, invalid, tenant-a, tenant-b, ownership-chain, ha-test
-  - [ ] **Tests:**
-    - [ ] Verify structure with `find functional-tests -type d | sort`
-  - [ ] **Metadata:**
-    - Task duration: ~2 min
+- [x] Create directory structure `[FUNC_01 §1.1]`
+  - [x] **Objectives:**
+    - [x] Create functional-tests root directory
+    - [x] Create helm/messaging-operator with templates/crds and tests subdirs
+    - [x] Create scripts, bats, fixtures directories
+    - [x] Create fixtures subdirs: valid, invalid, tenant-a, tenant-b, ownership-chain, ha-test
+  - [x] **Tests:**
+    - [x] Verify structure with `find functional-tests -type d | sort`
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Helm 3 auto-installs CRDs from templates/crds before other resources
 
 - [ ] Create Helm Chart base files `[FUNC_01 §1.2]`
