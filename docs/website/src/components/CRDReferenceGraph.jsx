@@ -7,7 +7,6 @@ import {
   useNodesState,
   useEdgesState,
   Handle,
-  getSmoothStepPath,
 } from '@xyflow/react'
 import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
@@ -72,23 +71,22 @@ const crdDefinitions = [
   },
 ]
 
-// Custom node that only renders handles that are actually used
-// All handles at bottom, except ACL which has handles at top (it only sends)
+// Custom node with visible anchor points (white circles with colored border)
 function CRDNode({ data }) {
-  const handleStyle = {
-    width: 8,
-    height: 8,
-    background: data.color,
-    border: '2px solid white',
-  }
-
-  const { targetHandles = [], sourceHandles = [], label } = data
+  const { targetHandles = [], sourceHandles = [], label, color } = data
   const isACL = label === 'ACL'
 
-  // ACL: source handles at top (sends upward)
-  // Others: source handles at bottom, target handles at bottom too
   const sourcePosition = isACL ? Position.Top : Position.Bottom
   const targetPosition = Position.Bottom
+
+  // Visible anchor point style: white fill with colored border
+  const handleStyle = {
+    width: 10,
+    height: 10,
+    background: 'white',
+    border: `2px solid ${color}`,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+  }
 
   return (
     <div
@@ -96,13 +94,13 @@ function CRDNode({ data }) {
         padding: '12px 16px',
         borderRadius: '8px',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        border: `2px solid ${data.color}`,
-        backgroundColor: data.color,
+        border: `2px solid ${color}`,
+        backgroundColor: color,
         minWidth: '160px',
         position: 'relative',
       }}
     >
-      {/* Target handles - at bottom for all nodes */}
+      {/* Target handles - visible anchor points at bottom */}
       {targetHandles.map((h) => (
         <Handle
           key={h.id}
@@ -113,12 +111,14 @@ function CRDNode({ data }) {
         />
       ))}
 
-      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>{label}</div>
+      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>
+        {label}
+      </div>
       <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
         {data.description}
       </div>
 
-      {/* Source handles - at top for ACL, bottom for others */}
+      {/* Source handles - visible anchor points */}
       {sourceHandles.map((h) => (
         <Handle
           key={h.id}
@@ -132,64 +132,158 @@ function CRDNode({ data }) {
   )
 }
 
-// Custom edge with visible styling
-function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }) {
-  const [edgePath] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: 20,
-  })
+// Build orthogonal path with 90° angles and small rounded corners (4px)
+function buildOrthogonalPath(sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, offset = 0) {
+  const borderRadius = 4
+  const segments = []
 
+  // Determine if we need horizontal offset for parallel line spacing
+  const horizontalOffset = offset * 15
+
+  if (sourcePosition === Position.Top && targetPosition === Position.Bottom) {
+    // Source at top going up to target at bottom (child → parent)
+    const midY = sourceY - (sourceY - targetY - 40) / 2
+
+    // Start point
+    const startX = sourceX + horizontalOffset
+    const startY = sourceY
+
+    // End point (target bottom)
+    const endX = targetX + horizontalOffset
+    const endY = targetY + 40
+
+    // Build path with rounded corners
+    segments.push(`M ${startX} ${startY}`)
+
+    if (Math.abs(startX - endX) < 5) {
+      // Straight vertical line
+      segments.push(`L ${endX} ${endY}`)
+    } else {
+      // Orthogonal with corners
+      segments.push(`L ${startX} ${midY + borderRadius}`)
+
+      if (startX < endX) {
+        segments.push(`Q ${startX} ${midY} ${startX + borderRadius} ${midY}`)
+        segments.push(`L ${endX - borderRadius} ${midY}`)
+        segments.push(`Q ${endX} ${midY} ${endX} ${midY - borderRadius}`)
+      } else {
+        segments.push(`Q ${startX} ${midY} ${startX - borderRadius} ${midY}`)
+        segments.push(`L ${endX + borderRadius} ${midY}`)
+        segments.push(`Q ${endX} ${midY} ${endX} ${midY - borderRadius}`)
+      }
+
+      segments.push(`L ${endX} ${endY}`)
+    }
+  } else if (sourcePosition === Position.Bottom && targetPosition === Position.Bottom) {
+    // Source at bottom going down then up to target at bottom
+    const dropDistance = 25 + Math.abs(offset) * 10
+    const midY = Math.max(sourceY, targetY) + dropDistance
+
+    const startX = sourceX + horizontalOffset
+    const startY = sourceY
+    const endX = targetX + horizontalOffset
+    const endY = targetY + 40
+
+    segments.push(`M ${startX} ${startY}`)
+
+    // Go down from source
+    segments.push(`L ${startX} ${midY - borderRadius}`)
+
+    if (startX < endX) {
+      segments.push(`Q ${startX} ${midY} ${startX + borderRadius} ${midY}`)
+      segments.push(`L ${endX - borderRadius} ${midY}`)
+      segments.push(`Q ${endX} ${midY} ${endX} ${midY - borderRadius}`)
+    } else if (startX > endX) {
+      segments.push(`Q ${startX} ${midY} ${startX - borderRadius} ${midY}`)
+      segments.push(`L ${endX + borderRadius} ${midY}`)
+      segments.push(`Q ${endX} ${midY} ${endX} ${midY - borderRadius}`)
+    }
+
+    // Go up to target
+    segments.push(`L ${endX} ${endY}`)
+  }
+
+  return segments.join(' ')
+}
+
+// Custom edge with orthogonal routing, distinct colors, and proper arrow
+function OrthogonalEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }) {
   const edgeColor = data?.color || '#6B7280'
   const isRequired = data?.required !== false
+  const offset = data?.offset || 0
 
-  // Arrow direction based on target position
-  // Bottom: arrow points down (into bottom of node)
-  // Top: arrow points up (into top of node)
-  const arrowDown = targetPosition === Position.Bottom
-  const arrowPoints = arrowDown
-    ? `${targetX},${targetY + 2} ${targetX - 6},${targetY + 12} ${targetX + 6},${targetY + 12}`
-    : `${targetX},${targetY - 2} ${targetX - 6},${targetY - 12} ${targetX + 6},${targetY - 12}`
+  // Build orthogonal path
+  const edgePath = buildOrthogonalPath(
+    sourceX, sourceY, targetX, targetY,
+    sourcePosition, targetPosition,
+    offset
+  )
+
+  // Calculate arrow position and direction (pointing into target = towards parent)
+  const arrowSize = 8
+  const horizontalOffset = offset * 15
+  const arrowX = targetX + horizontalOffset
+  const arrowY = targetY + 40
+
+  // Arrow pointing up into bottom of parent node
+  const arrowPath = `M ${arrowX} ${arrowY - 2} L ${arrowX - arrowSize/2} ${arrowY + arrowSize} L ${arrowX + arrowSize/2} ${arrowY + arrowSize} Z`
 
   return (
-    <>
+    <g>
       <path
         id={id}
         d={edgePath}
         fill="none"
         stroke={edgeColor}
-        strokeWidth={isRequired ? 3 : 2}
-        strokeDasharray={isRequired ? undefined : '8,4'}
-        style={{ pointerEvents: 'stroke' }}
+        strokeWidth={isRequired ? 2.5 : 2}
+        strokeDasharray={isRequired ? undefined : '6,4'}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <polygon points={arrowPoints} fill={edgeColor} />
-    </>
+      <path
+        d={arrowPath}
+        fill={edgeColor}
+      />
+    </g>
   )
 }
 
 const nodeTypes = { crd: CRDNode }
-const edgeTypes = { labeled: CustomEdge }
+const edgeTypes = { orthogonal: OrthogonalEdge }
 
 // Calculate handle positions distributed evenly across the node width
 function calculateHandlePositions(count) {
   if (count === 0) return []
   if (count === 1) return ['50%']
-  // Distribute from 15% to 85% of width
   const positions = []
   for (let i = 0; i < count; i++) {
-    const pct = 15 + (70 * i) / (count - 1)
+    const pct = 20 + (60 * i) / (count - 1)
     positions.push(`${pct}%`)
   }
   return positions
 }
 
-// Assign handles to edges and collect used handles per node
+// Assign handles and calculate offsets for parallel edges
 function assignHandlesAndCollect(edges, nodePositions) {
   const result = edges.map((e) => ({ ...e }))
+
+  // Group edges by source-target pair to detect parallel edges
+  const edgeGroups = {}
+  result.forEach((edge) => {
+    const key = [edge.source, edge.target].sort().join('-')
+    if (!edgeGroups[key]) edgeGroups[key] = []
+    edgeGroups[key].push(edge)
+  })
+
+  // Assign offsets to parallel edges for spacing
+  Object.values(edgeGroups).forEach((group) => {
+    if (group.length > 1) {
+      const mid = (group.length - 1) / 2
+      group.forEach((edge, i) => {
+        edge.data = { ...edge.data, offset: i - mid }
+      })
+    }
+  })
 
   // Collect edges by target and source
   const byTarget = {}
@@ -202,12 +296,10 @@ function assignHandlesAndCollect(edges, nodePositions) {
     bySource[edge.source].push(edge)
   })
 
-  // For each node, calculate its used handles
   const nodeHandles = {}
 
   // Process target handles (incoming edges)
   Object.entries(byTarget).forEach(([nodeId, targetEdges]) => {
-    // Sort by source x position
     targetEdges.sort((a, b) => nodePositions[a.source].x - nodePositions[b.source].x)
     const positions = calculateHandlePositions(targetEdges.length)
 
@@ -222,7 +314,6 @@ function assignHandlesAndCollect(edges, nodePositions) {
 
   // Process source handles (outgoing edges)
   Object.entries(bySource).forEach(([nodeId, sourceEdges]) => {
-    // Sort by target x position
     sourceEdges.sort((a, b) => nodePositions[a.target].x - nodePositions[b.target].x)
     const positions = calculateHandlePositions(sourceEdges.length)
 
@@ -242,7 +333,7 @@ function assignHandlesAndCollect(edges, nodePositions) {
 function getLayoutedElements(nodes, edges) {
   const g = new dagre.graphlib.Graph()
   g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 120, marginx: 40, marginy: 40 })
+  g.setGraph({ rankdir: 'TB', nodesep: 120, ranksep: 100, marginx: 50, marginy: 50 })
 
   const nodeWidth = 180
   const nodeHeight = 65
@@ -270,9 +361,7 @@ function getLayoutedElements(nodes, edges) {
     return {
       ...node,
       position: nodePositions[node.id],
-      // ACL sends from top, others send from bottom
       sourcePosition: isACL ? Position.Top : Position.Bottom,
-      // All nodes receive at bottom
       targetPosition: Position.Bottom,
       data: {
         ...node.data,
@@ -305,7 +394,7 @@ export default function CRDReferenceGraph() {
           id: `e-${crd.id}-${ref.target}-${idx}`,
           source: crd.id,
           target: ref.target,
-          type: 'labeled',
+          type: 'orthogonal',
           data: { label: ref.label, color: crd.color, required: ref.required },
         })
       })
@@ -344,7 +433,7 @@ export default function CRDReferenceGraph() {
         minZoom={0.4}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{ type: 'labeled' }}
+        defaultEdgeOptions={{ type: 'orthogonal' }}
       >
         <Background color="#cbd5e1" gap={24} size={1} />
         <Controls showInteractive={false} />
@@ -365,18 +454,20 @@ export default function CRDReferenceGraph() {
         }}
       >
         <div style={{ fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: 8 }}>Legend</div>
-        <div style={{ display: 'flex', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="30" height="4">
-              <line x1="0" y1="2" x2="30" y2="2" stroke="#3B82F6" strokeWidth="3" />
+            <svg width="30" height="10">
+              <line x1="0" y1="5" x2="22" y2="5" stroke="#3B82F6" strokeWidth="2.5" />
+              <polygon points="22,5 16,2 16,8" fill="#3B82F6" />
             </svg>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Required</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Required (ownership)</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="30" height="4">
-              <line x1="0" y1="2" x2="30" y2="2" stroke="#94a3b8" strokeWidth="2" strokeDasharray="6,3" />
+            <svg width="30" height="10">
+              <line x1="0" y1="5" x2="22" y2="5" stroke="#EF4444" strokeWidth="2" strokeDasharray="4,3" />
+              <polygon points="22,5 16,2 16,8" fill="#EF4444" />
             </svg>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Optional</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Optional (reference)</span>
           </div>
         </div>
       </div>
