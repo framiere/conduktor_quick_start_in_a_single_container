@@ -72,7 +72,7 @@ const crdDefinitions = [
   },
 ]
 
-// Custom node with 3 connection handles on each side (top and bottom)
+// Custom node that only renders handles that are actually used
 function CRDNode({ data }) {
   const handleStyle = {
     width: 8,
@@ -80,6 +80,8 @@ function CRDNode({ data }) {
     background: data.color,
     border: '2px solid white',
   }
+
+  const { targetHandles = [], sourceHandles = [] } = data
 
   return (
     <div
@@ -93,22 +95,32 @@ function CRDNode({ data }) {
         position: 'relative',
       }}
     >
-      {/* Target handles (top) - where edges come IN */}
-      <Handle type="target" position={Position.Top} id="top-left" style={{ ...handleStyle, left: '20%' }} />
-      <Handle type="target" position={Position.Top} id="top-center" style={{ ...handleStyle, left: '50%' }} />
-      <Handle type="target" position={Position.Top} id="top-right" style={{ ...handleStyle, left: '80%' }} />
+      {/* Target handles (top) - only render used ones */}
+      {targetHandles.map((h) => (
+        <Handle
+          key={h.id}
+          type="target"
+          position={Position.Top}
+          id={h.id}
+          style={{ ...handleStyle, left: h.position }}
+        />
+      ))}
 
-      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>
-        {data.label}
-      </div>
+      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>{data.label}</div>
       <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
         {data.description}
       </div>
 
-      {/* Source handles (bottom) - where edges go OUT */}
-      <Handle type="source" position={Position.Bottom} id="bottom-left" style={{ ...handleStyle, left: '20%' }} />
-      <Handle type="source" position={Position.Bottom} id="bottom-center" style={{ ...handleStyle, left: '50%' }} />
-      <Handle type="source" position={Position.Bottom} id="bottom-right" style={{ ...handleStyle, left: '80%' }} />
+      {/* Source handles (bottom) - only render used ones */}
+      {sourceHandles.map((h) => (
+        <Handle
+          key={h.id}
+          type="source"
+          position={Position.Bottom}
+          id={h.id}
+          style={{ ...handleStyle, left: h.position }}
+        />
+      ))}
     </div>
   )
 }
@@ -150,64 +162,71 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
 const nodeTypes = { crd: CRDNode }
 const edgeTypes = { labeled: CustomEdge }
 
-// Assign handles to edges based on node positions to distribute connections
-function assignHandlesToEdges(edges, nodePositions) {
+// Calculate handle positions distributed evenly across the node width
+function calculateHandlePositions(count) {
+  if (count === 0) return []
+  if (count === 1) return ['50%']
+  // Distribute from 15% to 85% of width
+  const positions = []
+  for (let i = 0; i < count; i++) {
+    const pct = 15 + (70 * i) / (count - 1)
+    positions.push(`${pct}%`)
+  }
+  return positions
+}
+
+// Assign handles to edges and collect used handles per node
+function assignHandlesAndCollect(edges, nodePositions) {
   const result = edges.map((e) => ({ ...e }))
 
-  // Group edges by target node and assign target handles
+  // Collect edges by target and source
   const byTarget = {}
+  const bySource = {}
+
   result.forEach((edge) => {
     if (!byTarget[edge.target]) byTarget[edge.target] = []
     byTarget[edge.target].push(edge)
-  })
-
-  Object.values(byTarget).forEach((targetEdges) => {
-    // Sort by source node x position (left to right)
-    targetEdges.sort((a, b) => nodePositions[a.source].x - nodePositions[b.source].x)
-    const handles = ['top-left', 'top-center', 'top-right']
-    const n = targetEdges.length
-    targetEdges.forEach((edge, i) => {
-      if (n === 1) {
-        edge.targetHandle = 'top-center'
-      } else if (n === 2) {
-        edge.targetHandle = i === 0 ? 'top-left' : 'top-right'
-      } else {
-        // Distribute evenly across 3 handles
-        const idx = Math.min(Math.floor((i * 3) / n), 2)
-        edge.targetHandle = handles[idx]
-      }
-    })
-  })
-
-  // Group edges by source node and assign source handles
-  const bySource = {}
-  result.forEach((edge) => {
     if (!bySource[edge.source]) bySource[edge.source] = []
     bySource[edge.source].push(edge)
   })
 
-  Object.values(bySource).forEach((sourceEdges) => {
-    // Sort by target node x position (left to right)
-    sourceEdges.sort((a, b) => nodePositions[a.target].x - nodePositions[b.target].x)
-    const handles = ['bottom-left', 'bottom-center', 'bottom-right']
-    const n = sourceEdges.length
-    sourceEdges.forEach((edge, i) => {
-      if (n === 1) {
-        edge.sourceHandle = 'bottom-center'
-      } else if (n === 2) {
-        edge.sourceHandle = i === 0 ? 'bottom-left' : 'bottom-right'
-      } else {
-        // Distribute evenly across 3 handles
-        const idx = Math.min(Math.floor((i * 3) / n), 2)
-        edge.sourceHandle = handles[idx]
-      }
+  // For each node, calculate its used handles
+  const nodeHandles = {}
+
+  // Process target handles (incoming edges)
+  Object.entries(byTarget).forEach(([nodeId, targetEdges]) => {
+    // Sort by source x position
+    targetEdges.sort((a, b) => nodePositions[a.source].x - nodePositions[b.source].x)
+    const positions = calculateHandlePositions(targetEdges.length)
+
+    if (!nodeHandles[nodeId]) nodeHandles[nodeId] = { targetHandles: [], sourceHandles: [] }
+
+    targetEdges.forEach((edge, i) => {
+      const handleId = `target-${i}`
+      edge.targetHandle = handleId
+      nodeHandles[nodeId].targetHandles.push({ id: handleId, position: positions[i] })
     })
   })
 
-  return result
+  // Process source handles (outgoing edges)
+  Object.entries(bySource).forEach(([nodeId, sourceEdges]) => {
+    // Sort by target x position
+    sourceEdges.sort((a, b) => nodePositions[a.target].x - nodePositions[b.target].x)
+    const positions = calculateHandlePositions(sourceEdges.length)
+
+    if (!nodeHandles[nodeId]) nodeHandles[nodeId] = { targetHandles: [], sourceHandles: [] }
+
+    sourceEdges.forEach((edge, i) => {
+      const handleId = `source-${i}`
+      edge.sourceHandle = handleId
+      nodeHandles[nodeId].sourceHandles.push({ id: handleId, position: positions[i] })
+    })
+  })
+
+  return { edges: result, nodeHandles }
 }
 
-// Dagre layout with handle assignment
+// Dagre layout with dynamic handle assignment
 function getLayoutedElements(nodes, edges) {
   const g = new dagre.graphlib.Graph()
   g.setDefaultEdgeLabel(() => ({}))
@@ -217,29 +236,36 @@ function getLayoutedElements(nodes, edges) {
   const nodeHeight = 65
 
   nodes.forEach((node) => g.setNode(node.id, { width: nodeWidth, height: nodeHeight }))
-  // Reverse edge direction for layout: parent nodes should be above children
-  // Our edges go child→parent, but dagre places sources above targets
-  // So we flip: target→source for layout, keeping visual edges unchanged
+  // Reverse edge direction for layout: parent nodes above children
   edges.forEach((edge) => g.setEdge(edge.target, edge.source))
 
   dagre.layout(g)
 
   // Build position map
   const nodePositions = {}
-  const layoutedNodes = nodes.map((node) => {
+  nodes.forEach((node) => {
     const pos = g.node(node.id)
-    const position = { x: pos.x - nodeWidth / 2, y: pos.y - nodeHeight / 2 }
-    nodePositions[node.id] = position
-    return {
-      ...node,
-      position,
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
-    }
+    nodePositions[node.id] = { x: pos.x - nodeWidth / 2, y: pos.y - nodeHeight / 2 }
   })
 
-  // Assign handles to edges based on positions
-  const layoutedEdges = assignHandlesToEdges(edges, nodePositions)
+  // Assign handles and collect which ones each node uses
+  const { edges: layoutedEdges, nodeHandles } = assignHandlesAndCollect(edges, nodePositions)
+
+  // Build final nodes with handle info
+  const layoutedNodes = nodes.map((node) => {
+    const handles = nodeHandles[node.id] || { targetHandles: [], sourceHandles: [] }
+    return {
+      ...node,
+      position: nodePositions[node.id],
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
+      data: {
+        ...node.data,
+        targetHandles: handles.targetHandles,
+        sourceHandles: handles.sourceHandles,
+      },
+    }
+  })
 
   return { nodes: layoutedNodes, edges: layoutedEdges }
 }
