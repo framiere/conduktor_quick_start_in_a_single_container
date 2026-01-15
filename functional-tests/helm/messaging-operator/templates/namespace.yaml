@@ -1,6 +1,8 @@
+{{- if .Values.createNamespace }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ include "messaging-operator.namespace" . }}
   labels:
     {{- include "messaging-operator.labels" . | nindent 4 }}
+{{- end }}

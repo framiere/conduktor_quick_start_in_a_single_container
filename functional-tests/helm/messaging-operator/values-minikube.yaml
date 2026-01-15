@@ -1,6 +1,9 @@
 # Minikube-specific values for local development and testing
 # Use: helm install ... -f values.yaml -f values-minikube.yaml
 
+# Namespace created by setup-minikube.sh, not Helm
+createNamespace: false
+
 # Single replica for local testing (saves resources)
 webhook:
   replicas: 1

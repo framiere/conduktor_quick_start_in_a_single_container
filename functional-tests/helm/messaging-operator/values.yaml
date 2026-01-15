@@ -4,6 +4,9 @@
 # Namespace to deploy operator resources
 namespace: operator-system
 
+# Set to false when namespace is created externally (e.g., by setup scripts)
+createNamespace: true
+
 # Webhook deployment configuration
 webhook:
   # Number of replicas for high availability
