@@ -63,9 +63,9 @@ webhookConfig:
     - name: serviceaccount
       kind: ServiceAccount
       plural: serviceaccounts
-    - name: virtualcluster
-      kind: VirtualCluster
-      plural: virtualclusters
+    - name: kafkacluster
+      kind: KafkaCluster
+      plural: kafkaclusters
     - name: consumergroup
       kind: ConsumerGroup
       plural: consumergroups

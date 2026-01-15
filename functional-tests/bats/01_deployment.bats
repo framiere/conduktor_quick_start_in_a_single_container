@@ -49,8 +49,8 @@ setup_file() {
     assert_success
 }
 
-@test "VirtualCluster CRD is installed" {
-    run kubectl get crd virtualclusters.messaging.example.com
+@test "KafkaCluster CRD is installed" {
+    run kubectl get crd kafkaclusters.messaging.example.com
     assert_success
 }
 

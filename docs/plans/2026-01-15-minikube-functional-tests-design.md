@@ -238,15 +238,15 @@ load 'test_helper'
 setup_file() {
     apply_fixture "tenant-a/application-service.yaml"
     apply_fixture "tenant-b/application-service.yaml"
-    apply_fixture "tenant-a/virtual-cluster.yaml"
+    apply_fixture "tenant-a/kafka-cluster.yaml"
 }
 
-@test "tenant B cannot reference tenant A's VirtualCluster" {
+@test "tenant B cannot reference tenant A's KafkaCluster" {
     expect_rejection "tenant-b/topic-referencing-tenant-a.yaml" \
         "does not belong to ApplicationService"
 }
 
-@test "tenant A can reference own VirtualCluster" {
+@test "tenant A can reference own KafkaCluster" {
     run apply_fixture "tenant-a/topic-valid.yaml"
     assert_success
 }
@@ -278,7 +278,7 @@ setup_file() {
 
 @test "webhook recovers after pod restart" {
     wait_for "kubectl get deployment webhook -n $NAMESPACE -o jsonpath='{.status.readyReplicas}' | grep -q '2'" 120
-    run apply_fixture "ha-test/virtual-cluster.yaml"
+    run apply_fixture "ha-test/kafka-cluster.yaml"
     assert_success
 }
 
@@ -353,7 +353,7 @@ class OwnershipChainE2ETest extends E2ETestBase {
             .appName("e2e-app")
             .createIn(k8sClient);
 
-        var vc = TestDataBuilder.virtualCluster()
+        var vc = TestDataBuilder.kafkaCluster()
             .namespace(namespace)
             .name("e2e-vc")
             .applicationServiceRef(app.getMetadata().getName())
@@ -362,7 +362,7 @@ class OwnershipChainE2ETest extends E2ETestBase {
         var topic = TestDataBuilder.topic()
             .namespace(namespace)
             .name("e2e-topic")
-            .virtualClusterRef(vc.getMetadata().getName())
+            .kafkaClusterRef(vc.getMetadata().getName())
             .createIn(k8sClient);
 
         assertThat(k8sClient.resources(Topic.class)
@@ -372,14 +372,14 @@ class OwnershipChainE2ETest extends E2ETestBase {
     }
 
     @Test
-    void topic_withNonExistentVirtualCluster_rejected() {
+    void topic_withNonExistentKafkaCluster_rejected() {
         assertRejectedWith(
             () -> TestDataBuilder.topic()
                 .namespace(namespace)
                 .name("orphan-topic")
-                .virtualClusterRef("does-not-exist")
+                .kafkaClusterRef("does-not-exist")
                 .createIn(k8sClient),
-            "VirtualCluster 'does-not-exist' not found"
+            "KafkaCluster 'does-not-exist' not found"
         );
     }
 }
@@ -443,7 +443,7 @@ class HAFailoverE2ETest extends E2ETestBase {
 fixtures/
 ├── valid/
 │   ├── application-service.yaml
-│   ├── virtual-cluster.yaml
+│   ├── kafka-cluster.yaml
 │   ├── service-account.yaml
 │   ├── topic.yaml
 │   ├── acl.yaml
@@ -454,7 +454,7 @@ fixtures/
 │   └── nonexistent-parent-ref.yaml
 ├── tenant-a/
 │   ├── application-service.yaml
-│   ├── virtual-cluster.yaml
+│   ├── kafka-cluster.yaml
 │   └── topic-valid.yaml
 ├── tenant-b/
 │   ├── application-service.yaml

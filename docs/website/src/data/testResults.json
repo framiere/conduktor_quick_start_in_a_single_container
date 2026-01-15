@@ -36,7 +36,7 @@
         "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
         "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
         "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest"
+        "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest"
       ],
       "tests": 62,
       "passed": 62,
@@ -153,7 +153,7 @@
           "failureMessage": null
         },
         {
-          "name": "testCreateVirtualClusterWithValidation",
+          "name": "testCreateKafkaClusterWithValidation",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
           "time": 0.006,
           "status": "passed",
@@ -167,7 +167,7 @@
           "failureMessage": null
         },
         {
-          "name": "testRejectVirtualClusterWithMissingOwner",
+          "name": "testRejectKafkaClusterWithMissingOwner",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
           "time": 0.004,
           "status": "passed",
@@ -591,7 +591,7 @@
       "passed": 4,
       "testCases": [
         {
-          "name": "testServiceAccountToVirtualClusterReference",
+          "name": "testServiceAccountToKafkaClusterReference",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
           "time": 0.002,
           "status": "passed",
@@ -712,7 +712,7 @@
       "category": "CRD"
     },
     {
-      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
       "time": 0.027,
       "tests": 3,
       "errors": 0,
@@ -721,22 +721,22 @@
       "passed": 3,
       "testCases": [
         {
-          "name": "testVirtualClusterCreation",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "name": "testKafkaClusterCreation",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
           "time": 0.002,
           "status": "passed",
           "failureMessage": null
         },
         {
-          "name": "testVirtualClusterBuilder",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "name": "testKafkaClusterBuilder",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
           "time": 0.015,
           "status": "passed",
           "failureMessage": null
         },
         {
-          "name": "testVirtualClusterRequiredFields",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "name": "testKafkaClusterRequiredFields",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
           "time": 0.002,
           "status": "passed",
           "failureMessage": null
@@ -1055,7 +1055,7 @@
           "failureMessage": null
         },
         {
-          "name": "testRejectWrongVirtualClusterOwner",
+          "name": "testRejectWrongKafkaClusterOwner",
           "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
           "time": 0.896,
           "status": "passed",
@@ -1335,14 +1335,14 @@
           "failureMessage": null
         },
         {
-          "name": "testCreateEnforcesOwnershipForVirtualCluster",
+          "name": "testCreateEnforcesOwnershipForKafkaCluster",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
           "time": 0.004,
           "status": "passed",
           "failureMessage": null
         },
         {
-          "name": "testCreateAllowsVirtualClusterWithValidOwnership",
+          "name": "testCreateAllowsKafkaClusterWithValidOwnership",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
           "time": 0.003,
           "status": "passed",
@@ -1540,7 +1540,7 @@
       "passed": 12,
       "testCases": [
         {
-          "name": "testVirtualClusterCreateWithExistingAppService",
+          "name": "testKafkaClusterCreateWithExistingAppService",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
           "time": 0.202,
           "status": "passed",
@@ -1589,14 +1589,14 @@
           "failureMessage": null
         },
         {
-          "name": "testVirtualClusterCreateWithMissingAppService",
+          "name": "testKafkaClusterCreateWithMissingAppService",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
           "time": 0.023,
           "status": "passed",
           "failureMessage": null
         },
         {
-          "name": "testServiceAccountCreateWithMissingVirtualCluster",
+          "name": "testServiceAccountCreateWithMissingKafkaCluster",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
           "time": 0.016,
           "status": "passed",
@@ -1918,7 +1918,7 @@
           "failureMessage": null
         },
         {
-          "name": "testDenyVirtualClusterUpdate",
+          "name": "testDenyKafkaClusterUpdate",
           "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
           "time": 0.02,
           "status": "passed",

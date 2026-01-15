@@ -368,7 +368,7 @@ public class CRDStore {
     private String getName(Object resource) {
         return switch (resource) {
             case ApplicationService r -> r.getMetadata().getName();
-            case VirtualCluster r -> r.getMetadata().getName();
+            case KafkaCluster r -> r.getMetadata().getName();
             case ServiceAccount r -> r.getMetadata().getName();
             case Topic r -> r.getMetadata().getName();
             case ConsumerGroup r -> r.getMetadata().getName();
@@ -380,7 +380,7 @@ public class CRDStore {
     private String getApplicationServiceRef(Object resource) {
         return switch (resource) {
             case ApplicationService r -> r.getSpec().getName();
-            case VirtualCluster r -> r.getSpec().getApplicationServiceRef();
+            case KafkaCluster r -> r.getSpec().getApplicationServiceRef();
             case ServiceAccount r -> r.getSpec().getApplicationServiceRef();
             case Topic r -> r.getSpec().getApplicationServiceRef();
             case ConsumerGroup r -> r.getSpec().getApplicationServiceRef();
@@ -392,7 +392,7 @@ public class CRDStore {
     private void setResourceVersion(Object resource, String version) {
         switch (resource) {
             case ApplicationService r -> r.getMetadata().setResourceVersion(version);
-            case VirtualCluster r -> r.getMetadata().setResourceVersion(version);
+            case KafkaCluster r -> r.getMetadata().setResourceVersion(version);
             case ServiceAccount r -> r.getMetadata().setResourceVersion(version);
             case Topic r -> r.getMetadata().setResourceVersion(version);
             case ConsumerGroup r -> r.getMetadata().setResourceVersion(version);
@@ -404,7 +404,7 @@ public class CRDStore {
     private void setUid(Object resource, String uid) {
         switch (resource) {
             case ApplicationService r -> r.getMetadata().setUid(uid);
-            case VirtualCluster r -> r.getMetadata().setUid(uid);
+            case KafkaCluster r -> r.getMetadata().setUid(uid);
             case ServiceAccount r -> r.getMetadata().setUid(uid);
             case Topic r -> r.getMetadata().setUid(uid);
             case ConsumerGroup r -> r.getMetadata().setUid(uid);

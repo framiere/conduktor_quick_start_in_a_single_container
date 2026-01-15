@@ -1,5 +1,5 @@
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: test-vc
 spec:

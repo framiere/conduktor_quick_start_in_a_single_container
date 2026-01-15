@@ -43,7 +43,7 @@ class HAFailoverE2ETest extends E2ETestBase {
 
         // Setup test resources
         createApplicationService("e2e-ha-app");
-        createVirtualCluster("e2e-ha-vc", "e2e-ha-app");
+        createKafkaCluster("e2e-ha-vc", "e2e-ha-app");
         createServiceAccount("e2e-ha-sa", "e2e-ha-vc", "e2e-ha-app");
 
         // Delete one pod
@@ -82,8 +82,8 @@ class HAFailoverE2ETest extends E2ETestBase {
         });
 
         // Webhook should work again
-        VirtualCluster vc = createVirtualCluster("e2e-restart-vc", "e2e-restart-app");
-        assertThat(resourceExists(VirtualCluster.class, "e2e-restart-vc")).isTrue();
+        KafkaCluster vc = createKafkaCluster("e2e-restart-vc", "e2e-restart-app");
+        assertThat(resourceExists(KafkaCluster.class, "e2e-restart-vc")).isTrue();
     }
 
     @Test
@@ -94,7 +94,7 @@ class HAFailoverE2ETest extends E2ETestBase {
 
         // Create base resources
         createApplicationService("e2e-ha-multi-app");
-        createVirtualCluster("e2e-ha-multi-vc", "e2e-ha-multi-app");
+        createKafkaCluster("e2e-ha-multi-vc", "e2e-ha-multi-app");
         createServiceAccount("e2e-ha-multi-sa", "e2e-ha-multi-vc", "e2e-ha-multi-app");
 
         // Create multiple topics rapidly
@@ -116,7 +116,7 @@ class HAFailoverE2ETest extends E2ETestBase {
 
         // Create base resources
         createApplicationService("e2e-rolling-app");
-        createVirtualCluster("e2e-rolling-vc", "e2e-rolling-app");
+        createKafkaCluster("e2e-rolling-vc", "e2e-rolling-app");
         createServiceAccount("e2e-rolling-sa", "e2e-rolling-vc", "e2e-rolling-app");
 
         // Delete first pod and immediately create a topic

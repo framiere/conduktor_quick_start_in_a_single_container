@@ -25,8 +25,8 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
         syncToStore(app1);
 
-        // Create VirtualCluster for app1
-        VirtualCluster vc1 = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster for app1
+        KafkaCluster vc1 = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("vc1")
                 .clusterId("vc1")
@@ -64,8 +64,8 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
         syncToStore(app2);
 
-        // Create VirtualCluster for app2
-        VirtualCluster vc2 = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster for app2
+        KafkaCluster vc2 = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("vc2")
                 .clusterId("vc2")
@@ -109,8 +109,8 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         List<HasMetadata> apps = store.list(CRDKind.APPLICATION_SERVICE, "default");
         assertThat(apps).as("Should have 2 ApplicationServices").hasSize(2);
 
-        List<HasMetadata> vcs = store.list(CRDKind.VIRTUAL_CLUSTER, "default");
-        assertThat(vcs).as("Should have 2 VirtualClusters").hasSize(2);
+        List<HasMetadata> vcs = store.list(CRDKind.KAFKA_CLUSTER, "default");
+        assertThat(vcs).as("Should have 2 KafkaClusters").hasSize(2);
 
         List<HasMetadata> sas = store.list(CRDKind.SERVICE_ACCOUNT, "default");
         assertThat(sas).as("Should have 2 ServiceAccounts").hasSize(2);
@@ -123,7 +123,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         assertThat(app1).isNotNull();
         assertThat(app1.getSpec().getName()).isEqualTo("app1");
 
-        VirtualCluster vc1 = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "vc1");
+        KafkaCluster vc1 = store.get(CRDKind.KAFKA_CLUSTER, "default", "vc1");
         assertThat(vc1).isNotNull();
         assertThat(vc1.getSpec().getApplicationServiceRef()).isEqualTo("app1");
 
@@ -140,7 +140,7 @@ public class MultiTenantIsolationIT extends ScenarioITBase {
         assertThat(app2).isNotNull();
         assertThat(app2.getSpec().getName()).isEqualTo("app2");
 
-        VirtualCluster vc2 = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "vc2");
+        KafkaCluster vc2 = store.get(CRDKind.KAFKA_CLUSTER, "default", "vc2");
         assertThat(vc2).isNotNull();
         assertThat(vc2.getSpec().getApplicationServiceRef()).isEqualTo("app2");
 

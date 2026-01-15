@@ -9,7 +9,7 @@ spec:
   name: app1
 ---
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: vc1
   namespace: default
@@ -52,7 +52,7 @@ spec:
   name: app2
 ---
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: vc2
   namespace: default

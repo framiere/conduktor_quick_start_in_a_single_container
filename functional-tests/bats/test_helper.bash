@@ -192,7 +192,7 @@ cleanup_test_resources() {
     kubectl delete acls --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
     kubectl delete consumergroups --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
     kubectl delete serviceaccounts.messaging.example.com --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
-    kubectl delete virtualclusters --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
+    kubectl delete kafkaclusters --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
     kubectl delete applicationservices --all -n "$ns" --ignore-not-found=true 2>/dev/null || true
 
     # Wait for resources to be deleted
@@ -241,7 +241,7 @@ spec:
 EOF
 }
 
-# Create VirtualCluster
+# Create KafkaCluster
 create_virtual_cluster() {
     local name=$1
     local app_service_ref=$2
@@ -249,7 +249,7 @@ create_virtual_cluster() {
 
     kubectl apply -n "$ns" -f - <<EOF
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: $name
 spec:

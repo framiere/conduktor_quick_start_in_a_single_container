@@ -11,7 +11,7 @@ This repo builds and runs a single Docker image that bundles Conduktor Console, 
 make all
 ```
 
-This will build, run, generate certificates, and set up vClusters with mTLS automatically.
+This will build, run, generate certificates, and set up kClusters with mTLS automatically.
 
 ## Manual Build & Run
 
@@ -123,7 +123,7 @@ Client connects with certificate, Gateway extracts CN for identity:
     │     ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                                │
     │                                    │                                │
     │ 4. Map CN to Service Account       │                                │
-    │    demo-admin → demo vCluster      │                                │
+    │    demo-admin → demo kCluster      │                                │
     │     ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                                │
     │                                    │                                │
     │ 5. Kafka Request                   │ 6. Forward to                  │
@@ -149,19 +149,19 @@ Different certificates route to different Virtual Clusters:
 │  demo-admin      │   mTLS         │  │     Service Account Mapping   │  │
 │  certificate     │───────────────▶│  │                               │  │
 │  CN=demo-admin   │                │  │  CN=demo-admin                │  │
-└──────────────────┘                │  │    └──▶ demo vCluster         │  │
+└──────────────────┘                │  │    └──▶ demo kCluster         │  │
                                     │  │                               │  │
 ┌──────────────────┐                │  │  CN=demo-acl-admin            │  │
-│  demo-acl-admin  │   mTLS         │  │    └──▶ demo-acl vCluster     │  │
+│  demo-acl-admin  │   mTLS         │  │    └──▶ demo-acl kCluster     │  │
 │  certificate     │───────────────▶│  │                               │  │
 │  CN=demo-acl-    │                │  │  CN=demo-acl-user             │  │
-│       admin      │                │  │    └──▶ demo-acl vCluster     │  │
+│       admin      │                │  │    └──▶ demo-acl kCluster     │  │
 └──────────────────┘                │  │                               │  │
                                     │  └───────────────────────────────┘  │
 ┌──────────────────┐                │                                     │
 │  demo-acl-user   │   mTLS         │        ┌─────────┐  ┌─────────┐     │
 │  certificate     │───────────────▶│        │  demo   │  │demo-acl │     │
-│  CN=demo-acl-    │                │        │vCluster │  │vCluster │     │
+│  CN=demo-acl-    │                │        │kCluster │  │kCluster │     │
 │       user       │                │        │         │  │  +ACL   │     │
 └──────────────────┘                │        └────┬────┘  └────┬────┘     │
                                     │             │            │          │
@@ -175,13 +175,13 @@ Different certificates route to different Virtual Clusters:
                                     └─────────────────────────────────────┘
 ```
 
-### Step 6: ACL Enforcement (demo-acl vCluster)
+### Step 6: ACL Enforcement (demo-acl kCluster)
 
-The `demo-acl` vCluster enforces ACLs based on Service Account:
+The `demo-acl` kCluster enforces ACLs based on Service Account:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         demo-acl vCluster                               │
+│                         demo-acl kCluster                               │
 │                                                                         │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
 │  │                    Service Accounts                             │    │
@@ -228,7 +228,7 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 │   demo-admin.properties            │               ▼                       │ │
 │   demo-acl-admin.properties        │         ┌──────────┐ ┌───────────┐    │ │
 │   demo-acl-user.properties         │         │  demo    │ │ demo-acl  │    │ │
-│            │                       │         │ vCluster │ │ vCluster  │    │ │
+│            │                       │         │ kCluster │ │ kCluster  │    │ │
 │            │                       │         └────┬─────┘ └─────┬─────┘    │ │
 │            │                       │              │             │          │ │
 │            │                       │              └──────┬──────┘          │ │
@@ -252,8 +252,8 @@ The `demo-acl` vCluster enforces ACLs based on Service Account:
 - **Console** connects to Gateway HTTP admin API on port 8888
 - **Console** connects to Gateway mTLS Kafka on port 6969
 - **Schema Registry** is HTTP (plaintext)
-- **Certificate CN** determines which vCluster and Service Account is used
-- **ACLs** are enforced in Gateway per-vCluster (only `demo-acl` has ACL enabled)
+- **Certificate CN** determines which kCluster and Service Account is used
+- **ACLs** are enforced in Gateway per-kCluster (only `demo-acl` has ACL enabled)
 
 ## Makefile Targets
 
@@ -294,7 +294,7 @@ Open http://localhost:8080
 
 ### Virtual Clusters (mTLS Authentication)
 
-Two vClusters are created automatically with **mTLS authentication**:
+Two kClusters are created automatically with **mTLS authentication**:
 
 #### 1. `demo` (ACL disabled)
 
@@ -330,7 +330,7 @@ Access controlled by ACL rules.
 
 ### ACL Demo Results
 
-The setup script demonstrates ACL enforcement with mTLS on the `demo-acl` vCluster:
+The setup script demonstrates ACL enforcement with mTLS on the `demo-acl` kCluster:
 
 | User | Action | Topic | Result | Reason |
 |------|--------|-------|--------|--------|
@@ -348,7 +348,7 @@ Certificates are mounted via volume to `./certs/` and properties files are gener
 
 After running `make all` these files are created:
 
-| File | User | vCluster |
+| File | User | kCluster |
 |------|------|----------|
 | `demo-admin.properties` | demo-admin | demo |
 | `demo-acl-admin.properties` | demo-acl-admin | demo-acl |
@@ -367,11 +367,11 @@ ssl.key.password=conduktor
 ### Kafka CLI Examples
 
 ```sh
-# List topics on demo vCluster
+# List topics on demo kCluster
 kafka-topics --bootstrap-server localhost:6969 \
   --command-config demo-admin.properties --list
 
-# Create a topic on demo vCluster
+# Create a topic on demo kCluster
 kafka-topics --bootstrap-server localhost:6969 \
   --command-config demo-admin.properties \
   --create --topic my-topic --partitions 3
@@ -389,7 +389,7 @@ kafka-console-consumer \
   --topic my-topic \
   --from-beginning --max-messages 1
 
-# On demo-acl vCluster: demo-acl-user can read from click.* topics
+# On demo-acl kCluster: demo-acl-user can read from click.* topics
 kafka-console-consumer \
   --bootstrap-server localhost:6969 \
   --consumer.config demo-acl-user.properties \
@@ -421,7 +421,7 @@ export CDK_GATEWAY_BASE_URL=http://localhost:8888
 
 ```sh
 conduktor get KafkaCluster
-conduktor get VirtualCluster
+conduktor get KafkaCluster
 conduktor get GatewayServiceAccount
 ```
 
@@ -439,9 +439,9 @@ Certificates are generated at container startup and mounted to `./certs/`:
 |-------------|-----|---------|
 | CA | `ca.conduktor.local` | Root CA for signing all certs |
 | gateway | `gateway` | Gateway server certificate |
-| demo-admin | `demo-admin` | Admin for demo vCluster |
-| demo-acl-admin | `demo-acl-admin` | Admin for demo-acl vCluster |
-| demo-acl-user | `demo-acl-user` | Restricted user for demo-acl vCluster |
+| demo-admin | `demo-admin` | Admin for demo kCluster |
+| demo-acl-admin | `demo-acl-admin` | Admin for demo-acl kCluster |
+| demo-acl-user | `demo-acl-user` | Restricted user for demo-acl kCluster |
 | client | `client` | Generic client certificate |
 | console | `console` | Console service certificate |
 | redpanda | `redpanda` | Redpanda certificate (unused - plaintext) |

@@ -1,5 +1,5 @@
 # Complete ownership chain hierarchy for testing
-# Apply in order: ApplicationService -> VirtualCluster -> ServiceAccount -> Topic/ACL/ConsumerGroup
+# Apply in order: ApplicationService -> KafkaCluster -> ServiceAccount -> Topic/ACL/ConsumerGroup
 ---
 apiVersion: messaging.example.com/v1
 kind: ApplicationService
@@ -10,7 +10,7 @@ spec:
   displayName: Ownership Chain Test Application
 ---
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: chain-vc
 spec:

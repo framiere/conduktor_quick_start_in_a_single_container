@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 public enum CRDKind {
-    APPLICATION_SERVICE("ApplicationService", ApplicationService.class), VIRTUAL_CLUSTER("VirtualCluster", VirtualCluster.class), SERVICE_ACCOUNT("ServiceAccount",
+    APPLICATION_SERVICE("ApplicationService", ApplicationService.class), KAFKA_CLUSTER("KafkaCluster", KafkaCluster.class), SERVICE_ACCOUNT("ServiceAccount",
             ServiceAccount.class), TOPIC("Topic", Topic.class), ACL("ACL", ACL.class), CONSUMER_GROUP("ConsumerGroup", ConsumerGroup.class);
 
     private final String value;

@@ -7,9 +7,9 @@ metadata:
 spec:
   name: orders-service
 ---
-# VirtualCluster CR - represents a Conduktor virtual cluster
+# KafkaCluster CR - represents a Conduktor virtual cluster
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: prod-cluster
   namespace: orders
@@ -115,7 +115,7 @@ spec:
   name: demo-admin
 ---
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: demo
 spec:
@@ -131,7 +131,7 @@ spec:
   name: demo-acl-admin
 ---
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: demo-acl
 spec:

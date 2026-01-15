@@ -49,7 +49,7 @@ public abstract class KubernetesITBase {
 
         // Clean up K8s mock server state
         k8sClient.resources(ApplicationService.class).inAnyNamespace().delete();
-        k8sClient.resources(VirtualCluster.class).inAnyNamespace().delete();
+        k8sClient.resources(KafkaCluster.class).inAnyNamespace().delete();
         k8sClient.resources(ServiceAccount.class).inAnyNamespace().delete();
         k8sClient.resources(Topic.class).inAnyNamespace().delete();
         k8sClient.resources(ACL.class).inAnyNamespace().delete();
@@ -70,7 +70,7 @@ public abstract class KubernetesITBase {
      */
     protected void syncAllToStore() {
         k8sClient.resources(ApplicationService.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
-        k8sClient.resources(VirtualCluster.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
+        k8sClient.resources(KafkaCluster.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
         k8sClient.resources(ServiceAccount.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
         k8sClient.resources(Topic.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);
         k8sClient.resources(ACL.class).inAnyNamespace().list().getItems().forEach(this::syncToStore);

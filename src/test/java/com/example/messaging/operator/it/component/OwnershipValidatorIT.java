@@ -16,10 +16,10 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
     @Test
     void testValidateOwnershipChainFromK8s() {
-        // Create full ownership chain in K8s: ApplicationService -> VirtualCluster -> ServiceAccount -> Topic
+        // Create full ownership chain in K8s: ApplicationService -> KafkaCluster -> ServiceAccount -> Topic
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
@@ -78,14 +78,14 @@ public class OwnershipValidatorIT extends ComponentITBase {
     }
 
     @Test
-    void testRejectWrongVirtualClusterOwner() {
+    void testRejectWrongKafkaClusterOwner() {
         // Create two ApplicationServices in K8s
         ApplicationService app1 = TestDataBuilder.applicationService().namespace("default").name("app1").appName("app1").createIn(k8sClient);
 
         ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
 
-        // Create VirtualCluster owned by app1
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster owned by app1
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
@@ -108,7 +108,7 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
         // Verify validation fails
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).contains("VirtualCluster 'test-cluster' is owned by 'app1', not 'app2'");
+        assertThat(result.getMessage()).contains("KafkaCluster 'test-cluster' is owned by 'app1', not 'app2'");
     }
 
     @Test
@@ -118,8 +118,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
 
         ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
 
-        // Create VirtualCluster owned by app1 in K8s
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster owned by app1 in K8s
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
@@ -130,11 +130,11 @@ public class OwnershipValidatorIT extends ComponentITBase {
         syncAllToStore();
 
         // Get existing cluster from store
-        VirtualCluster existingCluster = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
+        KafkaCluster existingCluster = store.get(CRDKind.KAFKA_CLUSTER, "default", "test-cluster");
         assertThat(existingCluster).isNotNull();
 
         // Try to change ownership to app2
-        VirtualCluster updatedCluster = TestDataBuilder.virtualCluster()
+        KafkaCluster updatedCluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
@@ -154,8 +154,8 @@ public class OwnershipValidatorIT extends ComponentITBase {
         // Create ApplicationService in K8s
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
 
-        // Create VirtualCluster in K8s
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster in K8s
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("original-cluster-id")
@@ -166,12 +166,12 @@ public class OwnershipValidatorIT extends ComponentITBase {
         syncAllToStore();
 
         // Get existing cluster from store
-        VirtualCluster existingCluster = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
+        KafkaCluster existingCluster = store.get(CRDKind.KAFKA_CLUSTER, "default", "test-cluster");
         assertThat(existingCluster).isNotNull();
         assertThat(existingCluster.getSpec().getClusterId()).isEqualTo("original-cluster-id");
 
         // Update cluster spec but keep same owner
-        VirtualCluster updatedCluster = TestDataBuilder.virtualCluster()
+        KafkaCluster updatedCluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("updated-cluster-id") // Changed spec

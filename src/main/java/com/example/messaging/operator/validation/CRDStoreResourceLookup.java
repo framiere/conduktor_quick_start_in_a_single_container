@@ -19,8 +19,8 @@ public class CRDStoreResourceLookup implements ResourceLookup {
     }
 
     @Override
-    public VirtualCluster getVirtualCluster(String namespace, String name) {
-        return store.get(CRDKind.VIRTUAL_CLUSTER, namespace, name);
+    public KafkaCluster getKafkaCluster(String namespace, String name) {
+        return store.get(CRDKind.KAFKA_CLUSTER, namespace, name);
     }
 
     @Override

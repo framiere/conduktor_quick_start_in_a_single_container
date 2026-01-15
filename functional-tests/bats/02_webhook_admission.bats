@@ -30,14 +30,14 @@ teardown_file() {
     assert_success
 }
 
-@test "webhook accepts valid VirtualCluster with existing ApplicationService" {
+@test "webhook accepts valid KafkaCluster with existing ApplicationService" {
     # Create prerequisite
     create_app_service "test-app"
 
     run create_virtual_cluster "test-vc" "test-app"
     assert_success
 
-    run kubectl get virtualcluster test-vc -n "$NAMESPACE"
+    run kubectl get kafkacluster test-vc -n "$NAMESPACE"
     assert_success
 }
 
@@ -107,10 +107,10 @@ EOF
     assert_failure
 }
 
-@test "webhook rejects VirtualCluster with non-existent ApplicationService ref" {
+@test "webhook rejects KafkaCluster with non-existent ApplicationService ref" {
     run kubectl apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: invalid-vc
 spec:
@@ -121,8 +121,8 @@ EOF
     assert_failure
 }
 
-@test "webhook rejects ServiceAccount with non-existent VirtualCluster ref" {
-    # Create ApplicationService but not VirtualCluster
+@test "webhook rejects ServiceAccount with non-existent KafkaCluster ref" {
+    # Create ApplicationService but not KafkaCluster
     create_app_service "test-app"
 
     run kubectl apply -n "$NAMESPACE" -f - <<EOF

@@ -1,6 +1,6 @@
-# HA Test: VirtualCluster
+# HA Test: KafkaCluster
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: ha-test-vc
 spec:

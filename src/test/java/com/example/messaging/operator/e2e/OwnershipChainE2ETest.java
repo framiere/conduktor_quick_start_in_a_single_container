@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * E2E tests for validating the ownership chain hierarchy: ApplicationService -> VirtualCluster -> ServiceAccount -> Topic/ACL/ConsumerGroup
+ * E2E tests for validating the ownership chain hierarchy: ApplicationService -> KafkaCluster -> ServiceAccount -> Topic/ACL/ConsumerGroup
  */
 @E2ETest
 class OwnershipChainE2ETest extends E2ETestBase {
@@ -31,8 +31,8 @@ class OwnershipChainE2ETest extends E2ETestBase {
         ApplicationService app = createApplicationService("e2e-chain-app");
         assertThat(resourceExists(ApplicationService.class, "e2e-chain-app")).isTrue();
 
-        VirtualCluster vc = createVirtualCluster("e2e-chain-vc", "e2e-chain-app");
-        assertThat(resourceExists(VirtualCluster.class, "e2e-chain-vc")).isTrue();
+        KafkaCluster vc = createKafkaCluster("e2e-chain-vc", "e2e-chain-app");
+        assertThat(resourceExists(KafkaCluster.class, "e2e-chain-vc")).isTrue();
 
         ServiceAccount sa = createServiceAccount("e2e-chain-sa", "e2e-chain-vc", "e2e-chain-app");
         assertThat(resourceExists(ServiceAccount.class, "e2e-chain-sa")).isTrue();
@@ -42,18 +42,18 @@ class OwnershipChainE2ETest extends E2ETestBase {
     }
 
     @Test
-    @DisplayName("VirtualCluster with non-existent ApplicationService is rejected")
-    void virtualCluster_withNonExistentApplicationService_rejected() {
-        assertRejectedWith(() -> createVirtualCluster("orphan-vc", "non-existent-app"), "ApplicationService");
+    @DisplayName("KafkaCluster with non-existent ApplicationService is rejected")
+    void kafkaCluster_withNonExistentApplicationService_rejected() {
+        assertRejectedWith(() -> createKafkaCluster("orphan-vc", "non-existent-app"), "ApplicationService");
     }
 
     @Test
-    @DisplayName("ServiceAccount with non-existent VirtualCluster is rejected")
-    void serviceAccount_withNonExistentVirtualCluster_rejected() {
+    @DisplayName("ServiceAccount with non-existent KafkaCluster is rejected")
+    void serviceAccount_withNonExistentKafkaCluster_rejected() {
         // Create app first
         createApplicationService("e2e-sa-app");
 
-        assertRejectedWith(() -> createServiceAccount("orphan-sa", "non-existent-vc", "e2e-sa-app"), "VirtualCluster");
+        assertRejectedWith(() -> createServiceAccount("orphan-sa", "non-existent-vc", "e2e-sa-app"), "KafkaCluster");
     }
 
     @Test
@@ -61,20 +61,20 @@ class OwnershipChainE2ETest extends E2ETestBase {
     void topic_withNonExistentServiceAccount_rejected() {
         // Create app and vc first
         createApplicationService("e2e-topic-app");
-        createVirtualCluster("e2e-topic-vc", "e2e-topic-app");
+        createKafkaCluster("e2e-topic-vc", "e2e-topic-app");
 
         assertRejectedWith(() -> createTopic("orphan-topic", "non-existent-sa", "e2e-topic-app"), "ServiceAccount");
     }
 
     @Test
-    @DisplayName("ServiceAccount must belong to same ApplicationService as its VirtualCluster")
+    @DisplayName("ServiceAccount must belong to same ApplicationService as its KafkaCluster")
     void serviceAccount_mustBelongToSameApplicationService() {
         // Create two separate apps
         createApplicationService("e2e-app-a");
         createApplicationService("e2e-app-b");
 
         // Create VC under app-a
-        createVirtualCluster("e2e-vc-a", "e2e-app-a");
+        createKafkaCluster("e2e-vc-a", "e2e-app-a");
 
         // Try to create SA under app-b but referencing app-a's VC
         assertRejectedWith(() -> createServiceAccount("cross-app-sa", "e2e-vc-a", "e2e-app-b"), "does not belong");
@@ -85,7 +85,7 @@ class OwnershipChainE2ETest extends E2ETestBase {
     void topic_mustBelongToSameApplicationService() {
         // Create two separate apps with full chains
         createApplicationService("e2e-topic-app-a");
-        createVirtualCluster("e2e-topic-vc-a", "e2e-topic-app-a");
+        createKafkaCluster("e2e-topic-vc-a", "e2e-topic-app-a");
         createServiceAccount("e2e-topic-sa-a", "e2e-topic-vc-a", "e2e-topic-app-a");
 
         createApplicationService("e2e-topic-app-b");

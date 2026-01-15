@@ -52,22 +52,22 @@ class OwnershipValidatorTest {
         }
 
         @Test
-        @DisplayName("should allow VirtualCluster when ApplicationService exists")
-        void testVirtualClusterCreateWithExistingAppService() {
+        @DisplayName("should allow KafkaCluster when ApplicationService exists")
+        void testKafkaClusterCreateWithExistingAppService() {
             // Setup
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
             // Test
-            VirtualCluster vCluster = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster vCluster = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
             ValidationResult result = validator.validateCreate(vCluster, NAMESPACE);
 
             assertThat(result.isValid()).isTrue();
         }
 
         @Test
-        @DisplayName("should reject VirtualCluster when ApplicationService does not exist")
-        void testVirtualClusterCreateWithMissingAppService() {
-            VirtualCluster vCluster = buildVirtualCluster(CLUSTER_ID, "nonexistent-app-service");
+        @DisplayName("should reject KafkaCluster when ApplicationService does not exist")
+        void testKafkaClusterCreateWithMissingAppService() {
+            KafkaCluster vCluster = buildKafkaCluster(CLUSTER_ID, "nonexistent-app-service");
 
             ValidationResult result = validator.validateCreate(vCluster, NAMESPACE);
 
@@ -76,11 +76,11 @@ class OwnershipValidatorTest {
         }
 
         @Test
-        @DisplayName("should allow ServiceAccount when ApplicationService and VirtualCluster exist")
+        @DisplayName("should allow ServiceAccount when ApplicationService and KafkaCluster exist")
         void testServiceAccountCreateWithValidChain() {
             // Setup ownership chain
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster(CLUSTER_ID, APP_SERVICE));
 
             // Test
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
@@ -101,8 +101,8 @@ class OwnershipValidatorTest {
         }
 
         @Test
-        @DisplayName("should reject ServiceAccount when VirtualCluster does not exist")
-        void testServiceAccountCreateWithMissingVirtualCluster() {
+        @DisplayName("should reject ServiceAccount when KafkaCluster does not exist")
+        void testServiceAccountCreateWithMissingKafkaCluster() {
             // Setup only ApplicationService
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
@@ -111,23 +111,23 @@ class OwnershipValidatorTest {
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("VirtualCluster").contains("does not exist");
+            assertThat(result.getMessage()).contains("KafkaCluster").contains("does not exist");
         }
 
         @Test
-        @DisplayName("should reject ServiceAccount when VirtualCluster is owned by different ApplicationService")
+        @DisplayName("should reject ServiceAccount when KafkaCluster is owned by different ApplicationService")
         void testServiceAccountCreateWithWrongOwner() {
-            // Setup: VirtualCluster owned by OTHER_APP_SERVICE
+            // Setup: KafkaCluster owned by OTHER_APP_SERVICE
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster(CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create ServiceAccount referencing APP_SERVICE
             ServiceAccount sa = buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE);
             ValidationResult result = validator.validateCreate(sa, NAMESPACE);
 
             assertThat(result.isValid()).isFalse();
-            assertThat(result.getMessage()).contains("VirtualCluster").contains("is owned by").contains(OTHER_APP_SERVICE).contains(APP_SERVICE);
+            assertThat(result.getMessage()).contains("KafkaCluster").contains("is owned by").contains(OTHER_APP_SERVICE).contains(APP_SERVICE);
         }
 
         @Test
@@ -160,7 +160,7 @@ class OwnershipValidatorTest {
             // Setup: ServiceAccount owned by OTHER_APP_SERVICE
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(OTHER_APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster(CLUSTER_ID, OTHER_APP_SERVICE));
             store.create(CRDKind.SERVICE_ACCOUNT, NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, OTHER_APP_SERVICE));
 
             // Test: Try to create Topic referencing APP_SERVICE
@@ -206,8 +206,8 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should allow update when applicationServiceRef is unchanged")
         void testUpdateWithSameOwner() {
-            VirtualCluster existing = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
-            VirtualCluster updated = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster existing = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster updated = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
             updated.getSpec().setClusterId("prod-cluster-v2"); // Change other field
 
             ValidationResult result = validator.validateUpdate(existing, updated);
@@ -218,8 +218,8 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should reject update when applicationServiceRef is changed")
         void testUpdateWithDifferentOwner() {
-            VirtualCluster existing = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
-            VirtualCluster updated = buildVirtualCluster(CLUSTER_ID, OTHER_APP_SERVICE);
+            KafkaCluster existing = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster updated = buildKafkaCluster(CLUSTER_ID, OTHER_APP_SERVICE);
 
             ValidationResult result = validator.validateUpdate(existing, updated);
 
@@ -245,7 +245,7 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should reject update when new resource has null owner")
         void testUpdateWithNullNewOwner() {
-            VirtualCluster existing = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster existing = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
             ApplicationService updated = buildApplicationService(APP_SERVICE);
 
             ValidationResult result = validator.validateUpdate(existing, updated);
@@ -288,7 +288,7 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should allow delete when requestor is the owner")
         void testDeleteByOwner() {
-            VirtualCluster resource = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster resource = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
 
             ValidationResult result = validator.validateDelete(resource, APP_SERVICE);
 
@@ -298,7 +298,7 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should reject delete when requestor is not the owner")
         void testDeleteByNonOwner() {
-            VirtualCluster resource = buildVirtualCluster(CLUSTER_ID, APP_SERVICE);
+            KafkaCluster resource = buildKafkaCluster(CLUSTER_ID, APP_SERVICE);
 
             ValidationResult result = validator.validateDelete(resource, OTHER_APP_SERVICE);
 
@@ -352,7 +352,7 @@ class OwnershipValidatorTest {
 
     private void setupCompleteOwnershipChain() {
         store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
-        store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster(CLUSTER_ID, APP_SERVICE));
+        store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster(CLUSTER_ID, APP_SERVICE));
         store.create(CRDKind.SERVICE_ACCOUNT, NAMESPACE, buildServiceAccount(SERVICE_ACCOUNT, CLUSTER_ID, APP_SERVICE));
     }
 
@@ -369,13 +369,13 @@ class OwnershipValidatorTest {
         return appService;
     }
 
-    private VirtualCluster buildVirtualCluster(String clusterId, String appServiceRef) {
-        VirtualCluster vCluster = new VirtualCluster();
+    private KafkaCluster buildKafkaCluster(String clusterId, String appServiceRef) {
+        KafkaCluster vCluster = new KafkaCluster();
         vCluster.setMetadata(new ObjectMeta());
         vCluster.getMetadata().setName(clusterId);
         vCluster.getMetadata().setNamespace(NAMESPACE);
 
-        VirtualClusterSpec spec = new VirtualClusterSpec();
+        KafkaClusterSpec spec = new KafkaClusterSpec();
         spec.setClusterId(clusterId);
         spec.setApplicationServiceRef(appServiceRef);
         vCluster.setSpec(spec);

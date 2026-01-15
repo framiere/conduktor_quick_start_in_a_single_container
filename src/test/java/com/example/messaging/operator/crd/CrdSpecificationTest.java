@@ -84,13 +84,13 @@ class CrdSpecificationTest {
     }
 
     @Nested
-    @DisplayName("VirtualCluster CRD")
-    class VirtualClusterTest {
+    @DisplayName("KafkaCluster CRD")
+    class KafkaClusterTest {
 
         @Test
-        @DisplayName("should create VirtualCluster with clusterId and applicationServiceRef")
-        void testVirtualClusterCreation() {
-            VirtualClusterSpec spec = new VirtualClusterSpec();
+        @DisplayName("should create KafkaCluster with clusterId and applicationServiceRef")
+        void testKafkaClusterCreation() {
+            KafkaClusterSpec spec = new KafkaClusterSpec();
             spec.setClusterId("prod-cluster");
             spec.setApplicationServiceRef("orders-service");
 
@@ -101,17 +101,17 @@ class CrdSpecificationTest {
         }
 
         @Test
-        @DisplayName("should build VirtualCluster using builder pattern")
-        void testVirtualClusterBuilder() {
-            VirtualClusterSpec spec = new VirtualClusterSpecBuilder().withClusterId("demo-cluster").withApplicationServiceRef("demo-admin").build();
+        @DisplayName("should build KafkaCluster using builder pattern")
+        void testKafkaClusterBuilder() {
+            KafkaClusterSpec spec = new KafkaClusterSpecBuilder().withClusterId("demo-cluster").withApplicationServiceRef("demo-admin").build();
 
-            assertThat(spec).extracting(VirtualClusterSpec::getClusterId, VirtualClusterSpec::getApplicationServiceRef).containsExactly("demo-cluster", "demo-admin");
+            assertThat(spec).extracting(KafkaClusterSpec::getClusterId, KafkaClusterSpec::getApplicationServiceRef).containsExactly("demo-cluster", "demo-admin");
         }
 
         @Test
         @DisplayName("should validate all required fields are present")
-        void testVirtualClusterRequiredFields() {
-            VirtualClusterSpec spec = new VirtualClusterSpec();
+        void testKafkaClusterRequiredFields() {
+            KafkaClusterSpec spec = new KafkaClusterSpec();
 
             // Before setting required fields
             assertThat(spec.getClusterId()).isNull();
@@ -183,7 +183,7 @@ class CrdSpecificationTest {
         }
 
         @Test
-        @DisplayName("should maintain relationship chain: ServiceAccount -> VirtualCluster -> ApplicationService")
+        @DisplayName("should maintain relationship chain: ServiceAccount -> KafkaCluster -> ApplicationService")
         void testServiceAccountRelationships() {
             ServiceAccountSpec saSpec = new ServiceAccountSpec();
             saSpec.setName("orders-service");
@@ -193,7 +193,7 @@ class CrdSpecificationTest {
 
             // Verify the reference chain
             assertThat(saSpec).satisfies(s -> {
-                assertThat(s.getClusterRef()).as("ServiceAccount should reference VirtualCluster").isEqualTo("prod-cluster");
+                assertThat(s.getClusterRef()).as("ServiceAccount should reference KafkaCluster").isEqualTo("prod-cluster");
                 assertThat(s.getApplicationServiceRef()).as("ServiceAccount should reference ApplicationService").isEqualTo("orders-service");
             });
         }
@@ -417,12 +417,12 @@ class CrdSpecificationTest {
             ApplicationServiceSpec appService = new ApplicationServiceSpec();
             appService.setName("orders-service");
 
-            // VirtualCluster references ApplicationService
-            VirtualClusterSpec vCluster = new VirtualClusterSpec();
+            // KafkaCluster references ApplicationService
+            KafkaClusterSpec vCluster = new KafkaClusterSpec();
             vCluster.setClusterId("prod-cluster");
             vCluster.setApplicationServiceRef("orders-service");
 
-            // ServiceAccount references both VirtualCluster and ApplicationService
+            // ServiceAccount references both KafkaCluster and ApplicationService
             ServiceAccountSpec sa = new ServiceAccountSpec();
             sa.setName("orders-service");
             sa.setDn(List.of("CN=orders-service,OU=ORDERS,O=EXAMPLE,L=CITY,C=US"));
@@ -436,22 +436,22 @@ class CrdSpecificationTest {
             topic.setApplicationServiceRef("orders-service");
 
             // Validate the chain
-            assertThat(vCluster.getApplicationServiceRef()).isEqualTo(appService.getName()).as("VirtualCluster should reference ApplicationService");
+            assertThat(vCluster.getApplicationServiceRef()).isEqualTo(appService.getName()).as("KafkaCluster should reference ApplicationService");
 
             assertThat(sa.getApplicationServiceRef()).isEqualTo(appService.getName()).as("ServiceAccount should reference ApplicationService");
 
-            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount should reference VirtualCluster");
+            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount should reference KafkaCluster");
 
             assertThat(topic.getApplicationServiceRef()).isEqualTo(appService.getName()).as("Topic should reference ApplicationService");
         }
 
         @Test
-        @DisplayName("should validate ServiceAccount to VirtualCluster reference")
-        void testServiceAccountToVirtualClusterReference() {
+        @DisplayName("should validate ServiceAccount to KafkaCluster reference")
+        void testServiceAccountToKafkaClusterReference() {
             String clusterId = "demo-acl";
             String appServiceName = "demo-acl-admin";
 
-            VirtualClusterSpec vCluster = new VirtualClusterSpec();
+            KafkaClusterSpec vCluster = new KafkaClusterSpec();
             vCluster.setClusterId(clusterId);
             vCluster.setApplicationServiceRef(appServiceName);
 
@@ -459,7 +459,7 @@ class CrdSpecificationTest {
             sa.setClusterRef(clusterId);
             sa.setApplicationServiceRef(appServiceName);
 
-            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount clusterRef should match VirtualCluster clusterId");
+            assertThat(sa.getClusterRef()).isEqualTo(vCluster.getClusterId()).as("ServiceAccount clusterRef should match KafkaCluster clusterId");
 
             assertThat(sa.getApplicationServiceRef()).isEqualTo(vCluster.getApplicationServiceRef()).as("Both should reference the same ApplicationService");
         }
@@ -515,7 +515,7 @@ class CrdSpecificationTest {
         void testAllSpecsHaveBuilders() {
             assertThatCode(() -> {
                 new ApplicationServiceSpecBuilder().build();
-                new VirtualClusterSpecBuilder().build();
+                new KafkaClusterSpecBuilder().build();
                 new ServiceAccountSpecBuilder().build();
                 new TopicCRSpecBuilder().build();
                 new ConsumerGroupSpecBuilder().build();
@@ -635,7 +635,7 @@ class CrdSpecificationTest {
             ServiceAccountSpec saSpec = new ServiceAccountSpec();
             assertThat(saSpec.getDn()).isNotNull().isEmpty();
 
-            VirtualClusterSpec vcSpec = new VirtualClusterSpec();
+            KafkaClusterSpec vcSpec = new KafkaClusterSpec();
             assertThat(vcSpec).isNotNull();
 
             TopicCRSpec topicSpec = new TopicCRSpec();

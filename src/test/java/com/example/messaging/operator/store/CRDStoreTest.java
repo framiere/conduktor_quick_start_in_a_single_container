@@ -131,21 +131,21 @@ class CRDStoreTest {
         }
 
         @Test
-        @DisplayName("should enforce ownership on VirtualCluster create")
-        void testCreateEnforcesOwnershipForVirtualCluster() {
-            VirtualCluster vCluster = buildVirtualCluster("prod-cluster", "nonexistent-app");
+        @DisplayName("should enforce ownership on KafkaCluster create")
+        void testCreateEnforcesOwnershipForKafkaCluster() {
+            KafkaCluster vCluster = buildKafkaCluster("prod-cluster", "nonexistent-app");
 
-            assertThatThrownBy(() -> store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, vCluster)).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, vCluster)).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
         @Test
-        @DisplayName("should allow VirtualCluster create when ApplicationService exists")
-        void testCreateAllowsVirtualClusterWithValidOwnership() {
+        @DisplayName("should allow KafkaCluster create when ApplicationService exists")
+        void testCreateAllowsKafkaClusterWithValidOwnership() {
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
 
-            VirtualCluster vCluster = buildVirtualCluster("prod-cluster", APP_SERVICE);
-            VirtualCluster created = store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, vCluster);
+            KafkaCluster vCluster = buildKafkaCluster("prod-cluster", APP_SERVICE);
+            KafkaCluster created = store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, vCluster);
 
             assertThat(created).isNotNull();
             assertThat(created.getMetadata().getResourceVersion()).isEqualTo("2");
@@ -210,12 +210,12 @@ class CRDStoreTest {
             // Setup ownership chain
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("other-service"));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster("prod-cluster", APP_SERVICE));
 
-            // Try to change owner - create new VirtualCluster with different owner
-            VirtualCluster modifiedCluster = buildVirtualCluster("prod-cluster", "other-service");
+            // Try to change owner - create new KafkaCluster with different owner
+            KafkaCluster modifiedCluster = buildKafkaCluster("prod-cluster", "other-service");
 
-            assertThatThrownBy(() -> store.update(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", modifiedCluster)).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.update(CRDKind.KAFKA_CLUSTER, NAMESPACE, "prod-cluster", modifiedCluster)).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed")
                     .hasMessageContaining("Cannot change applicationServiceRef");
         }
@@ -224,12 +224,12 @@ class CRDStoreTest {
         @DisplayName("should allow update when ownership unchanged")
         void testUpdateAllowsWhenOwnershipUnchanged() {
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster("prod-cluster", APP_SERVICE));
 
-            VirtualCluster vCluster = store.get(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster");
+            KafkaCluster vCluster = store.get(CRDKind.KAFKA_CLUSTER, NAMESPACE, "prod-cluster");
             vCluster.getSpec().setClusterId("prod-cluster-updated");
 
-            VirtualCluster updated = store.update(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", vCluster);
+            KafkaCluster updated = store.update(CRDKind.KAFKA_CLUSTER, NAMESPACE, "prod-cluster", vCluster);
 
             assertThat(updated.getSpec().getClusterId()).isEqualTo("prod-cluster-updated");
         }
@@ -308,10 +308,10 @@ class CRDStoreTest {
             // Setup
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService("other-service"));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster("prod-cluster", APP_SERVICE));
 
             // Try to delete with wrong owner
-            assertThatThrownBy(() -> store.delete(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", "other-service")).isInstanceOf(SecurityException.class)
+            assertThatThrownBy(() -> store.delete(CRDKind.KAFKA_CLUSTER, NAMESPACE, "prod-cluster", "other-service")).isInstanceOf(SecurityException.class)
                     .hasMessageContaining("Ownership validation failed");
         }
 
@@ -319,9 +319,9 @@ class CRDStoreTest {
         @DisplayName("should allow delete by owner")
         void testDeleteAllowsByOwner() {
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("prod-cluster", APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster("prod-cluster", APP_SERVICE));
 
-            boolean deleted = store.delete(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, "prod-cluster", APP_SERVICE);
+            boolean deleted = store.delete(CRDKind.KAFKA_CLUSTER, NAMESPACE, "prod-cluster", APP_SERVICE);
 
             assertThat(deleted).isTrue();
         }
@@ -407,10 +407,10 @@ class CRDStoreTest {
         @DisplayName("should not list different resource kinds")
         void testListIsolatesResourceKinds() {
             store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE, buildApplicationService(APP_SERVICE));
-            store.create(CRDKind.VIRTUAL_CLUSTER, NAMESPACE, buildVirtualCluster("cluster1", APP_SERVICE));
+            store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, buildKafkaCluster("cluster1", APP_SERVICE));
 
             List<ApplicationService> apps = store.list(CRDKind.APPLICATION_SERVICE, NAMESPACE);
-            List<VirtualCluster> clusters = store.list(CRDKind.VIRTUAL_CLUSTER, NAMESPACE);
+            List<KafkaCluster> clusters = store.list(CRDKind.KAFKA_CLUSTER, NAMESPACE);
 
             assertThat(apps).hasSize(1);
             assertThat(clusters).hasSize(1);
@@ -496,13 +496,13 @@ class CRDStoreTest {
         return appService;
     }
 
-    private VirtualCluster buildVirtualCluster(String clusterId, String appServiceRef) {
-        VirtualCluster vCluster = new VirtualCluster();
+    private KafkaCluster buildKafkaCluster(String clusterId, String appServiceRef) {
+        KafkaCluster vCluster = new KafkaCluster();
         vCluster.setMetadata(new ObjectMeta());
         vCluster.getMetadata().setName(clusterId);
         vCluster.getMetadata().setNamespace(NAMESPACE);
 
-        VirtualClusterSpec spec = new VirtualClusterSpec();
+        KafkaClusterSpec spec = new KafkaClusterSpec();
         spec.setClusterId(clusterId);
         spec.setApplicationServiceRef(appServiceRef);
         vCluster.setSpec(spec);

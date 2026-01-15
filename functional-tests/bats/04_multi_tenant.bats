@@ -41,7 +41,7 @@ teardown_file() {
     assert_success
 }
 
-@test "tenant B cannot reference tenant A VirtualCluster" {
+@test "tenant B cannot reference tenant A KafkaCluster" {
     # Try to create a ServiceAccount under tenant-b-app but referencing tenant-a-vc
     run kubectl apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: messaging.example.com/v1
@@ -77,7 +77,7 @@ EOF
     assert_failure
 }
 
-@test "tenant A cannot reference tenant B VirtualCluster" {
+@test "tenant A cannot reference tenant B KafkaCluster" {
     # Try to create a ServiceAccount under tenant-a-app but referencing tenant-b-vc
     run kubectl apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: messaging.example.com/v1

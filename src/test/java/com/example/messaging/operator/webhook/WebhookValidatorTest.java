@@ -112,20 +112,20 @@ class WebhookValidatorTest {
     }
 
     @Test
-    @DisplayName("should deny VirtualCluster UPDATE when applicationServiceRef changed")
-    void testDenyVirtualClusterUpdate() {
-        VirtualCluster oldVc = new VirtualCluster();
+    @DisplayName("should deny KafkaCluster UPDATE when applicationServiceRef changed")
+    void testDenyKafkaClusterUpdate() {
+        KafkaCluster oldVc = new KafkaCluster();
         oldVc.setMetadata(new ObjectMeta());
         oldVc.getMetadata().setName("vc-1");
-        VirtualClusterSpec oldSpec = new VirtualClusterSpec();
+        KafkaClusterSpec oldSpec = new KafkaClusterSpec();
         oldSpec.setClusterId("cluster-1");
         oldSpec.setApplicationServiceRef("app-1");
         oldVc.setSpec(oldSpec);
 
-        VirtualCluster newVc = new VirtualCluster();
+        KafkaCluster newVc = new KafkaCluster();
         newVc.setMetadata(new ObjectMeta());
         newVc.getMetadata().setName("vc-1");
-        VirtualClusterSpec newSpec = new VirtualClusterSpec();
+        KafkaClusterSpec newSpec = new KafkaClusterSpec();
         newSpec.setClusterId("cluster-1");
         newSpec.setApplicationServiceRef("hacker-app"); // Changed!
         newVc.setSpec(newSpec);
@@ -136,7 +136,7 @@ class WebhookValidatorTest {
         request.setObject(mapper.convertValue(newVc, Map.class));
         request.setOldObject(mapper.convertValue(oldVc, Map.class));
 
-        AdmissionResponse response = validator.validate(request, VirtualCluster.class);
+        AdmissionResponse response = validator.validate(request, KafkaCluster.class);
 
         assertThat(response.isAllowed()).isFalse();
         assertThat(response.getStatus().getMessage()).contains("Cannot change applicationServiceRef");

@@ -1,6 +1,6 @@
-# Invalid: VirtualCluster without applicationServiceRef
+# Invalid: KafkaCluster without applicationServiceRef
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: orphan-vc
 spec:

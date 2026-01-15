@@ -10,7 +10,7 @@ const endpoints = [
   { path: '/validate/topic', method: 'POST', description: 'Topic admission validation', returns: 'AdmissionReview' },
   { path: '/validate/acl', method: 'POST', description: 'ACL admission validation', returns: 'AdmissionReview' },
   { path: '/validate/serviceaccount', method: 'POST', description: 'ServiceAccount admission validation', returns: 'AdmissionReview' },
-  { path: '/validate/virtualcluster', method: 'POST', description: 'VirtualCluster admission validation', returns: 'AdmissionReview' },
+  { path: '/validate/kafkacluster', method: 'POST', description: 'KafkaCluster admission validation', returns: 'AdmissionReview' },
   { path: '/validate/consumergroup', method: 'POST', description: 'ConsumerGroup admission validation', returns: 'AdmissionReview' },
 ]
 

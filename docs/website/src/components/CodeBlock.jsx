@@ -118,7 +118,7 @@ function highlightLogs(code) {
       result = result.replace(/\b(CREATE|UPDATE|DELETE)\b/g, '<span class="text-yellow-400">$1</span>')
 
       // Resource types
-      result = result.replace(/\b(ApplicationService|VirtualCluster|ServiceAccount|Topic|ACL|ConsumerGroup)\b/g,
+      result = result.replace(/\b(ApplicationService|KafkaCluster|ServiceAccount|Topic|ACL|ConsumerGroup)\b/g,
         '<span class="text-orange-400">$1</span>')
 
       // Namespace/name

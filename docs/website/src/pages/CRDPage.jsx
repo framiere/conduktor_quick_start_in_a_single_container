@@ -22,7 +22,7 @@ spec:
   name: team-a-app`
   },
   {
-    name: 'VirtualCluster',
+    name: 'KafkaCluster',
     icon: Database,
     color: 'purple',
     description: 'Represents a logical Kafka cluster mapped to an ApplicationService. Provides cluster isolation.',
@@ -31,7 +31,7 @@ spec:
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: team-a-cluster
 spec:
@@ -46,7 +46,7 @@ spec:
     fields: [
       { name: 'name', type: 'string', required: true, description: 'Service account identifier' },
       { name: 'dn', type: 'string[]', required: true, description: 'Distinguished names (CNs) for certificate mapping' },
-      { name: 'clusterRef', type: 'string', required: true, description: 'Reference to VirtualCluster' },
+      { name: 'clusterRef', type: 'string', required: true, description: 'Reference to KafkaCluster' },
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
@@ -156,7 +156,7 @@ export default function CRDPage() {
               {/* Level 1 */}
               <div className="flex gap-8">
                 <DiagramNode color="purple">
-                  <span className="font-bold">VirtualCluster</span>
+                  <span className="font-bold">KafkaCluster</span>
                   <span className="text-xs block opacity-70">Logical Kafka cluster</span>
                 </DiagramNode>
               </div>

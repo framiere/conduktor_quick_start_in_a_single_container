@@ -49,8 +49,8 @@ Six CRD types with strict ownership chain enforcement:
 
 ```
 ApplicationService (root - no parent)
-├── VirtualCluster (owned by ApplicationService)
-├── ServiceAccount (owned by ApplicationService, references VirtualCluster)
+├── KafkaCluster (owned by ApplicationService)
+├── ServiceAccount (owned by ApplicationService, references KafkaCluster)
 │   ├── Topic (owned by ApplicationService, references ServiceAccount)
 │   ├── ACL (owned by ApplicationService, references ServiceAccount + Topic/ConsumerGroup)
 │   └── ConsumerGroup (owned by ApplicationService, references ServiceAccount)
@@ -74,14 +74,14 @@ ApplicationService (root - no parent)
 ### Webhook Endpoints
 
 - `/health` - Health check
-- `/validate/{topic,acl,serviceaccount,virtualcluster,consumergroup}` - Admission validation
+- `/validate/{topic,acl,serviceaccount,kafkacluster,consumergroup}` - Admission validation
 
 ### mTLS Authentication Flow
 
 Gateway extracts CN from client certificates to map to Service Accounts:
-- `CN=demo-admin` → `demo` vCluster (ACL disabled)
-- `CN=demo-acl-admin` → `demo-acl` vCluster (superuser)
-- `CN=demo-acl-user` → `demo-acl` vCluster (restricted by ACL)
+- `CN=demo-admin` → `demo` kCluster (ACL disabled)
+- `CN=demo-acl-admin` → `demo-acl` kCluster (superuser)
+- `CN=demo-acl-user` → `demo-acl` kCluster (restricted by ACL)
 
 ## Java Coding Standards
 

@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.messaging.operator.crd.ApplicationService;
 import com.example.messaging.operator.crd.Topic;
-import com.example.messaging.operator.crd.VirtualCluster;
+import com.example.messaging.operator.crd.KafkaCluster;
 import com.example.messaging.operator.events.ReconciliationEvent;
 import com.example.messaging.operator.it.base.ScenarioITBase;
 import com.example.messaging.operator.it.base.TestDataBuilder;
@@ -229,13 +229,13 @@ public class ReconciliationIT extends ScenarioITBase {
         ApplicationService app = TestDataBuilder.applicationService().name("metadata-app").appName("metadata-app").createIn(k8sClient);
         store.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
-        VirtualCluster vc = TestDataBuilder.virtualCluster()
+        KafkaCluster vc = TestDataBuilder.kafkaCluster()
                 .name("metadata-vc")
                 .clusterId("metadata-cluster")
                 .applicationServiceRef("metadata-app")
                 .ownedBy(app)
                 .createIn(k8sClient);
-        store.create(CRDKind.VIRTUAL_CLUSTER, "default", vc);
+        store.create(CRDKind.KAFKA_CLUSTER, "default", vc);
 
         // Verify: Each resource type triggers correct events
         assertThat(receivedEvents).hasSizeGreaterThanOrEqualTo(4); // At least 2 per resource
@@ -247,8 +247,8 @@ public class ReconciliationIT extends ScenarioITBase {
         assertThat(appEvents.get(0).getResourceName()).isEqualTo("metadata-app");
         assertThat(appEvents.get(0).getResourceNamespace()).isEqualTo("default");
 
-        // Find VirtualCluster events
-        List<ReconciliationEvent> vcEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals(CRDKind.VIRTUAL_CLUSTER)).toList();
+        // Find KafkaCluster events
+        List<ReconciliationEvent> vcEvents = receivedEvents.stream().filter(e -> e.getResourceKind().equals(CRDKind.KAFKA_CLUSTER)).toList();
 
         assertThat(vcEvents).hasSize(2);
         assertThat(vcEvents.get(0).getResourceName()).isEqualTo("metadata-vc");

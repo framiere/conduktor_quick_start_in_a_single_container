@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Buildable(editableEnabled = false)
 @Data
-public class VirtualClusterSpec {
+public class KafkaClusterSpec {
 
     @JsonProperty("clusterId")
     @JsonPropertyDescription("Conduktor Virtual Cluster ID")

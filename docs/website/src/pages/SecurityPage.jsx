@@ -126,7 +126,7 @@ export default function SecurityPage() {
             {/* Service Account */}
             <DiagramNode color="green" className="w-64">
               <div className="font-bold">ServiceAccount CRD</div>
-              <div className="text-xs opacity-70 mt-1">Maps to VirtualCluster + ACLs</div>
+              <div className="text-xs opacity-70 mt-1">Maps to KafkaCluster + ACLs</div>
             </DiagramNode>
 
             <DiagramArrow direction="down" label="Apply ACL rules" />

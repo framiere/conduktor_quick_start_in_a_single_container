@@ -23,7 +23,7 @@ public class ServiceAccountSpec {
     private List<String> dn = new ArrayList<>();
 
     @JsonProperty("clusterRef")
-    @JsonPropertyDescription("Reference to VirtualCluster CR")
+    @JsonPropertyDescription("Reference to KafkaCluster CR")
     @Required
     private String clusterRef;
 

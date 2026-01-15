@@ -1,7 +1,7 @@
 # Invalid: Tenant B trying to reference Tenant A's ApplicationService
 # This should be rejected by the webhook
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: cross-tenant-vc
 spec:

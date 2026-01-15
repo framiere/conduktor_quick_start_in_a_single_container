@@ -24,8 +24,8 @@ public class OwnershipChainIT extends ScenarioITBase {
         ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("app2").appName("app2").createIn(k8sClient);
         syncToStore(app2);
 
-        // Create VirtualCluster owned by app1
-        VirtualCluster vc1 = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster owned by app1
+        KafkaCluster vc1 = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("cluster1")
                 .clusterId("cluster1")
@@ -61,8 +61,8 @@ public class OwnershipChainIT extends ScenarioITBase {
         ApplicationService app2 = TestDataBuilder.applicationService().namespace("default").name("payments-app").appName("payments-app").createIn(k8sClient);
         syncToStore(app2);
 
-        // Create VirtualCluster for app1
-        VirtualCluster vc1 = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster for app1
+        KafkaCluster vc1 = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("orders-cluster")
                 .clusterId("orders-cluster")
@@ -109,8 +109,8 @@ public class OwnershipChainIT extends ScenarioITBase {
         assertThat(app.getMetadata().getUid()).isNotNull();
         syncToStore(app);
 
-        // Create VirtualCluster owned by app
-        VirtualCluster vc = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster owned by app
+        KafkaCluster vc = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("prod-cluster")
                 .clusterId("prod-cluster")
@@ -176,7 +176,7 @@ public class OwnershipChainIT extends ScenarioITBase {
 
         // Validate all creations should succeed
         ValidationResult vcResult = ownershipValidator.validateCreate(vc, "default");
-        assertThat(vcResult.isValid()).as("VirtualCluster creation should be valid").isTrue();
+        assertThat(vcResult.isValid()).as("KafkaCluster creation should be valid").isTrue();
 
         ValidationResult saResult = ownershipValidator.validateCreate(sa, "default");
         assertThat(saResult.isValid()).as("ServiceAccount creation should be valid").isTrue();
@@ -192,7 +192,7 @@ public class OwnershipChainIT extends ScenarioITBase {
 
         // Verify all resources exist in store
         assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default")).hasSize(1);
-        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default")).hasSize(1);
+        assertThat(store.list(CRDKind.KAFKA_CLUSTER, "default")).hasSize(1);
         assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default")).hasSize(1);
         assertThat(store.list(CRDKind.TOPIC, "default")).hasSize(2);
         assertThat(store.list(CRDKind.ACL, "default")).hasSize(1);
@@ -202,7 +202,7 @@ public class OwnershipChainIT extends ScenarioITBase {
         assertThat(appFromStore).isNotNull();
         assertThat(appFromStore.getSpec().getName()).isEqualTo("orders-app");
 
-        VirtualCluster vcFromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "prod-cluster");
+        KafkaCluster vcFromStore = store.get(CRDKind.KAFKA_CLUSTER, "default", "prod-cluster");
         assertThat(vcFromStore).isNotNull();
         assertThat(vcFromStore.getSpec().getApplicationServiceRef()).isEqualTo("orders-app");
 

@@ -70,7 +70,7 @@ delete_crd_instances() {
         "acls.messaging.example.com"
         "consumergroups.messaging.example.com"
         "serviceaccounts.messaging.example.com"
-        "virtualclusters.messaging.example.com"
+        "kafkaclusters.messaging.example.com"
         "applicationservices.messaging.example.com"
     )
 

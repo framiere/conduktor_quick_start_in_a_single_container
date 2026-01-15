@@ -24,11 +24,11 @@ public class MessagingDeclarationSpec {
     @Max(63)
     private String serviceName;
 
-    @JsonProperty("virtualClusterId")
+    @JsonProperty("kafkaClusterId")
     @JsonPropertyDescription("Conduktor Virtual Cluster ID")
     @Required
     @Max(100)
-    private String virtualClusterId;
+    private String kafkaClusterId;
 
     @JsonProperty("topics")
     @JsonPropertyDescription("Topics OWNED by this CR")

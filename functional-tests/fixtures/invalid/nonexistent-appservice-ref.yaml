@@ -1,6 +1,6 @@
-# Invalid: VirtualCluster referencing non-existent ApplicationService
+# Invalid: KafkaCluster referencing non-existent ApplicationService
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: invalid-vc
 spec:

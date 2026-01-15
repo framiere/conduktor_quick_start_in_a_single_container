@@ -11,7 +11,7 @@ const features = [
   {
     icon: Boxes,
     title: '6 Custom Resource Definitions',
-    description: 'ApplicationService, VirtualCluster, ServiceAccount, Topic, ACL, ConsumerGroup - all managed declaratively'
+    description: 'ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, ConsumerGroup - all managed declaratively'
   },
   {
     icon: Shield,
@@ -198,7 +198,7 @@ EOF`}
               {/* Level 2 */}
               <div className="flex items-center gap-8">
                 <div className="px-6 py-3 bg-purple-100 dark:bg-purple-900/50 border-2 border-purple-300 dark:border-purple-700 rounded-xl font-semibold text-purple-800 dark:text-purple-200">
-                  VirtualCluster
+                  KafkaCluster
                 </div>
                 <div className="px-6 py-3 bg-green-100 dark:bg-green-900/50 border-2 border-green-300 dark:border-green-700 rounded-xl font-semibold text-green-800 dark:text-green-200">
                   ServiceAccount

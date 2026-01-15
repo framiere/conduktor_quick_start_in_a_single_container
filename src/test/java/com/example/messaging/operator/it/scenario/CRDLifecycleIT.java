@@ -24,8 +24,8 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(app.getMetadata().getUid()).isNotNull();
         syncToStore(app);
 
-        // Create VirtualCluster owned by app
-        VirtualCluster vc = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster owned by app
+        KafkaCluster vc = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("lifecycle-cluster")
                 .clusterId("lifecycle-cluster-id")
@@ -58,7 +58,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         List<OwnerReference> saOwners = sa.getMetadata().getOwnerReferences();
         assertThat(saOwners).isNotNull().hasSize(1);
         assertThat(saOwners).first().extracting(OwnerReference::getName).isEqualTo("lifecycle-cluster");
-        assertThat(saOwners).first().extracting(OwnerReference::getKind).isEqualTo(CRDKind.VIRTUAL_CLUSTER.getValue());
+        assertThat(saOwners).first().extracting(OwnerReference::getKind).isEqualTo(CRDKind.KAFKA_CLUSTER.getValue());
 
         // Create Topic owned by sa
         Topic topic = TestDataBuilder.topic()
@@ -116,7 +116,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
 
         // Step 3: Verify all resources exist in store
         assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default")).hasSize(1);
-        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default")).hasSize(1);
+        assertThat(store.list(CRDKind.KAFKA_CLUSTER, "default")).hasSize(1);
         assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default")).hasSize(1);
         assertThat(store.list(CRDKind.TOPIC, "default")).hasSize(1);
         assertThat(store.list(CRDKind.ACL, "default")).hasSize(1);
@@ -138,10 +138,10 @@ public class CRDLifecycleIT extends ScenarioITBase {
         store.delete(CRDKind.SERVICE_ACCOUNT, "default", sa.getMetadata().getName());
         assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default")).hasSize(0);
 
-        // Delete VirtualCluster
+        // Delete KafkaCluster
         k8sClient.resource(vc).delete();
-        store.delete(CRDKind.VIRTUAL_CLUSTER, "default", vc.getMetadata().getName());
-        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default")).hasSize(0);
+        store.delete(CRDKind.KAFKA_CLUSTER, "default", vc.getMetadata().getName());
+        assertThat(store.list(CRDKind.KAFKA_CLUSTER, "default")).hasSize(0);
 
         // Delete ApplicationService
         k8sClient.resource(app).delete();
@@ -159,8 +159,8 @@ public class CRDLifecycleIT extends ScenarioITBase {
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("orders-app").appName("orders-app").createIn(k8sClient);
         syncToStore(app);
 
-        // Create VirtualCluster (as defined in fixture)
-        VirtualCluster vc = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster (as defined in fixture)
+        KafkaCluster vc = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("prod-cluster")
                 .clusterId("prod-cluster")
@@ -216,7 +216,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
 
         // Verify all resources created successfully
         assertThat(store.list(CRDKind.APPLICATION_SERVICE, "default")).hasSize(1);
-        assertThat(store.list(CRDKind.VIRTUAL_CLUSTER, "default")).hasSize(1);
+        assertThat(store.list(CRDKind.KAFKA_CLUSTER, "default")).hasSize(1);
         assertThat(store.list(CRDKind.SERVICE_ACCOUNT, "default")).hasSize(1);
         assertThat(store.list(CRDKind.TOPIC, "default")).hasSize(2);
         assertThat(store.list(CRDKind.ACL, "default")).hasSize(1);
@@ -226,7 +226,7 @@ public class CRDLifecycleIT extends ScenarioITBase {
         assertThat(appFromStore).isNotNull();
         assertThat(appFromStore.getSpec().getName()).isEqualTo("orders-app");
 
-        VirtualCluster vcFromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "prod-cluster");
+        KafkaCluster vcFromStore = store.get(CRDKind.KAFKA_CLUSTER, "default", "prod-cluster");
         assertThat(vcFromStore).isNotNull();
         assertThat(vcFromStore.getSpec().getClusterId()).isEqualTo("prod-cluster");
         assertThat(vcFromStore.getSpec().getApplicationServiceRef()).isEqualTo("orders-app");

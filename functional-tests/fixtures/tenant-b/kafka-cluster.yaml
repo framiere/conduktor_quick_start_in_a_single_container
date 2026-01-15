@@ -1,6 +1,6 @@
-# Tenant B: VirtualCluster
+# Tenant B: KafkaCluster
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: tenant-b-vc
 spec:

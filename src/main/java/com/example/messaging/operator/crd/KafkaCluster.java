@@ -8,11 +8,11 @@ import io.fabric8.kubernetes.model.annotation.Version;
 
 @Group("messaging.example.com")
 @Version("v1")
-@Plural("virtualclusters")
-public class VirtualCluster extends CustomResource<VirtualClusterSpec, Void> implements Namespaced {
+@Plural("kafkaclusters")
+public class KafkaCluster extends CustomResource<KafkaClusterSpec, Void> implements Namespaced {
 
     @Override
-    protected VirtualClusterSpec initSpec() {
-        return new VirtualClusterSpec();
+    protected KafkaClusterSpec initSpec() {
+        return new KafkaClusterSpec();
     }
 }

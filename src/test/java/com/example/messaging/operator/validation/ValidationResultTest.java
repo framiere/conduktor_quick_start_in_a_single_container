@@ -54,12 +54,12 @@ class ValidationResultTest {
         String multilineMessage = """
                 Validation failed:
                 - ApplicationService 'foo' does not exist
-                - VirtualCluster 'bar' is owned by different service
+                - KafkaCluster 'bar' is owned by different service
                 """;
         ValidationResult result = ValidationResult.invalid(multilineMessage);
 
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getMessage()).isEqualTo(multilineMessage).contains("ApplicationService").contains("VirtualCluster");
+        assertThat(result.getMessage()).isEqualTo(multilineMessage).contains("ApplicationService").contains("KafkaCluster");
     }
 
     @Test

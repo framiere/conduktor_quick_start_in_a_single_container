@@ -154,7 +154,7 @@ public abstract class E2ETestBase {
         safeDelete(() -> k8sClient.resources(ConsumerGroup.class).inNamespace(namespace).delete());
         safeDelete(() -> k8sClient.resources(Topic.class).inNamespace(namespace).delete());
         safeDelete(() -> k8sClient.resources(ServiceAccount.class).inNamespace(namespace).delete());
-        safeDelete(() -> k8sClient.resources(VirtualCluster.class).inNamespace(namespace).delete());
+        safeDelete(() -> k8sClient.resources(KafkaCluster.class).inNamespace(namespace).delete());
         safeDelete(() -> k8sClient.resources(ApplicationService.class).inNamespace(namespace).delete());
 
         await().atMost(30, SECONDS).pollInterval(1, SECONDS).untilAsserted(() -> {
@@ -196,10 +196,10 @@ public abstract class E2ETestBase {
     }
 
     /**
-     * Creates a VirtualCluster and waits for it to be available
+     * Creates a KafkaCluster and waits for it to be available
      */
-    protected VirtualCluster createVirtualCluster(String name, String applicationServiceRef) {
-        VirtualCluster vc = new VirtualCluster();
+    protected KafkaCluster createKafkaCluster(String name, String applicationServiceRef) {
+        KafkaCluster vc = new KafkaCluster();
         vc.getMetadata().setNamespace(namespace);
         vc.getMetadata().setName(name);
         vc.getSpec().setClusterId(name);

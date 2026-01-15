@@ -20,7 +20,7 @@ class MultiTenantE2ETest extends E2ETestBase {
 
         // Create tenant A hierarchy
         createApplicationService("e2e-tenant-a");
-        createVirtualCluster("e2e-vc-a", "e2e-tenant-a");
+        createKafkaCluster("e2e-vc-a", "e2e-tenant-a");
         createServiceAccount("e2e-sa-a", "e2e-vc-a", "e2e-tenant-a");
 
         // Create tenant B app
@@ -41,8 +41,8 @@ class MultiTenantE2ETest extends E2ETestBase {
     }
 
     @Test
-    @DisplayName("Tenant B cannot reference Tenant A's VirtualCluster")
-    void tenantB_cannotReferenceTenantA_virtualCluster() {
+    @DisplayName("Tenant B cannot reference Tenant A's KafkaCluster")
+    void tenantB_cannotReferenceTenantA_kafkaCluster() {
         assertRejectedWith(() -> createServiceAccount("e2e-cross-sa", "e2e-vc-a", "e2e-tenant-b"), "does not belong");
     }
 
@@ -56,8 +56,8 @@ class MultiTenantE2ETest extends E2ETestBase {
     @DisplayName("Tenant B can create own isolated resources")
     void tenantB_canCreateOwnResources() {
         // Create tenant B's own hierarchy
-        VirtualCluster vcB = createVirtualCluster("e2e-vc-b", "e2e-tenant-b");
-        assertThat(resourceExists(VirtualCluster.class, "e2e-vc-b")).isTrue();
+        KafkaCluster vcB = createKafkaCluster("e2e-vc-b", "e2e-tenant-b");
+        assertThat(resourceExists(KafkaCluster.class, "e2e-vc-b")).isTrue();
 
         ServiceAccount saB = createServiceAccount("e2e-sa-b", "e2e-vc-b", "e2e-tenant-b");
         assertThat(resourceExists(ServiceAccount.class, "e2e-sa-b")).isTrue();
@@ -71,7 +71,7 @@ class MultiTenantE2ETest extends E2ETestBase {
     void tenantsWithSameNamedResources_areIsolated() {
         // Tenant A already has sa-a
         // Create tenant B with similarly-named resources
-        createVirtualCluster("e2e-vc-b", "e2e-tenant-b");
+        createKafkaCluster("e2e-vc-b", "e2e-tenant-b");
         createServiceAccount("e2e-sa-b", "e2e-vc-b", "e2e-tenant-b");
 
         // Create topics with same logical purpose in each tenant
@@ -90,7 +90,7 @@ class MultiTenantE2ETest extends E2ETestBase {
         createTopic("e2e-acl-topic", "e2e-sa-a", "e2e-tenant-a");
 
         // Create tenant B hierarchy
-        createVirtualCluster("e2e-acl-vc-b", "e2e-tenant-b");
+        createKafkaCluster("e2e-acl-vc-b", "e2e-tenant-b");
         createServiceAccount("e2e-acl-sa-b", "e2e-acl-vc-b", "e2e-tenant-b");
 
         // Tenant B cannot create ACL referencing tenant A's ServiceAccount

@@ -9,7 +9,7 @@ import com.example.messaging.operator.store.CRDKind;
  */
 public interface ResourceLookup {
     ApplicationService getApplicationService(String namespace, String name);
-    VirtualCluster getVirtualCluster(String namespace, String name);
+    KafkaCluster getKafkaCluster(String namespace, String name);
     ServiceAccount getServiceAccount(String namespace, String name);
     Topic getTopic(String namespace, String name);
     ConsumerGroup getConsumerGroup(String namespace, String name);

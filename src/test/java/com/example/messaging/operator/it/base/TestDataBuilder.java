@@ -16,8 +16,8 @@ public class TestDataBuilder {
         return new ApplicationServiceBuilder();
     }
 
-    public static VirtualClusterBuilder virtualCluster() {
-        return new VirtualClusterBuilder();
+    public static KafkaClusterBuilder kafkaCluster() {
+        return new KafkaClusterBuilder();
     }
 
     public static ServiceAccountBuilder serviceAccount() {
@@ -86,41 +86,41 @@ public class TestDataBuilder {
         }
     }
 
-    // VirtualCluster Builder
-    public static class VirtualClusterBuilder {
+    // KafkaCluster Builder
+    public static class KafkaClusterBuilder {
         private String namespace = "default";
         private String name = "test-cluster";
         private String clusterId;
         private String applicationServiceRef;
         private List<OwnerReference> owners = new ArrayList<>();
 
-        public VirtualClusterBuilder namespace(String namespace) {
+        public KafkaClusterBuilder namespace(String namespace) {
             this.namespace = namespace;
             return this;
         }
 
-        public VirtualClusterBuilder name(String name) {
+        public KafkaClusterBuilder name(String name) {
             this.name = name;
             return this;
         }
 
-        public VirtualClusterBuilder clusterId(String clusterId) {
+        public KafkaClusterBuilder clusterId(String clusterId) {
             this.clusterId = clusterId;
             return this;
         }
 
-        public VirtualClusterBuilder applicationServiceRef(String applicationServiceRef) {
+        public KafkaClusterBuilder applicationServiceRef(String applicationServiceRef) {
             this.applicationServiceRef = applicationServiceRef;
             return this;
         }
 
-        public VirtualClusterBuilder ownedBy(ApplicationService owner) {
+        public KafkaClusterBuilder ownedBy(ApplicationService owner) {
             this.owners.add(createOwnerReference(owner));
             return this;
         }
 
-        public VirtualCluster build() {
-            VirtualCluster vc = new VirtualCluster();
+        public KafkaCluster build() {
+            KafkaCluster vc = new KafkaCluster();
             ObjectMeta metadata = new ObjectMeta();
             metadata.setNamespace(namespace);
             metadata.setName(name);
@@ -129,7 +129,7 @@ public class TestDataBuilder {
             }
             vc.setMetadata(metadata);
 
-            VirtualClusterSpec spec = new VirtualClusterSpec();
+            KafkaClusterSpec spec = new KafkaClusterSpec();
             spec.setClusterId(clusterId != null ? clusterId : "test-cluster-id");
             spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
             vc.setSpec(spec);
@@ -137,8 +137,8 @@ public class TestDataBuilder {
             return vc;
         }
 
-        public VirtualCluster createIn(KubernetesClient client) {
-            VirtualCluster vc = build();
+        public KafkaCluster createIn(KubernetesClient client) {
+            KafkaCluster vc = build();
             return client.resource(vc).create();
         }
     }
@@ -193,7 +193,7 @@ public class TestDataBuilder {
             return this;
         }
 
-        public ServiceAccountBuilder ownedBy(VirtualCluster owner) {
+        public ServiceAccountBuilder ownedBy(KafkaCluster owner) {
             this.owners.add(createOwnerReference(owner));
             return this;
         }
@@ -509,7 +509,7 @@ public class TestDataBuilder {
         return ref;
     }
 
-    private static OwnerReference createOwnerReference(VirtualCluster owner) {
+    private static OwnerReference createOwnerReference(KafkaCluster owner) {
         OwnerReference ref = new OwnerReference();
         ref.setApiVersion(owner.getApiVersion());
         ref.setKind(owner.getKind());

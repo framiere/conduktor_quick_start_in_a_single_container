@@ -30,14 +30,14 @@ public class KubernetesResourceLookup implements ResourceLookup {
     }
 
     @Override
-    public VirtualCluster getVirtualCluster(String namespace, String name) {
+    public KafkaCluster getKafkaCluster(String namespace, String name) {
         try {
-            return client.resources(VirtualCluster.class)
+            return client.resources(KafkaCluster.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .get();
         } catch (KubernetesClientException e) {
-            log.debug("Failed to get VirtualCluster {}/{}: {}", namespace, name, e.getMessage());
+            log.debug("Failed to get KafkaCluster {}/{}: {}", namespace, name, e.getMessage());
             return null;
         }
     }

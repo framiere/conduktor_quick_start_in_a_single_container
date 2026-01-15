@@ -37,11 +37,11 @@ public class CRDStoreIT extends ComponentITBase {
 
     @Test
     void testListResourcesFromStore() {
-        // Create full ownership chain: ApplicationService -> VirtualCluster -> ServiceAccount -> Topics
+        // Create full ownership chain: ApplicationService -> KafkaCluster -> ServiceAccount -> Topics
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")
@@ -109,8 +109,8 @@ public class CRDStoreIT extends ComponentITBase {
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
-        // Create VirtualCluster in K8s
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        // Create KafkaCluster in K8s
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("original-cluster-id")
@@ -121,7 +121,7 @@ public class CRDStoreIT extends ComponentITBase {
         syncToStore(cluster);
 
         // Verify initial state
-        VirtualCluster fromStore = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
+        KafkaCluster fromStore = store.get(CRDKind.KAFKA_CLUSTER, "default", "test-cluster");
         assertThat(fromStore).isNotNull();
         assertThat(fromStore.getSpec().getClusterId()).isEqualTo("original-cluster-id");
         String originalVersion = fromStore.getMetadata().getResourceVersion();
@@ -130,7 +130,7 @@ public class CRDStoreIT extends ComponentITBase {
         fromStore.getSpec().setClusterId("updated-cluster-id");
 
         // Update in store
-        VirtualCluster updated = store.update(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster", fromStore);
+        KafkaCluster updated = store.update(CRDKind.KAFKA_CLUSTER, "default", "test-cluster", fromStore);
 
         // Verify update
         assertThat(updated).isNotNull();
@@ -138,17 +138,17 @@ public class CRDStoreIT extends ComponentITBase {
         assertThat(updated.getMetadata().getResourceVersion()).isNotEqualTo(originalVersion);
 
         // Verify persisted in store
-        VirtualCluster fromStoreAfterUpdate = store.get(CRDKind.VIRTUAL_CLUSTER, "default", "test-cluster");
+        KafkaCluster fromStoreAfterUpdate = store.get(CRDKind.KAFKA_CLUSTER, "default", "test-cluster");
         assertThat(fromStoreAfterUpdate.getSpec().getClusterId()).isEqualTo("updated-cluster-id");
     }
 
     @Test
     void testDeleteResourceFromStore() {
-        // Create full ownership chain: ApplicationService -> VirtualCluster -> ServiceAccount
+        // Create full ownership chain: ApplicationService -> KafkaCluster -> ServiceAccount
         ApplicationService app = TestDataBuilder.applicationService().namespace("default").name("test-app").appName("test-app").createIn(k8sClient);
         syncToStore(app);
 
-        VirtualCluster cluster = TestDataBuilder.virtualCluster()
+        KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace("default")
                 .name("test-cluster")
                 .clusterId("test-cluster-id")

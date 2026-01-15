@@ -45,7 +45,7 @@ public class WebhookServer {
         httpServer.createContext("/validate/topic", new ValidationHandler(Topic.class));
         httpServer.createContext("/validate/acl", new ValidationHandler(ACL.class));
         httpServer.createContext("/validate/serviceaccount", new ValidationHandler(ServiceAccount.class));
-        httpServer.createContext("/validate/virtualcluster", new ValidationHandler(VirtualCluster.class));
+        httpServer.createContext("/validate/kafkacluster", new ValidationHandler(KafkaCluster.class));
         httpServer.createContext("/validate/consumergroup", new ValidationHandler(ConsumerGroup.class));
     }
 

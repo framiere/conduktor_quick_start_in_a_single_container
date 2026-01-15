@@ -141,14 +141,14 @@
     - Task duration: ~1 min (actual)
     - Tests duration: N/A (tested during deployment)
 
-- [x] Create VirtualCluster CRD `[FUNC_03 §3.2]`
+- [x] Create KafkaCluster CRD `[FUNC_03 §3.2]`
   - [x] **Objectives:**
-    - [x] Create templates/crds/virtualcluster.yaml
+    - [x] Create templates/crds/kafkacluster.yaml
     - [x] Define spec.clusterId and spec.applicationServiceRef as required
     - [x] Add status subresource
     - [x] Set shortName vc
   - [x] **Tests:**
-    - [x] kubectlGetCrdVirtualclustersShouldExist
+    - [x] kubectlGetCrdKafkaclustersShouldExist
   - [x] **Metadata:**
     - Task duration: ~1 min (actual)
     - Tests duration: N/A
@@ -368,23 +368,23 @@
   - [x] **Objectives:**
     - [x] Setup: wait for webhook ready, cleanup test resources
     - [x] Test webhook accepts valid ApplicationService
-    - [x] Test webhook accepts valid VirtualCluster with existing ApplicationService
+    - [x] Test webhook accepts valid KafkaCluster with existing ApplicationService
     - [x] Test webhook accepts valid ServiceAccount with prereqs
     - [x] Test webhook accepts valid Topic with prereqs
     - [x] Test webhook accepts valid ACL
     - [x] Test webhook accepts valid ConsumerGroup
     - [x] Test webhook rejects ApplicationService with missing name
-    - [x] Test webhook rejects VirtualCluster with non-existent ApplicationService ref
+    - [x] Test webhook rejects KafkaCluster with non-existent ApplicationService ref
     - [x] Teardown: cleanup test resources
   - [x] **Tests:**
     - [x] webhookAcceptsValidApplicationService
-    - [x] webhookAcceptsValidVirtualClusterWithExistingApplicationService
+    - [x] webhookAcceptsValidKafkaClusterWithExistingApplicationService
     - [x] webhookAcceptsValidServiceAccount
     - [x] webhookAcceptsValidTopic
     - [x] webhookAcceptsValidAcl
     - [x] webhookAcceptsValidConsumerGroup
     - [x] webhookRejectsApplicationServiceWithMissingName
-    - [x] webhookRejectsVirtualClusterWithNonExistentApplicationServiceRef
+    - [x] webhookRejectsKafkaClusterWithNonExistentApplicationServiceRef
   - [x] **Metadata:**
     - Task duration: ~4 min (actual)
     - Tests duration: ~30s
@@ -399,16 +399,16 @@
   - [x] **Objectives:**
     - [x] Setup: wait for webhook, cleanup resources
     - [x] Test full ownership chain (App -> VC -> SA -> Topic) accepted
-    - [x] Test VirtualCluster requires valid ApplicationService reference
-    - [x] Test ServiceAccount requires valid VirtualCluster reference
+    - [x] Test KafkaCluster requires valid ApplicationService reference
+    - [x] Test ServiceAccount requires valid KafkaCluster reference
     - [x] Test Topic requires valid ServiceAccount reference
     - [x] Test cannot change applicationServiceRef on update (immutability)
     - [x] Test deleting parent with existing children fails
     - [x] Each test starts with cleanup_test_resources for isolation
   - [x] **Tests:**
     - [x] fullOwnershipChainValidHierarchyAccepted
-    - [x] virtualClusterRequiresValidApplicationServiceReference
-    - [x] serviceAccountRequiresValidVirtualClusterReference
+    - [x] kafkaClusterRequiresValidApplicationServiceReference
+    - [x] serviceAccountRequiresValidKafkaClusterReference
     - [x] topicRequiresValidServiceAccountReference
     - [x] cannotChangeApplicationServiceRefOnUpdate
     - [x] deletingParentWithExistingChildrenFails
@@ -425,14 +425,14 @@
 - [x] Create 04_multi_tenant.bats `[FUNC_09 §9.1]`
   - [x] **Objectives:**
     - [x] Setup: create tenant-a and tenant-b ApplicationServices
-    - [x] Setup: create tenant-a VirtualCluster and ServiceAccount
+    - [x] Setup: create tenant-a KafkaCluster and ServiceAccount
     - [x] Test tenant A can create resources under own ApplicationService
-    - [x] Test tenant B cannot reference tenant A's VirtualCluster
+    - [x] Test tenant B cannot reference tenant A's KafkaCluster
     - [x] Test tenant B cannot reference tenant A's ServiceAccount
     - [x] Test tenant B can create own isolated resources
   - [x] **Tests:**
     - [x] tenantACanCreateResourcesUnderOwnApplicationService
-    - [x] tenantBCannotReferenceTenantAVirtualCluster
+    - [x] tenantBCannotReferenceTenantAKafkaCluster
     - [x] tenantBCannotReferenceTenantAServiceAccount
     - [x] tenantBCanCreateOwnIsolatedResources
   - [x] **Metadata:**
@@ -471,7 +471,7 @@
 - [x] Create valid resource fixtures `[FUNC_11 §11.1]`
   - [x] **Objectives:**
     - [x] Create fixtures/valid/application-service.yaml (name: test-app)
-    - [x] Create fixtures/valid/virtual-cluster.yaml (refs test-app)
+    - [x] Create fixtures/valid/kafka-cluster.yaml (refs test-app)
     - [x] Create fixtures/valid/service-account.yaml (refs test-app, test-vc)
     - [x] Create fixtures/valid/topic.yaml (refs test-app, test-sa)
     - [x] Create fixtures/valid/acl.yaml (refs test-app, test-sa, test-topic)
@@ -509,7 +509,7 @@
 - [x] Create tenant-a fixtures `[FUNC_13 §13.1]`
   - [x] **Objectives:**
     - [x] Create fixtures/tenant-a/application-service.yaml (name: tenant-a-app)
-    - [x] Create fixtures/tenant-a/virtual-cluster.yaml (refs tenant-a-app)
+    - [x] Create fixtures/tenant-a/kafka-cluster.yaml (refs tenant-a-app)
     - [x] Create fixtures/tenant-a/service-account.yaml (refs tenant-a-app, tenant-a-vc)
     - [x] Create fixtures/tenant-a/topic.yaml (refs tenant-a-app, tenant-a-sa)
   - [x] **Tests:**
@@ -521,7 +521,7 @@
 - [x] Create tenant-b fixtures `[FUNC_13 §13.2]`
   - [x] **Objectives:**
     - [x] Create fixtures/tenant-b/application-service.yaml (name: tenant-b-app)
-    - [x] Create fixtures/tenant-b/virtual-cluster.yaml (refs tenant-b-app)
+    - [x] Create fixtures/tenant-b/kafka-cluster.yaml (refs tenant-b-app)
     - [x] Create fixtures/tenant-b/service-account.yaml (refs tenant-b-app, tenant-b-vc)
     - [x] Create fixtures/tenant-b/topic.yaml (refs tenant-b-app, tenant-b-sa)
     - [x] Create fixtures/tenant-b/cross-tenant-topic.yaml (illegal cross-ref to tenant-a SA)
@@ -553,7 +553,7 @@
 - [x] Create ha-test fixtures `[FUNC_14 §14.2]`
   - [x] **Objectives:**
     - [x] Create fixtures/ha-test/application-service.yaml (ha-test-app)
-    - [x] Create fixtures/ha-test/virtual-cluster.yaml (ha-test-vc)
+    - [x] Create fixtures/ha-test/kafka-cluster.yaml (ha-test-vc)
     - [x] Create fixtures/ha-test/service-account.yaml (ha-test-sa)
     - [x] Create fixtures/ha-test/topic-1.yaml through topic-5.yaml
   - [x] **Tests:**
@@ -619,7 +619,7 @@
     - [x] Implement getWebhookPods() returning pod names
     - [x] Implement cleanupTestResources() deleting all CRD instances
     - [x] Add teardownCluster() to close client
-    - [x] Implement createApplicationService, createVirtualCluster, createServiceAccount, createTopic helpers
+    - [x] Implement createApplicationService, createKafkaCluster, createServiceAccount, createTopic helpers
     - [x] Implement resourceExists() generic method
   - [x] **Tests:**
     - [x] e2eTestBaseShouldConnectToCluster
@@ -641,15 +641,15 @@
     - [x] Annotate with @E2ETest, extend E2ETestBase
     - [x] Add @BeforeEach and @AfterEach calling cleanupTestResources()
     - [x] Test fullOwnershipChain_validHierarchy_accepted
-    - [x] Test virtualCluster_withNonExistentApplicationService_rejected
-    - [x] Test serviceAccount_withNonExistentVirtualCluster_rejected
+    - [x] Test kafkaCluster_withNonExistentApplicationService_rejected
+    - [x] Test serviceAccount_withNonExistentKafkaCluster_rejected
     - [x] Test topic_withNonExistentServiceAccount_rejected
     - [x] Test serviceAccount_mustBelongToSameApplicationService
     - [x] Test topic_mustBelongToSameApplicationService
   - [x] **Tests:**
     - [x] fullOwnershipChainValidHierarchyAccepted
-    - [x] virtualClusterWithNonExistentApplicationServiceRejected
-    - [x] serviceAccountWithNonExistentVirtualClusterRejected
+    - [x] kafkaClusterWithNonExistentApplicationServiceRejected
+    - [x] serviceAccountWithNonExistentKafkaClusterRejected
     - [x] topicWithNonExistentServiceAccountRejected
   - [x] **Metadata:**
     - Task duration: ~3 min (actual)
@@ -663,7 +663,7 @@
     - [x] Create tenant A and B apps in @BeforeEach
     - [x] Create tenant A VC and SA in setup
     - [x] Test tenantA_canCreateResourcesUnderOwnApplicationService
-    - [x] Test tenantB_cannotReferenceTenantA_virtualCluster
+    - [x] Test tenantB_cannotReferenceTenantA_kafkaCluster
     - [x] Test tenantB_cannotReferenceTenantA_serviceAccount
     - [x] Test tenantB_canCreateOwnResources
     - [x] Test tenantsWithSameNamedResources_areIsolated

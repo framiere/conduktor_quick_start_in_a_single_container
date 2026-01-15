@@ -37,7 +37,7 @@ teardown_file() {
     run kubectl get applicationservice chain-app -n "$NAMESPACE"
     assert_success
 
-    run kubectl get virtualcluster chain-vc -n "$NAMESPACE"
+    run kubectl get kafkacluster chain-vc -n "$NAMESPACE"
     assert_success
 
     run kubectl get serviceaccount.messaging.example.com chain-sa -n "$NAMESPACE"
@@ -47,11 +47,11 @@ teardown_file() {
     assert_success
 }
 
-@test "VirtualCluster requires valid ApplicationService reference" {
-    # Try to create VirtualCluster without ApplicationService
+@test "KafkaCluster requires valid ApplicationService reference" {
+    # Try to create KafkaCluster without ApplicationService
     run kubectl apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: messaging.example.com/v1
-kind: VirtualCluster
+kind: KafkaCluster
 metadata:
   name: orphan-vc
 spec:
@@ -62,11 +62,11 @@ EOF
     assert_failure
 }
 
-@test "ServiceAccount requires valid VirtualCluster reference" {
+@test "ServiceAccount requires valid KafkaCluster reference" {
     # Create ApplicationService only
     create_app_service "test-app"
 
-    # Try to create ServiceAccount with non-existent VirtualCluster
+    # Try to create ServiceAccount with non-existent KafkaCluster
     run kubectl apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: messaging.example.com/v1
 kind: ServiceAccount
@@ -148,12 +148,12 @@ EOF
     assert_failure
 }
 
-@test "ServiceAccount must belong to same ApplicationService as VirtualCluster" {
+@test "ServiceAccount must belong to same ApplicationService as KafkaCluster" {
     # Create two separate ApplicationServices
     create_app_service "app-a"
     create_app_service "app-b"
 
-    # Create VirtualCluster under app-a
+    # Create KafkaCluster under app-a
     create_virtual_cluster "vc-a" "app-a"
 
     # Try to create ServiceAccount referencing vc-a but owned by app-b
@@ -187,7 +187,7 @@ EOF
     run kubectl delete serviceaccount.messaging.example.com delete-sa -n "$NAMESPACE"
     assert_success
 
-    run kubectl delete virtualcluster delete-vc -n "$NAMESPACE"
+    run kubectl delete kafkacluster delete-vc -n "$NAMESPACE"
     assert_success
 
     run kubectl delete applicationservice delete-app -n "$NAMESPACE"

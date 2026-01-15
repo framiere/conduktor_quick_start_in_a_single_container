@@ -76,27 +76,27 @@ class CrdReconciliationTest {
         }
 
         @Test
-        @DisplayName("should create VirtualCluster with ownership validation")
-        void testCreateVirtualClusterWithValidation() {
+        @DisplayName("should create KafkaCluster with ownership validation")
+        void testCreateKafkaClusterWithValidation() {
             // Setup: Create ApplicationService
             crdStore.create(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
 
             // BEFORE STATE
-            List<VirtualCluster> beforeState = crdStore.list(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE);
+            List<KafkaCluster> beforeState = crdStore.list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE);
             assertThat(beforeState).isEmpty();
 
             // CREATE OPERATION with validation
-            VirtualCluster vCluster = buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE);
+            KafkaCluster vCluster = buildKafkaCluster("prod-cluster", OWNER_APP_SERVICE);
 
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult validationResult = validator.validateCreate(vCluster, TEST_NAMESPACE);
 
             assertThat(validationResult.isValid()).as("Validation should pass when ApplicationService exists").isTrue();
 
-            VirtualCluster created = crdStore.create(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE, vCluster);
+            KafkaCluster created = crdStore.create(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE, vCluster);
 
             // AFTER STATE
-            List<VirtualCluster> afterState = crdStore.list(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE);
+            List<KafkaCluster> afterState = crdStore.list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE);
 
             assertThat(afterState).hasSize(1).first().satisfies(vc -> {
                 assertThat(vc.getSpec().getClusterId()).isEqualTo("prod-cluster");
@@ -106,10 +106,10 @@ class CrdReconciliationTest {
         }
 
         @Test
-        @DisplayName("should reject VirtualCluster creation with missing ApplicationService")
-        void testRejectVirtualClusterWithMissingOwner() {
+        @DisplayName("should reject KafkaCluster creation with missing ApplicationService")
+        void testRejectKafkaClusterWithMissingOwner() {
             // BEFORE STATE: No ApplicationService exists
-            VirtualCluster vCluster = buildVirtualCluster("prod-cluster", "nonexistent-service");
+            KafkaCluster vCluster = buildKafkaCluster("prod-cluster", "nonexistent-service");
 
             // CREATE OPERATION should fail validation
             OwnershipValidator validator = new OwnershipValidator(crdStore);
@@ -120,7 +120,7 @@ class CrdReconciliationTest {
             assertThat(result.getMessage()).contains("ApplicationService").contains("does not exist");
 
             // AFTER STATE: Nothing should be created
-            List<VirtualCluster> afterState = crdStore.list(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE);
+            List<KafkaCluster> afterState = crdStore.list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE);
             assertThat(afterState).isEmpty();
         }
 
@@ -129,7 +129,7 @@ class CrdReconciliationTest {
         void testCreateServiceAccountWithOwnershipChain() {
             // Setup ownership chain
             crdStore.create(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
-            crdStore.create(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE, buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
+            crdStore.create(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE, buildKafkaCluster("prod-cluster", OWNER_APP_SERVICE));
 
             // BEFORE STATE
             assertThat(crdStore.<ServiceAccount>list(CRDKind.SERVICE_ACCOUNT, TEST_NAMESPACE)).isEmpty();
@@ -156,12 +156,12 @@ class CrdReconciliationTest {
         }
 
         @Test
-        @DisplayName("should reject ServiceAccount with mismatched owner in VirtualCluster")
+        @DisplayName("should reject ServiceAccount with mismatched owner in KafkaCluster")
         void testRejectServiceAccountWithOwnershipMismatch() {
-            // Setup: ApplicationServices and VirtualCluster owned by different service
+            // Setup: ApplicationServices and KafkaCluster owned by different service
             crdStore.create(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
             crdStore.create(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, buildApplicationService(DIFFERENT_APP_SERVICE));
-            crdStore.create(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE, buildVirtualCluster("prod-cluster", DIFFERENT_APP_SERVICE));
+            crdStore.create(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE, buildKafkaCluster("prod-cluster", DIFFERENT_APP_SERVICE));
 
             // Try to create ServiceAccount claiming wrong owner
             ServiceAccount sa = buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE);
@@ -169,9 +169,9 @@ class CrdReconciliationTest {
             OwnershipValidator validator = new OwnershipValidator(crdStore);
             ValidationResult result = validator.validateCreate(sa, TEST_NAMESPACE);
 
-            assertThat(result.isValid()).as("Validation should fail when VirtualCluster is owned by different ApplicationService").isFalse();
+            assertThat(result.isValid()).as("Validation should fail when KafkaCluster is owned by different ApplicationService").isFalse();
 
-            assertThat(result.getMessage()).contains("VirtualCluster").contains("owned by").contains(DIFFERENT_APP_SERVICE);
+            assertThat(result.getMessage()).contains("KafkaCluster").contains("owned by").contains(DIFFERENT_APP_SERVICE);
         }
 
         @Test
@@ -479,14 +479,14 @@ class CrdReconciliationTest {
 
             // BEFORE STATE
             Map<CRDKind, Integer> beforeCounts = Map.of(CRDKind.APPLICATION_SERVICE,
-                    crdStore.<ApplicationService>list(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE).size(), CRDKind.VIRTUAL_CLUSTER,
-                    crdStore.<VirtualCluster>list(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE).size(), CRDKind.SERVICE_ACCOUNT,
+                    crdStore.<ApplicationService>list(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE).size(), CRDKind.KAFKA_CLUSTER,
+                    crdStore.<KafkaCluster>list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE).size(), CRDKind.SERVICE_ACCOUNT,
                     crdStore.<ServiceAccount>list(CRDKind.SERVICE_ACCOUNT, TEST_NAMESPACE).size(), CRDKind.TOPIC,
                     crdStore.<Topic>list(CRDKind.TOPIC, TEST_NAMESPACE).size(), CRDKind.ACL, crdStore.<ACL>list(CRDKind.ACL, TEST_NAMESPACE).size());
 
             assertThat(beforeCounts).as("BEFORE: All resources exist")
                     .containsEntry(CRDKind.APPLICATION_SERVICE, 1)
-                    .containsEntry(CRDKind.VIRTUAL_CLUSTER, 1)
+                    .containsEntry(CRDKind.KAFKA_CLUSTER, 1)
                     .containsEntry(CRDKind.SERVICE_ACCOUNT, 1)
                     .containsEntry(CRDKind.TOPIC, 1)
                     .containsEntry(CRDKind.ACL, 1);
@@ -497,18 +497,18 @@ class CrdReconciliationTest {
             crdStore.delete(CRDKind.ACL, TEST_NAMESPACE, "orders-events-rw");
             crdStore.delete(CRDKind.TOPIC, TEST_NAMESPACE, "orders-events");
             crdStore.delete(CRDKind.SERVICE_ACCOUNT, TEST_NAMESPACE, "orders-service-sa");
-            crdStore.delete(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE, "prod-cluster");
+            crdStore.delete(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE, "prod-cluster");
             crdStore.delete(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, OWNER_APP_SERVICE);
 
             // AFTER STATE
             Map<CRDKind, Integer> afterCounts = Map.of(CRDKind.APPLICATION_SERVICE, crdStore.<ApplicationService>list(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE).size(),
-                    CRDKind.VIRTUAL_CLUSTER, crdStore.<VirtualCluster>list(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE).size(), CRDKind.SERVICE_ACCOUNT,
+                    CRDKind.KAFKA_CLUSTER, crdStore.<KafkaCluster>list(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE).size(), CRDKind.SERVICE_ACCOUNT,
                     crdStore.<ServiceAccount>list(CRDKind.SERVICE_ACCOUNT, TEST_NAMESPACE).size(), CRDKind.TOPIC,
                     crdStore.<Topic>list(CRDKind.TOPIC, TEST_NAMESPACE).size(), CRDKind.ACL, crdStore.<ACL>list(CRDKind.ACL, TEST_NAMESPACE).size());
 
             assertThat(afterCounts).as("AFTER: All resources should be deleted")
                     .containsEntry(CRDKind.APPLICATION_SERVICE, 0)
-                    .containsEntry(CRDKind.VIRTUAL_CLUSTER, 0)
+                    .containsEntry(CRDKind.KAFKA_CLUSTER, 0)
                     .containsEntry(CRDKind.SERVICE_ACCOUNT, 0)
                     .containsEntry(CRDKind.TOPIC, 0)
                     .containsEntry(CRDKind.ACL, 0);
@@ -715,7 +715,7 @@ class CrdReconciliationTest {
     // Helper methods
     private void setupCompleteOwnershipChain() {
         crdStore.create(CRDKind.APPLICATION_SERVICE, TEST_NAMESPACE, buildApplicationService(OWNER_APP_SERVICE));
-        crdStore.create(CRDKind.VIRTUAL_CLUSTER, TEST_NAMESPACE, buildVirtualCluster("prod-cluster", OWNER_APP_SERVICE));
+        crdStore.create(CRDKind.KAFKA_CLUSTER, TEST_NAMESPACE, buildKafkaCluster("prod-cluster", OWNER_APP_SERVICE));
         crdStore.create(CRDKind.SERVICE_ACCOUNT, TEST_NAMESPACE, buildServiceAccount("orders-service-sa", "prod-cluster", OWNER_APP_SERVICE));
     }
 
@@ -732,13 +732,13 @@ class CrdReconciliationTest {
         return appService;
     }
 
-    private VirtualCluster buildVirtualCluster(String clusterId, String appServiceRef) {
-        VirtualCluster vCluster = new VirtualCluster();
+    private KafkaCluster buildKafkaCluster(String clusterId, String appServiceRef) {
+        KafkaCluster vCluster = new KafkaCluster();
         vCluster.setMetadata(new ObjectMeta());
         vCluster.getMetadata().setName(clusterId);
         vCluster.getMetadata().setNamespace(TEST_NAMESPACE);
 
-        VirtualClusterSpec spec = new VirtualClusterSpec();
+        KafkaClusterSpec spec = new KafkaClusterSpec();
         spec.setClusterId(clusterId);
         spec.setApplicationServiceRef(appServiceRef);
         vCluster.setSpec(spec);

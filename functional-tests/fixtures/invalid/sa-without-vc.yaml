@@ -1,4 +1,4 @@
-# Invalid: ServiceAccount referencing non-existent VirtualCluster
+# Invalid: ServiceAccount referencing non-existent KafkaCluster
 apiVersion: messaging.example.com/v1
 kind: ServiceAccount
 metadata:

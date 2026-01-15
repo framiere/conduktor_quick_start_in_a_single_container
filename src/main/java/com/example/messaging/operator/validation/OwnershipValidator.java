@@ -9,7 +9,7 @@ import static com.example.messaging.operator.validation.ValidationResult.*;
  * Validator for enforcing applicationService ownership rules. Ensures that:
  * - Resources can only be modified by their owner applicationService
  * - Referenced resources exist and belong to the same owner
- * - Ownership chains are maintained (ApplicationService -> VirtualCluster -> ServiceAccount -> Topic/ACL)
+ * - Ownership chains are maintained (ApplicationService -> KafkaCluster -> ServiceAccount -> Topic/ACL)
  */
 public class OwnershipValidator {
     private final ResourceLookup resourceLookup;
@@ -25,12 +25,12 @@ public class OwnershipValidator {
     /** Validates that all referenced resources exist and belong to the same applicationService. */
     public ValidationResult validateCreate(Object resource, String namespace) {
         return switch (resource) {
-            case VirtualCluster vc -> validateApplicationServiceExists(vc.getSpec().getApplicationServiceRef(), namespace);
+            case KafkaCluster vc -> validateApplicationServiceExists(vc.getSpec().getApplicationServiceRef(), namespace);
             case ServiceAccount sa -> {
                 ValidationResult appServiceResult = validateApplicationServiceExists(sa.getSpec().getApplicationServiceRef(), namespace);
                 if (!appServiceResult.isValid())
                     yield appServiceResult;
-                yield validateVirtualClusterExists(sa.getSpec().getClusterRef(), namespace, sa.getSpec().getApplicationServiceRef());
+                yield validateKafkaClusterExists(sa.getSpec().getClusterRef(), namespace, sa.getSpec().getApplicationServiceRef());
             }
             case Topic topic -> validateServiceAccountExists(topic.getSpec().getServiceRef(), namespace, topic.getSpec().getApplicationServiceRef());
             case ACL acl -> validateServiceAccountExists(acl.getSpec().getServiceRef(), namespace, acl.getSpec().getApplicationServiceRef());
@@ -73,13 +73,13 @@ public class OwnershipValidator {
         return valid();
     }
 
-    private ValidationResult validateVirtualClusterExists(String clusterRef, String namespace, String expectedAppService) {
-        VirtualCluster vc = resourceLookup.getVirtualCluster(namespace, clusterRef);
+    private ValidationResult validateKafkaClusterExists(String clusterRef, String namespace, String expectedAppService) {
+        KafkaCluster vc = resourceLookup.getKafkaCluster(namespace, clusterRef);
         if (vc == null) {
-            return invalid("Referenced VirtualCluster '%s' does not exist", clusterRef);
+            return invalid("Referenced KafkaCluster '%s' does not exist", clusterRef);
         }
         if (!vc.getSpec().getApplicationServiceRef().equals(expectedAppService)) {
-            return invalid("VirtualCluster '%s' is owned by '%s', not '%s'", clusterRef, vc.getSpec().getApplicationServiceRef(), expectedAppService);
+            return invalid("KafkaCluster '%s' is owned by '%s', not '%s'", clusterRef, vc.getSpec().getApplicationServiceRef(), expectedAppService);
         }
         return valid();
     }
@@ -97,7 +97,7 @@ public class OwnershipValidator {
 
     private String getApplicationServiceRef(Object resource) {
         return switch (resource) {
-            case VirtualCluster r -> r.getSpec().getApplicationServiceRef();
+            case KafkaCluster r -> r.getSpec().getApplicationServiceRef();
             case ServiceAccount sa -> sa.getSpec().getApplicationServiceRef();
             case Topic topic -> topic.getSpec().getApplicationServiceRef();
             case ConsumerGroup cg -> cg.getSpec().getApplicationServiceRef();

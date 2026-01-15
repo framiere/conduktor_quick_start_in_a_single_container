@@ -14,8 +14,8 @@ const eventTypes = [
 
 const sampleLogs = `[main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE ApplicationService default/team-a-app
 [main] INFO ReconciliationEventPublisher - RECONCILIATION_END: CREATE ApplicationService default/team-a-app - SUCCESS CREATE completed successfully
-[main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE VirtualCluster default/team-a-cluster
-[main] INFO ReconciliationEventPublisher - RECONCILIATION_END: CREATE VirtualCluster default/team-a-cluster - SUCCESS CREATE completed successfully
+[main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE KafkaCluster default/team-a-cluster
+[main] INFO ReconciliationEventPublisher - RECONCILIATION_END: CREATE KafkaCluster default/team-a-cluster - SUCCESS CREATE completed successfully
 [main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE ServiceAccount default/team-a-sa
 [main] INFO ReconciliationEventPublisher - RECONCILIATION_END: CREATE ServiceAccount default/team-a-sa - SUCCESS CREATE completed successfully
 [main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE Topic default/orders-events
@@ -193,7 +193,7 @@ export default function OperabilityPage() {
           </div>
           <CodeBlock code={sampleLogs} />
           <p className="text-sm text-gray-500 mt-4">
-            Each step in the ownership chain is tracked: ApplicationService → VirtualCluster → ServiceAccount → Topic → ACL
+            Each step in the ownership chain is tracked: ApplicationService → KafkaCluster → ServiceAccount → Topic → ACL
           </p>
         </Card>
 

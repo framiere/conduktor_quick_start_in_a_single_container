@@ -97,7 +97,7 @@ export default function ArchitecturePage() {
               <div className="flex flex-col items-center">
                 <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
                 <DiagramNode color="purple">
-                  <div className="font-bold">VirtualCluster</div>
+                  <div className="font-bold">KafkaCluster</div>
                   <div className="text-xs opacity-70 mt-1">Owned by AppService</div>
                 </DiagramNode>
               </div>
@@ -105,7 +105,7 @@ export default function ArchitecturePage() {
                 <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mb-2"></div>
                 <DiagramNode color="green">
                   <div className="font-bold">ServiceAccount</div>
-                  <div className="text-xs opacity-70 mt-1">Refs VirtualCluster</div>
+                  <div className="text-xs opacity-70 mt-1">Refs KafkaCluster</div>
                 </DiagramNode>
               </div>
             </div>
@@ -211,8 +211,8 @@ export default function ArchitecturePage() {
                 <td className="px-6 py-4 text-gray-600 dark:text-gray-400">ServiceAccount admission validation</td>
               </tr>
               <tr>
-                <td className="px-6 py-4"><code className="text-sm">/validate/virtualcluster</code></td>
-                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">VirtualCluster admission validation</td>
+                <td className="px-6 py-4"><code className="text-sm">/validate/kafkacluster</code></td>
+                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">KafkaCluster admission validation</td>
               </tr>
               <tr>
                 <td className="px-6 py-4"><code className="text-sm">/validate/consumergroup</code></td>
