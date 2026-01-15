@@ -1,1953 +1,1460 @@
 {
+  "timestamp": "2026-01-15T11:23:42.872133",
   "summary": {
-    "timestamp": "2026-01-15T09:13:41.016Z",
-    "unit": {
-      "suites": 36,
-      "tests": 158,
-      "passed": 155,
-      "failed": 0,
-      "errors": 3,
-      "skipped": 0,
-      "time": 203.744
-    },
-    "integration": {
-      "suites": 6,
-      "tests": 24,
-      "passed": 24,
-      "failed": 0,
-      "errors": 0,
-      "skipped": 0,
-      "time": 105.174
-    }
+    "totalTests": 158,
+    "passed": 158,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "totalTime": 18.036,
+    "passRate": 100.0
   },
-  "byCategory": {
-    "CRD": {
-      "suites": [
-        "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-        "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-        "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-        "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$BuilderPatternTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$ConsumerGroupTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$FieldValidationTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-        "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest"
-      ],
-      "tests": 62,
-      "passed": 62,
-      "failed": 0,
-      "time": 0.4370000000000001
-    },
-    "E2E": {
-      "suites": [
-        "com.example.messaging.operator.e2e.HAFailoverE2ETest",
-        "com.example.messaging.operator.e2e.MultiTenantE2ETest",
-        "com.example.messaging.operator.e2e.OwnershipChainE2ETest"
-      ],
-      "tests": 3,
-      "passed": 0,
-      "failed": 3,
-      "time": 184.503
-    },
-    "Events": {
-      "suites": [
-        "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-        "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-        "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-        "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest"
-      ],
-      "tests": 19,
-      "passed": 19,
-      "failed": 0,
-      "time": 0.12
-    },
-    "Store": {
-      "suites": [
-        "com.example.messaging.operator.store.CRDStoreTest$ClearOperationTests",
-        "com.example.messaging.operator.store.CRDStoreTest$ConcurrencyTests",
-        "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-        "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-        "com.example.messaging.operator.store.CRDStoreTest$GetOperationTests",
-        "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
-        "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests"
-      ],
-      "tests": 29,
-      "passed": 29,
-      "failed": 0,
-      "time": 0.174
-    },
-    "Validation": {
-      "suites": [
-        "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-        "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-        "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-        "com.example.messaging.operator.validation.ValidationResultTest"
-      ],
-      "tests": 34,
-      "passed": 34,
-      "failed": 0,
-      "time": 1.188
-    },
-    "Webhook": {
-      "suites": [
-        "com.example.messaging.operator.webhook.AdmissionReviewTest",
-        "com.example.messaging.operator.webhook.WebhookIntegrationTest",
-        "com.example.messaging.operator.webhook.WebhookServerTest",
-        "com.example.messaging.operator.webhook.WebhookValidatorTest"
-      ],
-      "tests": 11,
-      "passed": 11,
-      "failed": 0,
-      "time": 17.322
-    },
-    "Component": {
-      "suites": [
-        "com.example.messaging.operator.it.component.CRDStoreIT",
-        "com.example.messaging.operator.it.component.OwnershipValidatorIT"
-      ],
-      "tests": 9,
-      "passed": 9,
-      "failed": 0,
-      "time": 16.477
-    },
-    "Scenario": {
-      "suites": [
-        "com.example.messaging.operator.it.scenario.CRDLifecycleIT",
-        "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-        "com.example.messaging.operator.it.scenario.OwnershipChainIT",
-        "com.example.messaging.operator.it.scenario.ReconciliationIT"
-      ],
-      "tests": 15,
-      "passed": 15,
-      "failed": 0,
-      "time": 88.697
-    }
-  },
-  "suites": [
+  "testSuites": [
     {
       "name": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-      "time": 0.063,
       "tests": 8,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 8,
+      "time": 0.05,
       "testCases": [
         {
           "name": "testCreateServiceAccountWithOwnershipChain",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.013,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testRejectTopicWithOwnershipMismatch",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateKafkaClusterWithValidation",
-          "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateACLWithOwnershipValidation",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testRejectKafkaClusterWithMissingOwner",
-          "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testRejectServiceAccountWithOwnershipMismatch",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateTopicWithOwnershipValidation",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreateKafkaClusterWithValidation",
+          "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateApplicationService",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testRejectKafkaClusterWithMissingOwner",
+          "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$CreateOperationsTest",
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-      "time": 0.055,
       "tests": 5,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 5,
+      "time": 0.045,
       "testCases": [
         {
           "name": "testDeleteTopic",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCascadeDeleteStateTransitions",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-          "time": 0.024,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.017,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteACL",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testRejectUnauthorizedDelete",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAllowAuthorizedDelete",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$DeleteOperationsTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-      "time": 0.059,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.057,
       "testCases": [
         {
           "name": "testCreateEventLifecycle",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
           "time": 0.009,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteEventLifecycle",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateFailureEvent",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCompleteLifecycleEventTracking",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-          "time": 0.014,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.012,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateEventLifecycle",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testResourceVersionInEvents",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$EventPublishingTest",
-          "time": 0.009,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-      "time": 0.025,
       "tests": 4,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 4,
+      "time": 0.033,
       "testCases": [
         {
           "name": "testUpdateServiceAccountDN",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateACLOperations",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testRejectOwnershipChange",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateTopicPartitions",
           "classname": "com.example.messaging.operator.crd.CrdReconciliationTest$UpdateOperationsTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
-      "time": 0.03,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.028,
       "testCases": [
         {
           "name": "testAclBuilder",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
           "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAclReadWrite",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAclWithConsumerGroupRef",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAclReadOnly",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
           "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAclWithTopicRef",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAclMutuallyExclusiveRefs",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$AclTest",
           "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-      "time": 0.033,
       "tests": 4,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 4,
+      "time": 0.017,
       "testCases": [
         {
           "name": "testApplicationServiceCustomResource",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testApplicationServiceCreation",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testApplicationServiceEqualsAndHashCode",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testApplicationServiceBuilder",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ApplicationServiceTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$BuilderPatternTest",
-      "time": 0.015,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 0.019,
       "testCases": [
         {
           "name": "testFluentBuilderChaining",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$BuilderPatternTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testBuilderFromExistingSpec",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$BuilderPatternTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAllSpecsHaveBuilders",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$BuilderPatternTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$ConsumerGroupTest",
-      "time": 0.026,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 0.021,
       "testCases": [
         {
           "name": "testConsumerGroupPrefixedPattern",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ConsumerGroupTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testConsumerGroupBuilder",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ConsumerGroupTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.009,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testConsumerGroupCreation",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ConsumerGroupTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$FieldValidationTest",
-      "time": 0.019,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 0.015,
       "testCases": [
         {
           "name": "testNullVsEmptyList",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$FieldValidationTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testRequiredAnnotations",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$FieldValidationTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testListFieldInitialization",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$FieldValidationTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "unit",
-      "category": "CRD"
-    },
-    {
-      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
-      "time": 0.016,
-      "tests": 4,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 4,
-      "testCases": [
-        {
-          "name": "testLombokHashCode",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
           "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testLombokGettersSetters",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testLombokToString",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testLombokEquals",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
-    },
-    {
-      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-      "time": 0.01,
-      "tests": 4,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 4,
-      "testCases": [
-        {
-          "name": "testServiceAccountToKafkaClusterReference",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testApplicationServiceOwnershipChain",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testTopicToServiceAccountReference",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testAclReferences",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "unit",
-      "category": "CRD"
-    },
-    {
-      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-      "time": 0.041,
-      "tests": 6,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 6,
-      "testCases": [
-        {
-          "name": "testServiceAccountWithSingleDn",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.015,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountDnMutability",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountRelationships",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountDnDefaultValue",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountBuilder",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountWithDnList",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "unit",
-      "category": "CRD"
-    },
-    {
-      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-      "time": 0.018,
-      "tests": 3,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 3,
-      "testCases": [
-        {
-          "name": "testTopicBuilder",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testTopicCreation",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testTopicServiceAccountReference",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
       "name": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
-      "time": 0.027,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 0.015,
       "testCases": [
-        {
-          "name": "testKafkaClusterCreation",
-          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
         {
           "name": "testKafkaClusterBuilder",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
-          "time": 0.015,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testKafkaClusterRequiredFields",
           "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
           "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testKafkaClusterCreation",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$KafkaClusterTest",
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "CRD"
+      ]
     },
     {
-      "name": "com.example.messaging.operator.e2e.HAFailoverE2ETest",
-      "time": 60.866,
-      "tests": 1,
-      "errors": 1,
-      "skipped": 0,
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
+      "tests": 4,
       "failures": 0,
-      "passed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time": 0.021,
       "testCases": [
         {
-          "name": "",
-          "classname": "com.example.messaging.operator.e2e.HAFailoverE2ETest",
-          "time": 60.866,
-          "status": "failed",
-          "failureMessage": "Test failed"
+          "name": "testLombokHashCode",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testLombokGettersSetters",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testLombokToString",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
+          "time": 0.009,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testLombokEquals",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$LombokIntegrationTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "E2E"
+      ]
     },
     {
-      "name": "com.example.messaging.operator.e2e.MultiTenantE2ETest",
-      "time": 62.823,
-      "tests": 1,
-      "errors": 1,
-      "skipped": 0,
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
+      "tests": 4,
       "failures": 0,
-      "passed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time": 0.014,
       "testCases": [
         {
-          "name": "",
-          "classname": "com.example.messaging.operator.e2e.MultiTenantE2ETest",
-          "time": 62.823,
-          "status": "failed",
-          "failureMessage": "Test failed"
+          "name": "testServiceAccountToKafkaClusterReference",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testApplicationServiceOwnershipChain",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testTopicToServiceAccountReference",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testAclReferences",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$RelationshipTest",
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "E2E"
+      ]
     },
     {
-      "name": "com.example.messaging.operator.e2e.OwnershipChainE2ETest",
-      "time": 60.814,
-      "tests": 1,
-      "errors": 1,
-      "skipped": 0,
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+      "tests": 6,
       "failures": 0,
-      "passed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time": 0.053,
       "testCases": [
         {
-          "name": "",
-          "classname": "com.example.messaging.operator.e2e.OwnershipChainE2ETest",
-          "time": 60.814,
-          "status": "failed",
-          "failureMessage": "Test failed"
+          "name": "testServiceAccountWithSingleDn",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.02,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountDnMutability",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountRelationships",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountDnDefaultValue",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountBuilder",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountWithDnList",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$ServiceAccountTest",
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "E2E"
+      ]
+    },
+    {
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time": 0.021,
+      "testCases": [
+        {
+          "name": "testTopicBuilder",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
+          "time": 0.012,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testTopicCreation",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testTopicServiceAccountReference",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$TopicTest",
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
+        }
+      ]
+    },
+    {
+      "name": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time": 0.015,
+      "testCases": [
+        {
+          "name": "testVirtualClusterCreation",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testVirtualClusterBuilder",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "time": 0.009,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testVirtualClusterRequiredFields",
+          "classname": "com.example.messaging.operator.crd.CrdSpecificationTest$VirtualClusterTest",
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
+        }
+      ]
     },
     {
       "name": "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-      "time": 0.015,
       "tests": 4,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 4,
+      "time": 0.016,
       "testCases": [
         {
           "name": "testPublishBefore",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testPublishSuccess",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testPublishValidationError",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testPublishFailure",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ConvenienceMethodsTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Events"
+      ]
     },
     {
       "name": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-      "time": 0.034,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.017,
       "testCases": [
         {
           "name": "testRequiredFieldValidation",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testEventToString",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateValidationErrorEvent",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateAfterEventWithResult",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testResourceReference",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
           "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateBeforeEvent",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventCreationTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Events"
+      ]
     },
     {
       "name": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-      "time": 0.049,
       "tests": 5,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 5,
+      "time": 0.026,
       "testCases": [
         {
           "name": "testRemoveListener",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-          "time": 0.011,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testPublishToSingleListener",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testClearListeners",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testListenerExceptionHandling",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-          "time": 0.013,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testPublishToMultipleListeners",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$EventPublisherTest",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Events"
+      ]
     },
     {
       "name": "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest",
-      "time": 0.022,
       "tests": 4,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 4,
+      "time": 0.015,
       "testCases": [
         {
           "name": "testUpdateLifecycleWithVersioning",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteLifecycle",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testSuccessfulCreateLifecycle",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testFailedCreateLifecycle",
           "classname": "com.example.messaging.operator.events.ReconciliationEventTest$ReconciliationLifecycleTest",
           "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Events"
-    },
-    {
-      "name": "com.example.messaging.operator.it.component.CRDStoreIT",
-      "time": 7.351,
-      "tests": 4,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 4,
-      "testCases": [
-        {
-          "name": "testDeleteResourceFromStore",
-          "classname": "com.example.messaging.operator.it.component.CRDStoreIT",
-          "time": 0.601,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testListResourcesFromStore",
-          "classname": "com.example.messaging.operator.it.component.CRDStoreIT",
-          "time": 0.772,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testK8sCreateSyncsStore",
-          "classname": "com.example.messaging.operator.it.component.CRDStoreIT",
-          "time": 0.438,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testUpdateResourceInStore",
-          "classname": "com.example.messaging.operator.it.component.CRDStoreIT",
-          "time": 0.491,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Component"
-    },
-    {
-      "name": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-      "time": 9.126,
-      "tests": 5,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 5,
-      "testCases": [
-        {
-          "name": "testRejectOwnershipChange",
-          "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-          "time": 0.863,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testRejectMissingServiceAccount",
-          "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-          "time": 0.667,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testRejectWrongKafkaClusterOwner",
-          "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-          "time": 0.896,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testAllowUpdateSameOwner",
-          "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-          "time": 0.781,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testValidateOwnershipChainFromK8s",
-          "classname": "com.example.messaging.operator.it.component.OwnershipValidatorIT",
-          "time": 0.859,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Component"
-    },
-    {
-      "name": "com.example.messaging.operator.it.scenario.CRDLifecycleIT",
-      "time": 11.878,
-      "tests": 2,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 2,
-      "testCases": [
-        {
-          "name": "testCompleteLifecycle",
-          "classname": "com.example.messaging.operator.it.scenario.CRDLifecycleIT",
-          "time": 6.001,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateFromYAMLFixture",
-          "classname": "com.example.messaging.operator.it.scenario.CRDLifecycleIT",
-          "time": 5.825,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Scenario"
-    },
-    {
-      "name": "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-      "time": 23.981,
-      "tests": 4,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 4,
-      "testCases": [
-        {
-          "name": "testCrossTenantUpdateDenied",
-          "classname": "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-          "time": 6.031,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testMultiTenantFixtureIsolation",
-          "classname": "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-          "time": 5.868,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCrossTenantReferenceDenied",
-          "classname": "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-          "time": 5.833,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testIndependentTenantOperations",
-          "classname": "com.example.messaging.operator.it.scenario.MultiTenantIsolationIT",
-          "time": 6.202,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Scenario"
-    },
-    {
-      "name": "com.example.messaging.operator.it.scenario.OwnershipChainIT",
-      "time": 17.184,
-      "tests": 3,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 3,
-      "testCases": [
-        {
-          "name": "testCrossOwnershipRejection",
-          "classname": "com.example.messaging.operator.it.scenario.OwnershipChainIT",
-          "time": 5.622,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testTopicRejectsWrongServiceAccountOwner",
-          "classname": "com.example.messaging.operator.it.scenario.OwnershipChainIT",
-          "time": 5.642,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testValidChainFromFixture",
-          "classname": "com.example.messaging.operator.it.scenario.OwnershipChainIT",
-          "time": 5.88,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Scenario"
-    },
-    {
-      "name": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-      "time": 35.654,
-      "tests": 6,
-      "errors": 0,
-      "skipped": 0,
-      "failures": 0,
-      "passed": 6,
-      "testCases": [
-        {
-          "name": "testEventsContainCorrectMetadata",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 7.164,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testUpdateTriggersReconciliationEvents",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 5.357,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testFailedValidationTriggersFailedEvent",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 5.394,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testDeleteTriggersReconciliationEvents",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 5.395,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateTriggersReconciliationEvents",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 5.335,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testMultipleListenersReceiveEvents",
-          "classname": "com.example.messaging.operator.it.scenario.ReconciliationIT",
-          "time": 5.415,
-          "status": "passed",
-          "failureMessage": null
-        }
-      ],
-      "type": "integration",
-      "category": "Scenario"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$ClearOperationTests",
-      "time": 0.006,
       "tests": 2,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 2,
+      "time": 0.023,
       "testCases": [
         {
           "name": "testClearResetsResourceVersion",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ClearOperationTests",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.01,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testClearAllResources",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ClearOperationTests",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$ConcurrencyTests",
-      "time": 0.015,
       "tests": 1,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 1,
+      "time": 0.013,
       "testCases": [
         {
           "name": "testConcurrentCreates",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ConcurrencyTests",
-          "time": 0.013,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.01,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-      "time": 0.037,
       "tests": 8,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 8,
+      "time": 0.057,
       "testCases": [
         {
           "name": "testCreateIncrementsResourceVersion",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateAssignsResourceVersion",
-          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreatePublishesFailureEventOnDuplicate",
-          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreatePublishesEvents",
-          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateAssignsUID",
-          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testCreateDuplicateThrowsException",
-          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateEnforcesOwnershipForKafkaCluster",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testCreateAllowsKafkaClusterWithValidOwnership",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
           "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreateAssignsResourceVersion",
+          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreatePublishesFailureEventOnDuplicate",
+          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreatePublishesEvents",
+          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreateAssignsUID",
+          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testCreateDuplicateThrowsException",
+          "classname": "com.example.messaging.operator.store.CRDStoreTest$CreateOperationTests",
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-      "time": 0.048,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.043,
       "testCases": [
         {
           "name": "testDeletePublishesNotFoundResult",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteNonExistentResource",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteAllowsByOwner",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteEnforcesOwnership",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteExistingResource",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
           "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeletePublishesEvents",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$DeleteOperationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$GetOperationTests",
-      "time": 0.018,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 0.021,
       "testCases": [
         {
           "name": "testGetNonExistentResource",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$GetOperationTests",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testGetExistingResource",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$GetOperationTests",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testGetResourceWithMetadata",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$GetOperationTests",
           "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
-      "time": 0.027,
       "tests": 4,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 4,
+      "time": 0.034,
       "testCases": [
         {
           "name": "testListIsolatesResourceKinds",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testListAllResources",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testListEmptyNamespace",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
           "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testListIsolatesNamespaces",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$ListOperationTests",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
-      "time": 0.023,
       "tests": 5,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 5,
+      "time": 0.027,
       "testCases": [
         {
           "name": "testUpdateAllowsWhenOwnershipUnchanged",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdatePublishesEvents",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateIncrementsResourceVersion",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.002,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateEnforcesOwnershipImmutability",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
           "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateNonExistentThrowsException",
           "classname": "com.example.messaging.operator.store.CRDStoreTest$UpdateOperationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Store"
+      ]
     },
     {
       "name": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-      "time": 0.419,
       "tests": 12,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 12,
+      "time": 0.191,
       "testCases": [
         {
           "name": "testKafkaClusterCreateWithExistingAppService",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.202,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.109,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testServiceAccountCreateWithMissingAppService",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.02,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.007,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testServiceAccountCreateWithValidChain",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.01,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testACLCreateWithMissingServiceAccount",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testServiceAccountCreateWithWrongOwner",
-          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.025,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testACLCreateWithValidChain",
-          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.012,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testTopicCreateWithWrongServiceAccountOwner",
-          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.026,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testKafkaClusterCreateWithMissingAppService",
-          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.023,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testServiceAccountCreateWithMissingKafkaCluster",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.016,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testServiceAccountCreateWithWrongOwner",
+          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testACLCreateWithValidChain",
+          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testTopicCreateWithWrongServiceAccountOwner",
+          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testTopicCreateWithMissingServiceAccount",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.002,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testTopicCreateWithValidChain",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
           "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testApplicationServiceCreateAlwaysValid",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testKafkaClusterCreateWithMissingAppService",
+          "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$CreateValidationTests",
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Validation"
+      ]
     },
     {
       "name": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-      "time": 0.227,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.151,
       "testCases": [
         {
           "name": "testTopicDeleteByOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-          "time": 0.179,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.107,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testACLDeleteByOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
           "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testACLDeleteByNonOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteByNonOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testTopicDeleteByNonOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDeleteByOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$DeleteValidationTests",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Validation"
+      ]
     },
     {
       "name": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-      "time": 0.064,
       "tests": 6,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 6,
+      "time": 0.039,
       "testCases": [
         {
           "name": "testTopicUpdateWithSameOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testTopicUpdateWithDifferentOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-          "time": 0.007,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateWithDifferentOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-          "time": 0.008,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.006,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateWithSameOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
           "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateWithNullExistingOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.005,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testUpdateWithNullNewOwner",
           "classname": "com.example.messaging.operator.validation.OwnershipValidatorTest$UpdateValidationTests",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Validation"
+      ]
     },
     {
       "name": "com.example.messaging.operator.validation.ValidationResultTest",
-      "time": 0.478,
       "tests": 10,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 10,
+      "time": 0.207,
       "testCases": [
         {
           "name": "testInvalidResultWithEmptyMessage",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.307,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.112,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testMultilineErrorMessage",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.009,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.008,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testFactoryMethodsReturnNewInstances",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testSpecialCharactersInMessage",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.006,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.003,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testInvalidResultWithNullMessage",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.001,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testInvalidResult",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testValidVsInvalid",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testImmutability",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.004,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.001,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testValidResult",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
-          "time": 0.003,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.004,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testVeryLongErrorMessage",
           "classname": "com.example.messaging.operator.validation.ValidationResultTest",
           "time": 0.005,
-          "status": "passed",
-          "failureMessage": null
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Validation"
+      ]
     },
     {
       "name": "com.example.messaging.operator.webhook.AdmissionReviewTest",
-      "time": 0.56,
       "tests": 1,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 1,
+      "time": 0.493,
       "testCases": [
         {
           "name": "testDeserializeUpdateRequest",
           "classname": "com.example.messaging.operator.webhook.AdmissionReviewTest",
-          "time": 0.17,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.125,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Webhook"
+      ]
     },
     {
       "name": "com.example.messaging.operator.webhook.WebhookIntegrationTest",
-      "time": 5.419,
       "tests": 3,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 3,
+      "time": 5.313,
       "testCases": [
         {
           "name": "testBlockTopicOwnershipTransfer",
           "classname": "com.example.messaging.operator.webhook.WebhookIntegrationTest",
-          "time": 0.217,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.133,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testBlockACLOwnershipTransfer",
           "classname": "com.example.messaging.operator.webhook.WebhookIntegrationTest",
-          "time": 0.088,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.098,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAllowTopicPartitionChange",
           "classname": "com.example.messaging.operator.webhook.WebhookIntegrationTest",
-          "time": 0.059,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.05,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Webhook"
+      ]
     },
     {
       "name": "com.example.messaging.operator.webhook.WebhookServerTest",
-      "time": 11.217,
       "tests": 2,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 2,
+      "time": 10.809,
       "testCases": [
         {
           "name": "testValidateTopicUpdate",
           "classname": "com.example.messaging.operator.webhook.WebhookServerTest",
-          "time": 6.163,
-          "status": "passed",
-          "failureMessage": null
+          "time": 5.775,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testHealthCheck",
           "classname": "com.example.messaging.operator.webhook.WebhookServerTest",
-          "time": 5.04,
-          "status": "passed",
-          "failureMessage": null
+          "time": 5.027,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Webhook"
+      ]
     },
     {
       "name": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-      "time": 0.126,
       "tests": 5,
+      "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "failures": 0,
-      "passed": 5,
+      "time": 0.117,
       "testCases": [
         {
           "name": "testDenyServiceAccountUpdate",
           "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-          "time": 0.03,
-          "status": "passed",
-          "failureMessage": null
-        },
-        {
-          "name": "testDenyKafkaClusterUpdate",
-          "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-          "time": 0.02,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.032,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testAllowUpdateSameOwner",
           "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-          "time": 0.031,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.025,
+          "status": "PASSED",
+          "message": ""
+        },
+        {
+          "name": "testDenyKafkaClusterUpdate",
+          "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
+          "time": 0.027,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDenyACLUpdate",
           "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-          "time": 0.022,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.012,
+          "status": "PASSED",
+          "message": ""
         },
         {
           "name": "testDenyUpdateDifferentOwner",
           "classname": "com.example.messaging.operator.webhook.WebhookValidatorTest",
-          "time": 0.017,
-          "status": "passed",
-          "failureMessage": null
+          "time": 0.012,
+          "status": "PASSED",
+          "message": ""
         }
-      ],
-      "type": "unit",
-      "category": "Webhook"
+      ]
     }
   ]
 }
