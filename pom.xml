@@ -275,23 +275,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Spotless for code formatting -->
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>2.43.0</version>
-                <configuration>
-                    <java>
-                        <eclipse>
-                            <version>4.26</version>
-                            <file>${project.basedir}/eclipse-formatter.xml</file>
-                        </eclipse>
-                        <removeUnusedImports/>
-                        <formatAnnotations/>
-                    </java>
-                </configuration>
-            </plugin>
-
             <!-- Shade plugin for creating executable uber-jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -24,12 +24,6 @@ mvn verify
 # Run single integration test
 mvn verify -Dit.test=CRDStoreIT
 
-# Format code (Spotless with Eclipse formatter)
-mvn spotless:apply
-
-# Check formatting without applying
-mvn spotless:check
-
 # Full Docker build and run
 make all
 
