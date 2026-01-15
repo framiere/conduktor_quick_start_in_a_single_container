@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw
+  Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw
 } from 'lucide-react'
 
 import './index.css'
@@ -42,7 +42,7 @@ const perspectives = [
   { path: '/operability', name: 'Operability', icon: Activity, description: 'Logs, events, and audit trail' },
 ]
 
-function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
+function Navigation({ isOpen, setIsOpen }) {
   const location = useLocation()
 
   return (
@@ -50,7 +50,7 @@ function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-white dark:bg-gray-800 shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-gray-800 shadow-lg"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -59,15 +59,15 @@ function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
       <aside className={`
         fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-gray-200 dark:border-gray-800
+        bg-gray-900/80 backdrop-blur-xl border-r border-gray-800
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <div className="p-6 border-b border-gray-800">
             <h1 className="text-xl font-semibold gradient-text">
               Messaging Operator
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 mt-1">
               Kubernetes Multi-Tenant Platform
             </p>
           </div>
@@ -86,7 +86,7 @@ function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                     ${isActive
                       ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                      : 'hover:bg-gray-800 text-gray-300'
                     }
                   `}
                 >
@@ -102,17 +102,6 @@ function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
               )
             })}
           </nav>
-
-          {/* Theme toggle */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-            >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -129,22 +118,14 @@ function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
 
 function App() {
   const [isOpen, setIsOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-    }
-    return false
-  })
 
   return (
     <Router>
-      <div className={darkMode ? 'dark' : ''}>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <div className="dark">
+        <div className="min-h-screen bg-gray-950 text-gray-100">
           <Navigation
             isOpen={isOpen}
             setIsOpen={setIsOpen}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
           />
 
           {/* Main content */}

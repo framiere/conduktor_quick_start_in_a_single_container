@@ -233,51 +233,40 @@ function ArchitectureDiagram() {
   )
 }
 
-const cliExample = `// ConduktorCli.java - Execute dry-run validation
-public CliResult applyDryRun(ConduktorResource<?> resource) {
-    Path yamlFile = yamlWriter.writeToTempFile(resource);
-    try {
-        ProcessBuilder pb = new ProcessBuilder(
-            cliPath, "apply", "-f", yamlFile.toString(), "--dry-run"
-        );
-        Process process = pb.start();
+const cliExample = `# Validate transformed resources with Conduktor CLI
+$ conduktor apply -f virtual-cluster.yaml --dry-run
+✓ VirtualCluster "payments-prod-vcluster" validated
 
-        String stdout = readStream(process.getInputStream());
-        String stderr = readStream(process.getErrorStream());
+$ conduktor apply -f service-account.yaml --dry-run
+✓ GatewayServiceAccount "payments-admin" validated
 
-        return new CliResult(process.exitValue(), stdout, stderr);
-    } finally {
-        Files.deleteIfExists(yamlFile);
-    }
-}`
+$ conduktor apply -f topic.yaml --dry-run
+✓ Topic "payments.events.v1" validated
 
-const transformerExample = `// TopicTransformer.java - Transform with cluster resolution
-public ConduktorTopic transform(Topic source) {
-    String clusterName = resolveClusterName(source);
+# Apply when ready (no --dry-run)
+$ conduktor apply -f virtual-cluster.yaml
+VirtualCluster "payments-prod-vcluster" created`
 
-    return ConduktorTopic.builder()
-        .apiVersion("kafka/v2")
-        .kind("Topic")
-        .metadata(ConduktorMetadata.builder()
-            .name(source.getSpec().getName())
-            .cluster(clusterName)
-            .build())
-        .spec(ConduktorTopicSpec.builder()
-            .partitions(source.getSpec().getPartitions())
-            .replicationFactor(source.getSpec().getReplicationFactor())
-            .configs(source.getSpec().getConfig())
-            .build())
-        .build();
-}
-
-private String resolveClusterName(Topic topic) {
-    ServiceAccount sa = store.get(
-        CRDKind.SERVICE_ACCOUNT,
-        topic.getMetadata().getNamespace(),
-        topic.getSpec().getServiceRef()
-    );
-    return sa.getSpec().getClusterRef();
-}`
+const transformerExample = `# Input: Internal Kubernetes CRD
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: payments-events
+  namespace: payments-team
+spec:
+  name: payments.events.v1
+  serviceRef: payments-admin    # Resolved to cluster
+  partitions: 12
+---
+# Output: Conduktor Gateway Format
+apiVersion: kafka/v2
+kind: Topic
+metadata:
+  name: payments.events.v1
+  cluster: payments-prod-vcluster  # From ServiceAccount lookup
+spec:
+  partitions: 12
+  replicationFactor: 3`
 
 export default function TransformationPage() {
   return (
@@ -318,7 +307,7 @@ export default function TransformationPage() {
               Each transformer implements a generic interface for type-safe conversions.
               The TopicTransformer demonstrates cluster resolution via CRDStore lookup.
             </p>
-            <CodeBlock code={transformerExample} language="java" />
+            <CodeBlock code={transformerExample} language="yaml" />
           </Card>
 
           <Card
@@ -330,7 +319,7 @@ export default function TransformationPage() {
               The ConduktorCli class executes dry-run validation, writing temporary YAML files
               and capturing CLI output for validation feedback.
             </p>
-            <CodeBlock code={cliExample} language="java" />
+            <CodeBlock code={cliExample} language="bash" />
           </Card>
         </CardGrid>
       </Section>
