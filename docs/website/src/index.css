@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode (Tailwind v4) */
+/* This makes dark: variants respond to .dark class instead of system preference */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --apple-blue: #007aff;
   --apple-green: #34c759;
