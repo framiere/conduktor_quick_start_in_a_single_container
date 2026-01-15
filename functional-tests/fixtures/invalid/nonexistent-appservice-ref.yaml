@@ -1,0 +1,8 @@
+# Invalid: VirtualCluster referencing non-existent ApplicationService
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: invalid-vc
+spec:
+  clusterId: invalid-vc
+  applicationServiceRef: non-existent-app

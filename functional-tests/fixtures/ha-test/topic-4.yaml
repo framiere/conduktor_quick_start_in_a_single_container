@@ -1,0 +1,11 @@
+# HA Test: Topic 4 - for failover testing
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: ha-test-topic-4
+spec:
+  name: ha-test-topic-4
+  serviceRef: ha-test-sa
+  applicationServiceRef: ha-test-app
+  partitions: 3
+  replicationFactor: 1

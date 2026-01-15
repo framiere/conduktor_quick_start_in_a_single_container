@@ -1,0 +1,11 @@
+# Tenant B: Topic
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: tenant-b-topic
+spec:
+  name: tenant-b-topic
+  serviceRef: tenant-b-sa
+  applicationServiceRef: tenant-b-app
+  partitions: 3
+  replicationFactor: 1

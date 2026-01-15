@@ -1,0 +1,6 @@
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: test-app
+spec:
+  name: test-app

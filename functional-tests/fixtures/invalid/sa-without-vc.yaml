@@ -1,0 +1,11 @@
+# Invalid: ServiceAccount referencing non-existent VirtualCluster
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: orphan-sa
+spec:
+  name: orphan-sa
+  dn:
+    - "CN=orphan-sa"
+  clusterRef: non-existent-vc
+  applicationServiceRef: test-app

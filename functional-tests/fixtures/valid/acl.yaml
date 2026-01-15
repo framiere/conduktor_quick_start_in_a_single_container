@@ -1,0 +1,14 @@
+apiVersion: messaging.example.com/v1
+kind: ACL
+metadata:
+  name: test-acl
+spec:
+  serviceRef: test-sa
+  applicationServiceRef: test-app
+  topicRef: test-topic
+  operations:
+    - READ
+    - WRITE
+    - DESCRIBE
+  host: "*"
+  permission: ALLOW

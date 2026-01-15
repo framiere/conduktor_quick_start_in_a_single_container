@@ -1,0 +1,7 @@
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: test-vc
+spec:
+  clusterId: test-vc
+  applicationServiceRef: test-app

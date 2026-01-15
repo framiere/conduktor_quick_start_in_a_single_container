@@ -1,0 +1,8 @@
+# HA Test: Application Service
+apiVersion: messaging.example.com/v1
+kind: ApplicationService
+metadata:
+  name: ha-test-app
+spec:
+  name: ha-test-app
+  displayName: HA Test Application

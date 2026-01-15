@@ -1,0 +1,7 @@
+# Invalid: VirtualCluster without applicationServiceRef
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: orphan-vc
+spec:
+  clusterId: orphan-vc

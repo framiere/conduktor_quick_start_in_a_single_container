@@ -1,0 +1,8 @@
+# HA Test: VirtualCluster
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: ha-test-vc
+spec:
+  clusterId: ha-test-vc
+  applicationServiceRef: ha-test-app

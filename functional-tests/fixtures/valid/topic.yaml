@@ -1,0 +1,13 @@
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: test-topic
+spec:
+  name: test-topic
+  serviceRef: test-sa
+  applicationServiceRef: test-app
+  partitions: 6
+  replicationFactor: 3
+  config:
+    retention.ms: "604800000"
+    cleanup.policy: "delete"

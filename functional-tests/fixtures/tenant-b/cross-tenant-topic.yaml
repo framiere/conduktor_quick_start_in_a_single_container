@@ -1,0 +1,12 @@
+# Invalid: Tenant B trying to create topic under Tenant A's ServiceAccount
+# This should be rejected by the webhook
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: cross-tenant-topic
+spec:
+  name: cross-tenant-topic
+  serviceRef: tenant-a-sa
+  applicationServiceRef: tenant-b-app
+  partitions: 3
+  replicationFactor: 1

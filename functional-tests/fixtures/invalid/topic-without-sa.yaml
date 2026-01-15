@@ -1,0 +1,11 @@
+# Invalid: Topic referencing non-existent ServiceAccount
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orphan-topic
+spec:
+  name: orphan-topic
+  serviceRef: non-existent-sa
+  applicationServiceRef: test-app
+  partitions: 3
+  replicationFactor: 1

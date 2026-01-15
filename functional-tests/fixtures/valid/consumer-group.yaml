@@ -1,0 +1,9 @@
+apiVersion: messaging.example.com/v1
+kind: ConsumerGroup
+metadata:
+  name: test-cg
+spec:
+  name: test-cg
+  serviceRef: test-sa
+  applicationServiceRef: test-app
+  patternType: LITERAL

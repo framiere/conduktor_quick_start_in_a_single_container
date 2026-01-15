@@ -1,0 +1,12 @@
+# Invalid: Topic with changed applicationServiceRef (immutable field)
+# This fixture is used to test UPDATE rejection when owner changes
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: test-topic
+spec:
+  name: test-topic
+  serviceRef: test-sa
+  applicationServiceRef: different-app  # Changed from original owner
+  partitions: 6
+  replicationFactor: 3

@@ -468,96 +468,98 @@
 
 ## Phase 11: Test Fixtures - Valid Resources
 
-- [ ] Create valid resource fixtures `[FUNC_11 §11.1]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/valid/application-service.yaml (name: test-app)
-    - [ ] Create fixtures/valid/virtual-cluster.yaml (refs test-app)
-    - [ ] Create fixtures/valid/service-account.yaml (refs test-app, test-vc)
-    - [ ] Create fixtures/valid/topic.yaml (refs test-app, test-sa)
-    - [ ] Create fixtures/valid/acl.yaml (refs test-app, test-sa, test-topic)
-    - [ ] Create fixtures/valid/consumer-group.yaml (refs test-app, test-sa)
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create valid resource fixtures `[FUNC_11 §11.1]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/valid/application-service.yaml (name: test-app)
+    - [x] Create fixtures/valid/virtual-cluster.yaml (refs test-app)
+    - [x] Create fixtures/valid/service-account.yaml (refs test-app, test-vc)
+    - [x] Create fixtures/valid/topic.yaml (refs test-app, test-sa)
+    - [x] Create fixtures/valid/acl.yaml (refs test-app, test-sa, test-topic)
+    - [x] Create fixtures/valid/consumer-group.yaml (refs test-app, test-sa)
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: N/A
 
 ---
 
 ## Phase 12: Test Fixtures - Invalid Resources
 
-- [ ] Create invalid resource fixtures `[FUNC_12 §12.1]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/invalid/missing-appname.yaml (ApplicationService without name)
-    - [ ] Create fixtures/invalid/nonexistent-appservice-ref.yaml (VC refs missing app)
-    - [ ] Create fixtures/invalid/vc-without-appservice.yaml (orphan VC)
-    - [ ] Create fixtures/invalid/sa-without-vc.yaml (SA refs missing VC)
-    - [ ] Create fixtures/invalid/topic-without-sa.yaml (Topic refs missing SA)
-    - [ ] Create fixtures/invalid/topic-changed-owner.yaml (UPDATE with changed appRef)
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create invalid resource fixtures `[FUNC_12 §12.1]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/invalid/missing-appname.yaml (ApplicationService without name)
+    - [x] Create fixtures/invalid/nonexistent-appservice-ref.yaml (VC refs missing app)
+    - [x] Create fixtures/invalid/vc-without-appservice.yaml (orphan VC)
+    - [x] Create fixtures/invalid/sa-without-vc.yaml (SA refs missing VC)
+    - [x] Create fixtures/invalid/topic-without-sa.yaml (Topic refs missing SA)
+    - [x] Create fixtures/invalid/topic-changed-owner.yaml (UPDATE with changed appRef)
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: N/A
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Invalid fixtures must trigger specific error messages for assertion
 
 ---
 
 ## Phase 13: Test Fixtures - Tenant Isolation
 
-- [ ] Create tenant-a fixtures `[FUNC_13 §13.1]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/tenant-a/application-service.yaml (name: tenant-a-app)
-    - [ ] Create fixtures/tenant-a/virtual-cluster.yaml (refs tenant-a-app)
-    - [ ] Create fixtures/tenant-a/service-account.yaml (refs tenant-a-app, tenant-a-vc)
-    - [ ] Create fixtures/tenant-a/topic.yaml (refs tenant-a-app, tenant-a-sa)
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create tenant-a fixtures `[FUNC_13 §13.1]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/tenant-a/application-service.yaml (name: tenant-a-app)
+    - [x] Create fixtures/tenant-a/virtual-cluster.yaml (refs tenant-a-app)
+    - [x] Create fixtures/tenant-a/service-account.yaml (refs tenant-a-app, tenant-a-vc)
+    - [x] Create fixtures/tenant-a/topic.yaml (refs tenant-a-app, tenant-a-sa)
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
 
-- [ ] Create tenant-b fixtures `[FUNC_13 §13.2]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/tenant-b/application-service.yaml (name: tenant-b-app)
-    - [ ] Create fixtures/tenant-b/virtual-cluster.yaml (refs tenant-b-app)
-    - [ ] Create fixtures/tenant-b/service-account.yaml (refs tenant-b-app, tenant-b-vc)
-    - [ ] Create fixtures/tenant-b/topic.yaml (refs tenant-b-app, tenant-b-sa)
-    - [ ] Create fixtures/tenant-b/topic-referencing-tenant-a-vc.yaml (illegal cross-ref)
-    - [ ] Create fixtures/tenant-b/acl-referencing-tenant-a-sa.yaml (illegal cross-ref)
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~4 min
+- [x] Create tenant-b fixtures `[FUNC_13 §13.2]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/tenant-b/application-service.yaml (name: tenant-b-app)
+    - [x] Create fixtures/tenant-b/virtual-cluster.yaml (refs tenant-b-app)
+    - [x] Create fixtures/tenant-b/service-account.yaml (refs tenant-b-app, tenant-b-vc)
+    - [x] Create fixtures/tenant-b/topic.yaml (refs tenant-b-app, tenant-b-sa)
+    - [x] Create fixtures/tenant-b/cross-tenant-topic.yaml (illegal cross-ref to tenant-a SA)
+    - [x] Create fixtures/tenant-b/cross-tenant-vc.yaml (illegal cross-ref to tenant-a app)
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: N/A
 
 ---
 
 ## Phase 14: Test Fixtures - Ownership Chain & HA
 
-- [ ] Create ownership-chain fixtures `[FUNC_14 §14.1]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/ownership-chain/full-hierarchy.yaml with all 4 resources in single file
-    - [ ] Use YAML document separators (---)
-    - [ ] Resources: chain-app, chain-vc, chain-sa, chain-topic
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create ownership-chain fixtures `[FUNC_14 §14.1]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/ownership-chain/full-hierarchy.yaml with all 6 resources in single file
+    - [x] Use YAML document separators (---)
+    - [x] Resources: chain-app, chain-vc, chain-sa, chain-topic, chain-cg, chain-acl
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~1 min (actual)
     - Tests duration: N/A
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Multi-document YAML allows atomic application of related resources
+    - Included all 6 CRD types for comprehensive ownership chain testing
 
-- [ ] Create ha-test fixtures `[FUNC_14 §14.2]`
-  - [ ] **Objectives:**
-    - [ ] Create fixtures/ha-test/application-service.yaml (ha-test-app)
-    - [ ] Create fixtures/ha-test/virtual-cluster.yaml (ha-test-vc)
-    - [ ] Create fixtures/ha-test/topic-rolling-1.yaml through topic-rolling-5.yaml
-  - [ ] **Tests:**
-    - [ ] N/A - fixtures are tested by Bats tests
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create ha-test fixtures `[FUNC_14 §14.2]`
+  - [x] **Objectives:**
+    - [x] Create fixtures/ha-test/application-service.yaml (ha-test-app)
+    - [x] Create fixtures/ha-test/virtual-cluster.yaml (ha-test-vc)
+    - [x] Create fixtures/ha-test/service-account.yaml (ha-test-sa)
+    - [x] Create fixtures/ha-test/topic-1.yaml through topic-5.yaml
+  - [x] **Tests:**
+    - [x] N/A - fixtures are tested by Bats tests
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: N/A
 
 ---

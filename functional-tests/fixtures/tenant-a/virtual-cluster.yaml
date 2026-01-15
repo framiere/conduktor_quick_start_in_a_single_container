@@ -1,0 +1,8 @@
+# Tenant A: VirtualCluster
+apiVersion: messaging.example.com/v1
+kind: VirtualCluster
+metadata:
+  name: tenant-a-vc
+spec:
+  clusterId: tenant-a-vc
+  applicationServiceRef: tenant-a-app
