@@ -13,6 +13,15 @@
   --apple-gray-4: #3a3a3c;
   --apple-gray-5: #2c2c2e;
   --apple-gray-6: #1c1c1e;
+
+  /* Refined editorial palette */
+  --navy-950: #0a0e1a;
+  --navy-900: #0f172a;
+  --navy-800: #1e293b;
+  --navy-700: #334155;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-400: #fbbf24;
 }
 
 html {
@@ -20,10 +29,18 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Literata', Georgia, Cambria, 'Times New Roman', serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Font utilities */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.font-serif {
+  font-family: 'Literata', Georgia, Cambria, 'Times New Roman', serif;
 }
 
 /* Custom scrollbar */
