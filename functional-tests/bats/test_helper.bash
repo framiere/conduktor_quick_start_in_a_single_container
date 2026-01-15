@@ -97,7 +97,7 @@ wait_for_webhook() {
     local timeout="${1:-60}"
     echo "Waiting for webhook to be ready (timeout: ${timeout}s)..."
 
-    wait_for "$timeout" "kubectl get endpoints ${RELEASE_NAME}-messaging-operator-webhook -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -q '.'"
+    wait_for "$timeout" "kubectl get endpoints ${RELEASE_NAME}-webhook -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -q '.'"
 }
 
 # Check if resource exists
@@ -209,19 +209,19 @@ get_webhook_pods() {
 # Scale webhook deployment
 scale_webhook() {
     local replicas=$1
-    kubectl scale deployment "${RELEASE_NAME}-messaging-operator-webhook" \
+    kubectl scale deployment "${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         --replicas="$replicas"
 
     # Wait for scaling
-    kubectl rollout status deployment/"${RELEASE_NAME}-messaging-operator-webhook" \
+    kubectl rollout status deployment/"${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         --timeout=120s
 }
 
 # Get webhook ready replicas
 get_webhook_ready_replicas() {
-    kubectl get deployment "${RELEASE_NAME}-messaging-operator-webhook" \
+    kubectl get deployment "${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0"
 }
