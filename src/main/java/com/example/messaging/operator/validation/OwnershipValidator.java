@@ -33,7 +33,7 @@ public class OwnershipValidator {
                 yield validateKafkaClusterExists(sa.getSpec().getClusterRef(), namespace, sa.getSpec().getApplicationServiceRef());
             }
             case Topic topic -> validateServiceAccountExists(topic.getSpec().getServiceRef(), namespace, topic.getSpec().getApplicationServiceRef());
-            case ACL acl -> validateServiceAccountExists(acl.getSpec().getServiceRef(), namespace, acl.getSpec().getApplicationServiceRef());
+            case ACL acl -> validateAcl(acl, namespace);
             default -> valid();
         };
     }
@@ -93,6 +93,24 @@ public class OwnershipValidator {
             return invalid("ServiceAccount '%s' is owned by '%s', not '%s'", saRef, sa.getSpec().getApplicationServiceRef(), expectedAppService);
         }
         return valid();
+    }
+
+    private ValidationResult validateAcl(ACL acl, String namespace) {
+        AclCRSpec spec = acl.getSpec();
+
+        // Validate oneOf: exactly one of topicRef or consumerGroupRef must be defined
+        boolean hasTopicRef = spec.getTopicRef() != null && !spec.getTopicRef().isBlank();
+        boolean hasConsumerGroupRef = spec.getConsumerGroupRef() != null && !spec.getConsumerGroupRef().isBlank();
+
+        if (!hasTopicRef && !hasConsumerGroupRef) {
+            return invalid("ACL must reference either a Topic (topicRef) or ConsumerGroup (consumerGroupRef)");
+        }
+        if (hasTopicRef && hasConsumerGroupRef) {
+            return invalid("ACL cannot reference both Topic and ConsumerGroup - specify only one of topicRef or consumerGroupRef");
+        }
+
+        // Validate service account ownership
+        return validateServiceAccountExists(spec.getServiceRef(), namespace, spec.getApplicationServiceRef());
     }
 
     private String getApplicationServiceRef(Object resource) {

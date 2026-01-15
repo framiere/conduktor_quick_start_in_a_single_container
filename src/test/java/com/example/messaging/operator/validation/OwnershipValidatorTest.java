@@ -172,23 +172,62 @@ class OwnershipValidatorTest {
         }
 
         @Test
-        @DisplayName("should allow ACL when ServiceAccount exists with same owner")
-        void testACLCreateWithValidChain() {
+        @DisplayName("should allow ACL with topicRef when ServiceAccount exists with same owner")
+        void testACLCreateWithTopicRef() {
             // Setup complete ownership chain
             setupCompleteOwnershipChain();
             store.create(CRDKind.TOPIC, NAMESPACE, buildTopic("orders-events", SERVICE_ACCOUNT, APP_SERVICE));
 
             // Test
-            ACL acl = buildACL("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
+            ACL acl = buildACLWithTopicRef("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
             ValidationResult result = validator.validateCreate(acl, NAMESPACE);
 
             assertThat(result.isValid()).isTrue();
         }
 
         @Test
+        @DisplayName("should allow ACL with consumerGroupRef when ServiceAccount exists with same owner")
+        void testACLCreateWithConsumerGroupRef() {
+            // Setup complete ownership chain
+            setupCompleteOwnershipChain();
+
+            // Test
+            ACL acl = buildACLWithConsumerGroupRef("orders-cg-acl", SERVICE_ACCOUNT, "orders-cg", APP_SERVICE);
+            ValidationResult result = validator.validateCreate(acl, NAMESPACE);
+
+            assertThat(result.isValid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("should reject ACL when neither topicRef nor consumerGroupRef is set")
+        void testACLCreateWithNeitherRef() {
+            setupCompleteOwnershipChain();
+
+            ACL acl = buildACLWithoutResourceRef("invalid-acl", SERVICE_ACCOUNT, APP_SERVICE);
+            ValidationResult result = validator.validateCreate(acl, NAMESPACE);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getMessage())
+                    .contains("ACL must reference either a Topic (topicRef) or ConsumerGroup (consumerGroupRef)");
+        }
+
+        @Test
+        @DisplayName("should reject ACL when both topicRef and consumerGroupRef are set")
+        void testACLCreateWithBothRefs() {
+            setupCompleteOwnershipChain();
+
+            ACL acl = buildACLWithBothRefs("invalid-acl", SERVICE_ACCOUNT, "orders-topic", "orders-cg", APP_SERVICE);
+            ValidationResult result = validator.validateCreate(acl, NAMESPACE);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getMessage())
+                    .contains("ACL cannot reference both Topic and ConsumerGroup");
+        }
+
+        @Test
         @DisplayName("should reject ACL when ServiceAccount does not exist")
         void testACLCreateWithMissingServiceAccount() {
-            ACL acl = buildACL("orders-rw", "nonexistent-sa", "orders-events", APP_SERVICE);
+            ACL acl = buildACLWithTopicRef("orders-rw", "nonexistent-sa", "orders-events", APP_SERVICE);
 
             ValidationResult result = validator.validateCreate(acl, NAMESPACE);
 
@@ -330,7 +369,7 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should allow ACL delete by owner")
         void testACLDeleteByOwner() {
-            ACL acl = buildACL("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
+            ACL acl = buildACLWithTopicRef("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
 
             ValidationResult result = validator.validateDelete(acl, APP_SERVICE);
 
@@ -340,7 +379,7 @@ class OwnershipValidatorTest {
         @Test
         @DisplayName("should reject ACL delete by non-owner")
         void testACLDeleteByNonOwner() {
-            ACL acl = buildACL("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
+            ACL acl = buildACLWithTopicRef("orders-rw", SERVICE_ACCOUNT, "orders-events", APP_SERVICE);
 
             ValidationResult result = validator.validateDelete(acl, OTHER_APP_SERVICE);
 
@@ -416,7 +455,7 @@ class OwnershipValidatorTest {
         return topic;
     }
 
-    private ACL buildACL(String name, String serviceRef, String topicRef, String appServiceRef) {
+    private ACL buildACLWithTopicRef(String name, String serviceRef, String topicRef, String appServiceRef) {
         ACL acl = new ACL();
         acl.setMetadata(new ObjectMeta());
         acl.getMetadata().setName(name);
@@ -425,6 +464,52 @@ class OwnershipValidatorTest {
         AclCRSpec spec = new AclCRSpec();
         spec.setServiceRef(serviceRef);
         spec.setTopicRef(topicRef);
+        spec.setApplicationServiceRef(appServiceRef);
+        acl.setSpec(spec);
+
+        return acl;
+    }
+
+    private ACL buildACLWithConsumerGroupRef(String name, String serviceRef, String consumerGroupRef, String appServiceRef) {
+        ACL acl = new ACL();
+        acl.setMetadata(new ObjectMeta());
+        acl.getMetadata().setName(name);
+        acl.getMetadata().setNamespace(NAMESPACE);
+
+        AclCRSpec spec = new AclCRSpec();
+        spec.setServiceRef(serviceRef);
+        spec.setConsumerGroupRef(consumerGroupRef);
+        spec.setApplicationServiceRef(appServiceRef);
+        acl.setSpec(spec);
+
+        return acl;
+    }
+
+    private ACL buildACLWithoutResourceRef(String name, String serviceRef, String appServiceRef) {
+        ACL acl = new ACL();
+        acl.setMetadata(new ObjectMeta());
+        acl.getMetadata().setName(name);
+        acl.getMetadata().setNamespace(NAMESPACE);
+
+        AclCRSpec spec = new AclCRSpec();
+        spec.setServiceRef(serviceRef);
+        spec.setApplicationServiceRef(appServiceRef);
+        // Neither topicRef nor consumerGroupRef set
+        acl.setSpec(spec);
+
+        return acl;
+    }
+
+    private ACL buildACLWithBothRefs(String name, String serviceRef, String topicRef, String consumerGroupRef, String appServiceRef) {
+        ACL acl = new ACL();
+        acl.setMetadata(new ObjectMeta());
+        acl.getMetadata().setName(name);
+        acl.getMetadata().setNamespace(NAMESPACE);
+
+        AclCRSpec spec = new AclCRSpec();
+        spec.setServiceRef(serviceRef);
+        spec.setTopicRef(topicRef);
+        spec.setConsumerGroupRef(consumerGroupRef);
         spec.setApplicationServiceRef(appServiceRef);
         acl.setSpec(spec);
 
