@@ -1,458 +1,153 @@
-# Conduktor Quick Start (Single Container)
+# Kubernetes Messaging Operator for Conduktor
 
-This repo builds and runs a single Docker image that bundles Conduktor Console, Gateway, Redpanda, and supporting services.
+A production-ready Kubernetes Operator that brings GitOps-style declarative management to your Kafka infrastructure through Conduktor Gateway.
 
-> [!WARNING]
-> DO NOT DO THIS AT HOME.
+<p align="center">
+  <a href="https://framiere.github.io/conduktor_quick_start_in_a_single_container/">
+    <img src="https://img.shields.io/badge/Documentation-Website-blue?style=for-the-badge&logo=github" alt="Documentation Website"/>
+  </a>
+</p>
+
+> **[View Full Documentation](https://framiere.github.io/conduktor_quick_start_in_a_single_container/)** - Interactive guides, architecture diagrams, and comprehensive API reference
+
+---
+
+## What This Project Does
+
+Transform your Kafka governance from manual Console clicks to **declarative Kubernetes manifests**:
+
+```yaml
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: payments-events
+  namespace: payments-team
+spec:
+  serviceAccountRef: payments-processor
+  topicName: payments.events.v1
+  partitions: 12
+  replicationFactor: 3
+```
+
+The operator watches these CRDs and automatically provisions the corresponding resources in Conduktor Gateway.
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **6 CRD Types** | ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, GatewayPolicy |
+| **27 Gateway Policies** | Traffic control, data masking, encryption, chaos testing |
+| **Ownership Validation** | Kubernetes-native ownership chains with ValidatingWebhook |
+| **Multi-Tenant** | Namespace-based isolation with strict resource boundaries |
+| **mTLS Authentication** | Certificate-based identity mapping to Virtual Clusters |
 
 ## Quick Start
+
+### Option 1: Docker (Local Development)
 
 ```sh
 make all
 ```
 
-This will build, run, generate certificates, and set up kClusters with mTLS automatically.
+This builds and runs a single container bundling Conduktor Console, Gateway, Redpanda, and generates mTLS certificates automatically.
 
-## Manual Build & Run
+**Access Console:** http://localhost:8080
+**Login:** `admin@demo.dev` / `123_ABC_abc`
 
-### Build
-
-```sh
-docker build . -t conduktor_quick_start_in_a_single_container
-```
-
-### Run
+### Option 2: Minikube (Kubernetes)
 
 ```sh
-docker run -d --name conduktor_quick_start_in_a_single_container \
-  -p 8080:8080 \
-  -p 8888:8888 \
-  -p 6969:6969 \
-  -v $(PWD)/certs:/var/lib/conduktor/certs \
-  conduktor_quick_start_in_a_single_container
+# Start Minikube with required resources
+minikube start --cpus=4 --memory=8192
+
+# Deploy the operator
+kubectl apply -f k8s/
+
+# Create your first resources
+kubectl apply -f examples/
 ```
 
-## Architecture
-
-### Step 1: Container Startup
-
-When the container starts, it launches all internal services:
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            Docker Container                             │
-│                                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
-│  │   Redpanda   │  │   Gateway    │  │   Console    │  │  Schema     │  │
-│  │    :9092     │  │ :6969  :8888 │  │    :8080     │  │  Registry   │  │
-│  │   (Kafka)    │  │ :kafka :api  │  │    (UI)      │  │   :8081     │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └─────────────┘  │
-│         │                 │                 │                │          │
-│         └─────────────────┴────────┬────────┴────────────────┘          │
-│                                    │                                    │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │  /var/lib/conduktor/certs/  (mounted from ./certs/)              │   │
-│  │  - ca.crt, gateway.keystore.jks, demo-admin.keystore.jks, ...    │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Kubernetes Cluster                              │
+│                                                                     │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────┐│
+│  │   Your CRDs  │────▶│   Operator   │────▶│  Conduktor Gateway   ││
+│  │              │     │              │     │                      ││
+│  │ - Topic      │     │ - Watches    │     │ - VirtualCluster     ││
+│  │ - ACL        │     │ - Validates  │     │ - ServiceAccount     ││
+│  │ - Policy     │     │ - Transforms │     │ - Topic              ││
+│  └──────────────┘     └──────────────┘     │ - Interceptor        ││
+│                                            └──────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 2: Certificate Generation
-
-Certificates are generated at container startup by `certs.sh`:
+## CRD Hierarchy
 
 ```
-                    ┌─────────────────────┐
-                    │   CA Certificate    │
-                    │ ca.conduktor.local  │
-                    └─────────┬───────────┘
-                              │ signs
-                    ┌─────────────────────┐
-                    │                     │
-                    ▼                     ▼
-            ┌───────────────┐     ┌───────────────┐
-            │  demo-admin   │     │demo-acl-admin │
-            │ (client cert) │     │ (client cert) │
-            │CN=demo-admin  │     │CN=demo-acl-   │
-            │               │     │     admin     │
-            └───────────────┘     └───────────────┘
-                    │                     │
-                    │                     │
-                    ▼                     ▼
-            ┌───────────────┐     ┌───────────────┐
-            │demo-admin.    │     │demo-acl-admin.│
-            │keystore.jks   │     │ keystore.jks  │
-            │demo-admin.    │     │demo-acl-admin.│
-            │truststore.jks │     │truststore.jks │
-            └───────────────┘     └───────────────┘
-                                          │
-                                          ▼
-                                  ┌───────────────┐
-                                  │demo-acl-user  │
-                                  │ (client cert) │
-                                  │CN=demo-acl-   │
-                                  │     user      │
-                                  └───────────────┘
-                                          │
-                                          ▼
-                                  ┌───────────────┐
-                                  │demo-acl-user. │
-                                  │ keystore.jks  │
-                                  │demo-acl-user. │
-                                  │truststore.jks │
-                                  └───────────────┘
+ApplicationService (root - no parent)
+├── KafkaCluster → VirtualCluster
+├── ServiceAccount → GatewayServiceAccount
+│   ├── Topic → ConduktorTopic
+│   ├── ACL
+│   └── ConsumerGroup
+└── GatewayPolicy → Interceptor
 ```
 
-### Step 4: mTLS Authentication Flow
+## Documentation
 
-Client connects with certificate, Gateway extracts CN for identity:
+The **[full documentation website](https://framiere.github.io/conduktor_quick_start_in_a_single_container/)** includes:
 
-```
-  Client                              Gateway                         Redpanda
-    │                                    │                                │
-    │ 1. TLS Handshake                   │                                │
-    │    (present certificate)           │                                │
-    ├───────────────────────────────────▶│                                │
-    │                                    │                                │
-    │ 2. Gateway validates cert          │                                │
-    │    against CA                      │                                │
-    │◀───────────────────────────────────┤                                │
-    │                                    │                                │
-    │ 3. Extract CN from cert            │                                │
-    │    CN=demo-admin                   │                                │
-    │     ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                                │
-    │                                    │                                │
-    │ 4. Map CN to Service Account       │                                │
-    │    demo-admin → demo kCluster      │                                │
-    │     ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                                │
-    │                                    │                                │
-    │ 5. Kafka Request                   │ 6. Forward to                  │
-    │    (encrypted)                     │    backing cluster             │
-    ├───────────────────────────────────▶├────────────────────────────────▶
-    │                                    │    (plaintext)                 │
-    │                                    │                                │
-    │                                    │ 7. Response                    │
-    │ 8. Response                        │◀────────────────────────────────
-    │◀───────────────────────────────────┤                                │
-    │                                    │                                │
-```
+- **Architecture** - System design, data flow diagrams, component interactions
+- **Security** - mTLS setup, ownership validation, access control patterns
+- **CRDs** - Complete reference for all Custom Resource Definitions
+- **Gateway Policies** - 27 policy types with transformation examples
+- **Testing** - Unit, integration, and E2E test strategies
+- **Operations** - Deployment guides, monitoring, troubleshooting
 
-### Step 5: Virtual Cluster Routing
-
-Different certificates route to different Virtual Clusters:
-
-```
-                                    ┌─────────────────────────────────────┐
-                                    │           Gateway :6969             │
-                                    │                                     │
-┌──────────────────┐                │  ┌───────────────────────────────┐  │
-│  demo-admin      │   mTLS         │  │     Service Account Mapping   │  │
-│  certificate     │───────────────▶│  │                               │  │
-│  CN=demo-admin   │                │  │  CN=demo-admin                │  │
-└──────────────────┘                │  │    └──▶ demo kCluster         │  │
-                                    │  │                               │  │
-┌──────────────────┐                │  │  CN=demo-acl-admin            │  │
-│  demo-acl-admin  │   mTLS         │  │    └──▶ demo-acl kCluster     │  │
-│  certificate     │───────────────▶│  │                               │  │
-│  CN=demo-acl-    │                │  │  CN=demo-acl-user             │  │
-│       admin      │                │  │    └──▶ demo-acl kCluster     │  │
-└──────────────────┘                │  │                               │  │
-                                    │  └───────────────────────────────┘  │
-┌──────────────────┐                │                                     │
-│  demo-acl-user   │   mTLS         │        ┌─────────┐  ┌─────────┐     │
-│  certificate     │───────────────▶│        │  demo   │  │demo-acl │     │
-│  CN=demo-acl-    │                │        │kCluster │  │kCluster │     │
-│       user       │                │        │         │  │  +ACL   │     │
-└──────────────────┘                │        └────┬────┘  └────┬────┘     │
-                                    │             │            │          │
-                                    │             └─────┬──────┘          │
-                                    │                   │                 │
-                                    │                   ▼                 │
-                                    │           ┌─────────────┐           │
-                                    │           │  Redpanda   │           │
-                                    │           │    :9092    │           │
-                                    │           └─────────────┘           │
-                                    └─────────────────────────────────────┘
-```
-
-### Step 6: ACL Enforcement (demo-acl kCluster)
-
-The `demo-acl` kCluster enforces ACLs based on Service Account:
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         demo-acl kCluster                               │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                    Service Accounts                             │    │
-│  │                                                                 │    │
-│  │  ┌─────────────────────────┐    ┌─────────────────────────────┐ │    │
-│  │  │    demo-acl-admin       │    │      demo-acl-user          │ │    │
-│  │  │    (superUser)          │    │      (restricted)           │ │    │
-│  │  │                         │    │                             │ │    │
-│  │  │  ✓ All operations       │    │  ACLs:                      │ │    │
-│  │  │  ✓ All topics           │    │  ✓ READ topic:click*        │ │    │
-│  │  │  ✓ No ACL checks        │    │  ✓ READ group:myconsumer-*  │ │    │
-│  │  │                         │    │  ✗ Everything else          │ │    │
-│  │  └─────────────────────────┘    └─────────────────────────────┘ │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                     ACL Enforcement Examples                    │    │
-│  │                                                                 │    │
-│  │   demo-acl-admin                   demo-acl-user                │    │
-│  │   ──────────────                   ──────────────               │    │
-│  │   CREATE  click-stream  ──▶ ✓       CREATE click-stream  ──▶ ✗  │    │
-│  │   PRODUCE click-stream  ──▶ ✓       WRITE  click-stream  ──▶ ✗  │    │
-│  │   READ    click-stream  ──▶ ✓       READ   click-stream  ──▶ ✓  │    │
-│  │                                                                 │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Overall System View
-
-```
-┌─────────────────────────────────────────-----------------------------─--─────┐
-│                              Host Machine                                    │
-│                                                                              │
-│   ./certs/                         ┌──────────────────────────────────--───┐ │
-│   ├── ca.crt                       │         Docker Container              │ │
-│   ├── demo-admin.keystore.jks      │                                       │ │
-│   ├── demo-acl-admin.keystore.jks  │  :8080 ──▶ Console (UI)               │ │
-│   └── demo-acl-user.keystore.jks   │                                       │ │
-│            │                       │  :8888 ──▶ Gateway Admin API (HTTP)   │ │
-│            │  volume mount         │                                       │ │
-│            └──────────────────────▶│  :6969 ──▶ Gateway Kafka (Kafka mTLS) │ │
-│                                    │               │                       │ │
-│   demo-admin.properties            │               ▼                       │ │
-│   demo-acl-admin.properties        │         ┌──────────┐ ┌───────────┐    │ │
-│   demo-acl-user.properties         │         │  demo    │ │ demo-acl  │    │ │
-│            │                       │         │ kCluster │ │ kCluster  │    │ │
-│            │                       │         └────┬─────┘ └─────┬─────┘    │ │
-│            │                       │              │             │          │ │
-│            │                       │              └──────┬──────┘          │ │
-│            │                       │               Kafka │ Plaintext       │ │
-│            │                       │                     ▼                 │ │
-│            │                       │              ┌────────────┐           │ │
-│            ▼                       │              │  Redpanda  │           │ │
-│   kafka-topics --bootstrap-server  │              │   :9092    │           │ │
-│     localhost:6969                 │              └────────────┘           │ │
-│     --command-config               │                                       │ │
-│     demo-admin.properties          └────────────────────────────────────--─┘ │
-│                                                                              │
-└───────────────────────────────────────────────────────────────────────────--─┘
-```
-
-### Summary
-
-- **Gateway** exposes mTLS to kafka clients on port 6969
-- **Gateway** connects to Redpanda via plaintext internally
-- **Console** connects to Redpanda directly via plaintext
-- **Console** connects to Gateway HTTP admin API on port 8888
-- **Console** connects to Gateway mTLS Kafka on port 6969
-- **Schema Registry** is HTTP (plaintext)
-- **Certificate CN** determines which kCluster and Service Account is used
-- **ACLs** are enforced in Gateway per-kCluster (only `demo-acl` has ACL enabled)
-
-## Makefile Targets
-
-| Target | Description |
-|--------|-------------|
-| `make all` | Build, run, and setup (default) |
-| `make build` | Build Docker image |
-| `make run` | Run container and wait for services |
-| `make stop` | Stop container |
-| `make rm` | Stop and remove container |
-| `make clean` | Remove container, image, and local certs |
-| `make logs` | Follow container logs |
-| `make setup-logs` | View setup script logs |
-| `make help` | Show help |
-
-### Check Setup Progress
+## Development
 
 ```sh
-make setup-logs
+# Build
+mvn compile
+
+# Run tests
+mvn test           # Unit tests (201 tests)
+mvn verify         # Integration tests (39 tests)
+
+# Format code
+mvn spotless:apply
 ```
 
-### View Generated Certificates
+## Services & Ports
 
-```sh
-ls -la ./certs/
-```
+| Port | Service | Protocol |
+|------|---------|----------|
+| 8080 | Console UI | HTTP |
+| 8888 | Gateway Admin API | HTTP |
+| 6969 | Gateway Kafka | mTLS |
+| 8081 | Schema Registry | HTTP |
 
-## Access
+## Contributing
 
-### Console UI
+1. Fork the repository
+2. Create a feature branch
+3. Follow the coding standards in `CLAUDE.md`
+4. Ensure all tests pass
+5. Submit a pull request
 
-Open http://localhost:8080
+## License
 
-| Field | Value |
-|-------|-------|
-| Login | `admin@demo.dev` |
-| Password | `123_ABC_abc` |
+This project is for demonstration and educational purposes.
 
-### Virtual Clusters (mTLS Authentication)
+---
 
-Two kClusters are created automatically with **mTLS authentication**:
-
-#### 1. `demo` (ACL disabled)
-
-Full access for all authenticated users.
-
-| Property | Value |
-|----------|-------|
-| Bootstrap | `localhost:6969` |
-| Security | `SSL` (mTLS) |
-| Certificate | `./certs/demo-admin.keystore.jks` |
-| Truststore | `./certs/demo-admin.truststore.jks` |
-| Password | `conduktor` |
-| Properties file | `demo-admin.properties` |
-
-#### 2. `demo-acl` (ACL enabled)
-
-Access controlled by ACL rules.
-
-**demo-acl-admin** - full access (superuser):
-| Property | Value |
-|----------|-------|
-| Certificate CN | `CN=demo-acl-admin,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK` |
-| Keystore | `./certs/demo-acl-admin.keystore.jks` |
-| Properties file | `demo-acl-admin.properties` |
-
-**demo-acl-user** - restricted access:
-| Property | Value |
-|----------|-------|
-| Certificate CN | `CN=demo-acl-user,OU=TEST,O=CONDUKTOR,L=LONDON,C=UK` |
-| Keystore | `./certs/demo-acl-user.keystore.jks` |
-| Properties file | `demo-acl-user.properties` |
-| ACL | Can only READ topics prefixed with `click` |
-
-### ACL Demo Results
-
-The setup script demonstrates ACL enforcement with mTLS on the `demo-acl` kCluster:
-
-| User | Action | Topic | Result | Reason |
-|------|--------|-------|--------|--------|
-| demo-acl-admin | CREATE | `click-stream` | ALLOWED | Admin is superuser |
-| demo-acl-admin | WRITE | `click-stream` | ALLOWED | Admin is superuser |
-| demo-acl-admin | READ | `click-stream` | ALLOWED | Admin is superuser |
-| demo-acl-user | WRITE | `click-stream` | **DENIED** | No WRITE ACL |
-| demo-acl-user | READ | `click-stream` | ALLOWED | Matches `click` prefix ACL |
-
-## Using mTLS Certificates
-
-Certificates are mounted via volume to `./certs/` and properties files are generated automatically
-
-### Generated Properties Files
-
-After running `make all` these files are created:
-
-| File | User | kCluster |
-|------|------|----------|
-| `demo-admin.properties` | demo-admin | demo |
-| `demo-acl-admin.properties` | demo-acl-admin | demo-acl |
-| `demo-acl-user.properties` | demo-acl-user | demo-acl |
-
-Example properties file content:
-```properties
-security.protocol=SSL
-ssl.truststore.location=certs/demo-admin.truststore.jks
-ssl.truststore.password=conduktor
-ssl.keystore.location=certs/demo-admin.keystore.jks
-ssl.keystore.password=conduktor
-ssl.key.password=conduktor
-```
-
-### Kafka CLI Examples
-
-```sh
-# List topics on demo kCluster
-kafka-topics --bootstrap-server localhost:6969 \
-  --command-config demo-admin.properties --list
-
-# Create a topic on demo kCluster
-kafka-topics --bootstrap-server localhost:6969 \
-  --command-config demo-admin.properties \
-  --create --topic my-topic --partitions 3
-
-# Produce messages
-echo '{"message":"hello mTLS"}' | kafka-console-producer \
-  --bootstrap-server localhost:6969 \
-  --producer.config demo-admin.properties \
-  --topic my-topic
-
-# Consume messages
-kafka-console-consumer \
-  --bootstrap-server localhost:6969 \
-  --consumer.config demo-admin.properties \
-  --topic my-topic \
-  --from-beginning --max-messages 1
-
-# On demo-acl kCluster: demo-acl-user can read from click.* topics
-kafka-console-consumer \
-  --bootstrap-server localhost:6969 \
-  --consumer.config demo-acl-user.properties \
-  --topic click-stream \
-  --group myconsumer-demo \
-  --from-beginning --max-messages 1
-```
-
-## CLI Usage
-
-### Install Conduktor CLI
-
-https://docs.conduktor.io/guide/conduktor-in-production/automate/cli-automation
-
-Or: https://github.com/conduktor/ctl
-
-### Configure CLI
-
-```sh
-export CDK_USER=admin@demo.dev
-export CDK_PASSWORD=123_ABC_abc
-export CDK_BASE_URL=http://localhost:8080
-export CDK_GATEWAY_USER=admin
-export CDK_GATEWAY_PASSWORD=conduktor
-export CDK_GATEWAY_BASE_URL=http://localhost:8888
-```
-
-### List Resources
-
-```sh
-conduktor get KafkaCluster
-conduktor get KafkaCluster
-conduktor get GatewayServiceAccount
-```
-
-or
-
-```sh
-conduktor get all
-```
-
-## Certificate Details
-
-Certificates are generated at container startup and mounted to `./certs/`:
-
-| Certificate | CN | Purpose |
-|-------------|-----|---------|
-| CA | `ca.conduktor.local` | Root CA for signing all certs |
-| gateway | `gateway` | Gateway server certificate |
-| demo-admin | `demo-admin` | Admin for demo kCluster |
-| demo-acl-admin | `demo-acl-admin` | Admin for demo-acl kCluster |
-| demo-acl-user | `demo-acl-user` | Restricted user for demo-acl kCluster |
-| client | `client` | Generic client certificate |
-| console | `console` | Console service certificate |
-| redpanda | `redpanda` | Redpanda certificate (unused - plaintext) |
-
-Certificate properties:
-- Algorithm: RSA
-- Validity: 365 days
-- Keystore password: `conduktor`
-- Key password: `conduktor`
-- Format: JKS (Java KeyStore) + PEM files
-
-## Demo
-
-[![asciicast](https://asciinema.org/a/mu1KXuyx1GAx9HGUIt04oDckZ.svg)](https://asciinema.org/a/mu1KXuyx1GAx9HGUIt04oDckZ)
+<p align="center">
+  <strong>
+    <a href="https://framiere.github.io/conduktor_quick_start_in_a_single_container/">
+      Explore the Full Documentation
+    </a>
+  </strong>
+</p>
