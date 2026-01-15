@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity
+  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench
 } from 'lucide-react'
 
 import './index.css'
@@ -20,6 +20,7 @@ import WebhookPage from './pages/WebhookPage'
 import DataFlowPage from './pages/DataFlowPage'
 import TestResultsPage from './pages/TestResultsPage'
 import OperabilityPage from './pages/OperabilityPage'
+import TestSetupPage from './pages/TestSetupPage'
 
 const perspectives = [
   { path: '/', name: 'Overview', icon: Home, description: 'Project introduction and quick start' },
@@ -27,6 +28,7 @@ const perspectives = [
   { path: '/architecture', name: 'Architecture', icon: Building2, description: 'System design and components' },
   { path: '/security', name: 'Security', icon: Shield, description: 'mTLS, ownership, and access control' },
   { path: '/testing', name: 'Testing', icon: TestTube2, description: 'Unit, integration, and E2E tests' },
+  { path: '/test-setup', name: 'Test Setup', icon: Wrench, description: 'Install Minikube, Helm, Bats' },
   { path: '/test-results', name: 'Test Results', icon: FlaskConical, description: 'Live test execution results' },
   { path: '/developer', name: 'Developer', icon: Code2, description: 'Build, compile, and contribute' },
   { path: '/operations', name: 'Operations', icon: Server, description: 'Deploy and run in Kubernetes' },
@@ -150,6 +152,7 @@ function App() {
                 <Route path="/business" element={<BusinessPage />} />
                 <Route path="/security" element={<SecurityPage />} />
                 <Route path="/testing" element={<TestingPage />} />
+                <Route path="/test-setup" element={<TestSetupPage />} />
                 <Route path="/test-results" element={<TestResultsPage />} />
                 <Route path="/developer" element={<DeveloperPage />} />
                 <Route path="/operations" element={<OperationsPage />} />
