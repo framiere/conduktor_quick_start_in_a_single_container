@@ -8,6 +8,7 @@ set -euo pipefail
 # Environment Variables:
 #   NAMESPACE       - Kubernetes namespace (reads from .test-namespace if not set)
 #   RELEASE_NAME    - Helm release name (default: messaging-operator)
+#   CLUSTER_NAME    - Minikube profile name (default: messaging-operator-test)
 #   SKIP_BUILD      - Skip Maven build if true (default: false)
 #   SKIP_DOCKER     - Skip Docker build if true (default: false)
 #   SKIP_CERTS      - Skip certificate generation if true (default: false)
@@ -21,6 +22,7 @@ HELM_CHART_DIR="$FUNC_TESTS_DIR/helm/messaging-operator"
 # Configuration
 NAMESPACE="${NAMESPACE:-}"
 RELEASE_NAME="${RELEASE_NAME:-messaging-operator}"
+CLUSTER_NAME="${CLUSTER_NAME:-messaging-operator-test}"
 SKIP_BUILD="${SKIP_BUILD:-false}"
 SKIP_DOCKER="${SKIP_DOCKER:-false}"
 SKIP_CERTS="${SKIP_CERTS:-false}"
@@ -75,7 +77,7 @@ build_docker() {
     fi
 
     info "Configuring Docker to use Minikube daemon..."
-    eval $(minikube docker-env)
+    eval $(minikube -p "$CLUSTER_NAME" docker-env)
 
     info "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}..."
     cd "$PROJECT_ROOT"
