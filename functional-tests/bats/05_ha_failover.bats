@@ -38,7 +38,7 @@ teardown_file() {
 
 @test "webhook service has multiple endpoints" {
     local endpoint_count
-    endpoint_count=$(kubectl get endpoints "${RELEASE_NAME}-messaging-operator-webhook" \
+    endpoint_count=$(kubectl get endpoints "${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         -o jsonpath='{.subsets[0].addresses}' | jq '. | length')
 
@@ -88,7 +88,7 @@ teardown_file() {
     echo "# Starting rolling restart" >&3
 
     # Initiate rolling restart
-    kubectl rollout restart deployment/"${RELEASE_NAME}-messaging-operator-webhook" -n "$NAMESPACE"
+    kubectl rollout restart deployment/"${RELEASE_NAME}-webhook" -n "$NAMESPACE"
 
     # Create resources during rollout - should succeed
     local success_count=0
@@ -104,7 +104,7 @@ teardown_file() {
     echo "# Created $success_count/$total_attempts topics during rollout" >&3
 
     # Wait for rollout to complete
-    kubectl rollout status deployment/"${RELEASE_NAME}-messaging-operator-webhook" \
+    kubectl rollout status deployment/"${RELEASE_NAME}-webhook" \
         -n "$NAMESPACE" \
         --timeout=120s
 
