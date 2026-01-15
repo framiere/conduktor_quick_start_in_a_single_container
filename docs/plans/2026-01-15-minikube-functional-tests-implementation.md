@@ -312,155 +312,156 @@
 
 ## Phase 5: Bats Test Infrastructure
 
-- [ ] Create test_helper.bash `[FUNC_05 §5.1]`
-  - [ ] **Objectives:**
-    - [ ] Load bats-support and bats-assert with fallback paths
-    - [ ] Provide minimal fallback assertions if libraries not found
-    - [ ] Read NAMESPACE from .test-namespace file
-    - [ ] Implement wait_for function with configurable timeout
-    - [ ] Implement apply_fixture, delete_fixture helper functions
-    - [ ] Implement expect_rejection for testing webhook rejections
-    - [ ] Implement resource_exists, get_resource helpers
-    - [ ] Implement cleanup_test_resources and wait_for_webhook
-  - [ ] **Tests:**
-    - [ ] testHelperShouldLoadBatsLibraries
-    - [ ] waitForShouldReturnSuccessWhenConditionMet
-    - [ ] waitForShouldTimeoutWhenConditionNotMet
-  - [ ] **Metadata:**
-    - Task duration: ~8 min
+- [x] Create test_helper.bash `[FUNC_05 §5.1]`
+  - [x] **Objectives:**
+    - [x] Load bats-support and bats-assert with fallback paths
+    - [x] Provide minimal fallback assertions if libraries not found
+    - [x] Read NAMESPACE from .test-namespace file
+    - [x] Implement wait_for function with configurable timeout
+    - [x] Implement apply_fixture, delete_fixture helper functions
+    - [x] Implement expect_rejection for testing webhook rejections
+    - [x] Implement resource_exists, get_resource helpers
+    - [x] Implement cleanup_test_resources and wait_for_webhook
+  - [x] **Tests:**
+    - [x] testHelperShouldLoadBatsLibraries
+    - [x] waitForShouldReturnSuccessWhenConditionMet
+    - [x] waitForShouldTimeoutWhenConditionNotMet
+  - [x] **Metadata:**
+    - Task duration: ~5 min (actual)
     - Tests duration: N/A (infrastructure)
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Bats runs each @test in a subshell; use setup_file for shared state
+    - Added helper functions to create resources inline (create_app_service, etc.)
 
 ---
 
 ## Phase 6: Bats Deployment Tests
 
-- [ ] Create 01_deployment.bats `[FUNC_06 §6.1]`
-  - [ ] **Objectives:**
-    - [ ] Test webhook deployment exists
-    - [ ] Test webhook deployment has ready replicas >= 1
-    - [ ] Test webhook service exists
-    - [ ] Test webhook service has endpoints with IP
-    - [ ] Test webhook pod is in Running phase
-    - [ ] Test all 6 CRDs are installed
-    - [ ] Test ValidatingWebhookConfiguration exists
-  - [ ] **Tests:**
-    - [ ] webhookDeploymentExists
-    - [ ] webhookDeploymentHasReadyReplicas
-    - [ ] webhookServiceExists
-    - [ ] webhookServiceHasEndpoints
-    - [ ] webhookPodIsRunning
-    - [ ] crdsAreInstalled
-    - [ ] validatingWebhookConfigurationExists
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create 01_deployment.bats `[FUNC_06 §6.1]`
+  - [x] **Objectives:**
+    - [x] Test webhook deployment exists
+    - [x] Test webhook deployment has ready replicas >= 1
+    - [x] Test webhook service exists
+    - [x] Test webhook service has endpoints with IP
+    - [x] Test webhook pod is in Running phase
+    - [x] Test all 6 CRDs are installed
+    - [x] Test ValidatingWebhookConfiguration exists
+  - [x] **Tests:**
+    - [x] webhookDeploymentExists
+    - [x] webhookDeploymentHasReadyReplicas
+    - [x] webhookServiceExists
+    - [x] webhookServiceHasEndpoints
+    - [x] webhookPodIsRunning
+    - [x] crdsAreInstalled
+    - [x] validatingWebhookConfigurationExists
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: ~10s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use jsonpath for precise kubectl output extraction
 
 ---
 
 ## Phase 7: Bats Webhook Admission Tests
 
-- [ ] Create 02_webhook_admission.bats `[FUNC_07 §7.1]`
-  - [ ] **Objectives:**
-    - [ ] Setup: wait for webhook ready, cleanup test resources
-    - [ ] Test webhook accepts valid ApplicationService
-    - [ ] Test webhook accepts valid VirtualCluster with existing ApplicationService
-    - [ ] Test webhook accepts valid ServiceAccount with prereqs
-    - [ ] Test webhook accepts valid Topic with prereqs
-    - [ ] Test webhook accepts valid ACL
-    - [ ] Test webhook accepts valid ConsumerGroup
-    - [ ] Test webhook rejects ApplicationService with missing name
-    - [ ] Test webhook rejects VirtualCluster with non-existent ApplicationService ref
-    - [ ] Teardown: cleanup test resources
-  - [ ] **Tests:**
-    - [ ] webhookAcceptsValidApplicationService
-    - [ ] webhookAcceptsValidVirtualClusterWithExistingApplicationService
-    - [ ] webhookAcceptsValidServiceAccount
-    - [ ] webhookAcceptsValidTopic
-    - [ ] webhookAcceptsValidAcl
-    - [ ] webhookAcceptsValidConsumerGroup
-    - [ ] webhookRejectsApplicationServiceWithMissingName
-    - [ ] webhookRejectsVirtualClusterWithNonExistentApplicationServiceRef
-  - [ ] **Metadata:**
-    - Task duration: ~8 min
+- [x] Create 02_webhook_admission.bats `[FUNC_07 §7.1]`
+  - [x] **Objectives:**
+    - [x] Setup: wait for webhook ready, cleanup test resources
+    - [x] Test webhook accepts valid ApplicationService
+    - [x] Test webhook accepts valid VirtualCluster with existing ApplicationService
+    - [x] Test webhook accepts valid ServiceAccount with prereqs
+    - [x] Test webhook accepts valid Topic with prereqs
+    - [x] Test webhook accepts valid ACL
+    - [x] Test webhook accepts valid ConsumerGroup
+    - [x] Test webhook rejects ApplicationService with missing name
+    - [x] Test webhook rejects VirtualCluster with non-existent ApplicationService ref
+    - [x] Teardown: cleanup test resources
+  - [x] **Tests:**
+    - [x] webhookAcceptsValidApplicationService
+    - [x] webhookAcceptsValidVirtualClusterWithExistingApplicationService
+    - [x] webhookAcceptsValidServiceAccount
+    - [x] webhookAcceptsValidTopic
+    - [x] webhookAcceptsValidAcl
+    - [x] webhookAcceptsValidConsumerGroup
+    - [x] webhookRejectsApplicationServiceWithMissingName
+    - [x] webhookRejectsVirtualClusterWithNonExistentApplicationServiceRef
+  - [x] **Metadata:**
+    - Task duration: ~4 min (actual)
     - Tests duration: ~30s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Create resources in dependency order; clean up in reverse order
 
 ---
 
 ## Phase 8: Bats Ownership Chain Tests
 
-- [ ] Create 03_ownership_chain.bats `[FUNC_08 §8.1]`
-  - [ ] **Objectives:**
-    - [ ] Setup: wait for webhook, cleanup resources
-    - [ ] Test full ownership chain (App -> VC -> SA -> Topic) accepted
-    - [ ] Test VirtualCluster requires valid ApplicationService reference
-    - [ ] Test ServiceAccount requires valid VirtualCluster reference
-    - [ ] Test Topic requires valid ServiceAccount reference
-    - [ ] Test cannot change applicationServiceRef on update (immutability)
-    - [ ] Test deleting parent with existing children fails
-    - [ ] Each test starts with cleanup_test_resources for isolation
-  - [ ] **Tests:**
-    - [ ] fullOwnershipChainValidHierarchyAccepted
-    - [ ] virtualClusterRequiresValidApplicationServiceReference
-    - [ ] serviceAccountRequiresValidVirtualClusterReference
-    - [ ] topicRequiresValidServiceAccountReference
-    - [ ] cannotChangeApplicationServiceRefOnUpdate
-    - [ ] deletingParentWithExistingChildrenFails
-  - [ ] **Metadata:**
-    - Task duration: ~8 min
+- [x] Create 03_ownership_chain.bats `[FUNC_08 §8.1]`
+  - [x] **Objectives:**
+    - [x] Setup: wait for webhook, cleanup resources
+    - [x] Test full ownership chain (App -> VC -> SA -> Topic) accepted
+    - [x] Test VirtualCluster requires valid ApplicationService reference
+    - [x] Test ServiceAccount requires valid VirtualCluster reference
+    - [x] Test Topic requires valid ServiceAccount reference
+    - [x] Test cannot change applicationServiceRef on update (immutability)
+    - [x] Test deleting parent with existing children fails
+    - [x] Each test starts with cleanup_test_resources for isolation
+  - [x] **Tests:**
+    - [x] fullOwnershipChainValidHierarchyAccepted
+    - [x] virtualClusterRequiresValidApplicationServiceReference
+    - [x] serviceAccountRequiresValidVirtualClusterReference
+    - [x] topicRequiresValidServiceAccountReference
+    - [x] cannotChangeApplicationServiceRefOnUpdate
+    - [x] deletingParentWithExistingChildrenFails
+  - [x] **Metadata:**
+    - Task duration: ~4 min (actual)
     - Tests duration: ~45s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use setup() for per-test cleanup, setup_file() for one-time setup
 
 ---
 
 ## Phase 9: Bats Multi-Tenant Tests
 
-- [ ] Create 04_multi_tenant.bats `[FUNC_09 §9.1]`
-  - [ ] **Objectives:**
-    - [ ] Setup: create tenant-a and tenant-b ApplicationServices
-    - [ ] Setup: create tenant-a VirtualCluster and ServiceAccount
-    - [ ] Test tenant A can create resources under own ApplicationService
-    - [ ] Test tenant B cannot reference tenant A's VirtualCluster
-    - [ ] Test tenant B cannot reference tenant A's ServiceAccount
-    - [ ] Test tenant B can create own isolated resources
-  - [ ] **Tests:**
-    - [ ] tenantACanCreateResourcesUnderOwnApplicationService
-    - [ ] tenantBCannotReferenceTenantAVirtualCluster
-    - [ ] tenantBCannotReferenceTenantAServiceAccount
-    - [ ] tenantBCanCreateOwnIsolatedResources
-  - [ ] **Metadata:**
-    - Task duration: ~6 min
+- [x] Create 04_multi_tenant.bats `[FUNC_09 §9.1]`
+  - [x] **Objectives:**
+    - [x] Setup: create tenant-a and tenant-b ApplicationServices
+    - [x] Setup: create tenant-a VirtualCluster and ServiceAccount
+    - [x] Test tenant A can create resources under own ApplicationService
+    - [x] Test tenant B cannot reference tenant A's VirtualCluster
+    - [x] Test tenant B cannot reference tenant A's ServiceAccount
+    - [x] Test tenant B can create own isolated resources
+  - [x] **Tests:**
+    - [x] tenantACanCreateResourcesUnderOwnApplicationService
+    - [x] tenantBCannotReferenceTenantAVirtualCluster
+    - [x] tenantBCannotReferenceTenantAServiceAccount
+    - [x] tenantBCanCreateOwnIsolatedResources
+  - [x] **Metadata:**
+    - Task duration: ~4 min (actual)
     - Tests duration: ~30s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Multi-tenant isolation is critical security boundary; test thoroughly
 
 ---
 
 ## Phase 10: Bats HA Failover Tests
 
-- [ ] Create 05_ha_failover.bats `[FUNC_10 §10.1]`
-  - [ ] **Objectives:**
-    - [ ] Setup: scale deployment to 2 replicas, wait for both ready
-    - [ ] Test webhook has 2 ready replicas
-    - [ ] Test webhook survives single pod failure (delete pod, verify ops work)
-    - [ ] Test webhook recovers after pod restart (wait for 2 replicas again)
-    - [ ] Test rolling restart maintains availability (rollout restart, verify ops during)
-    - [ ] Teardown: scale back to 1 replica
-  - [ ] **Tests:**
-    - [ ] webhookHas2ReadyReplicas
-    - [ ] webhookSurvivesSinglePodFailure
-    - [ ] webhookRecoversAfterPodRestart
-    - [ ] rollingRestartMaintainsAvailability
-  - [ ] **Metadata:**
-    - Task duration: ~8 min
+- [x] Create 05_ha_failover.bats `[FUNC_10 §10.1]`
+  - [x] **Objectives:**
+    - [x] Setup: scale deployment to 2 replicas, wait for both ready
+    - [x] Test webhook has 2 ready replicas
+    - [x] Test webhook survives single pod failure (delete pod, verify ops work)
+    - [x] Test webhook recovers after pod restart (wait for 2 replicas again)
+    - [x] Test rolling restart maintains availability (rollout restart, verify ops during)
+    - [x] Teardown: scale back to 1 replica
+  - [x] **Tests:**
+    - [x] webhookHas2ReadyReplicas
+    - [x] webhookSurvivesSinglePodFailure
+    - [x] webhookRecoversAfterPodRestart
+    - [x] rollingRestartMaintainsAvailability
+  - [x] **Metadata:**
+    - Task duration: ~4 min (actual)
     - Tests duration: ~120s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use --wait=false on pod delete for non-blocking operation
 
 ---
