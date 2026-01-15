@@ -23,7 +23,7 @@ public class CRDStore {
     private final AtomicLong resourceVersionCounter = new AtomicLong(1);
 
     @Getter
-    private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher(true);
+    private final ReconciliationEventPublisher eventPublisher = new ReconciliationEventPublisher();
 
     private final OwnershipValidator ownershipValidator = new OwnershipValidator(this);
 

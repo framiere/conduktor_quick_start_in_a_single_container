@@ -1,4 +1,4 @@
-import { Users, DollarSign, Clock, Shield, Zap, TrendingUp, CheckCircle2, Building2, Target, Layers } from 'lucide-react'
+import { Users, DollarSign, Clock, Shield, Zap, CheckCircle2 } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
@@ -27,27 +27,6 @@ const valueProps = [
     title: 'GitOps Native',
     description: 'Declarative CRDs work seamlessly with ArgoCD, Flux, and any GitOps workflow.',
     benefit: 'Full audit trail and version control'
-  }
-]
-
-const useCases = [
-  {
-    title: 'Enterprise Messaging Platform',
-    description: 'Large organizations with multiple business units sharing a central Kafka infrastructure.',
-    teams: ['Platform Engineering', 'Data Engineering', 'Application Teams'],
-    benefits: ['Centralized management', 'Consistent policies', 'Resource optimization']
-  },
-  {
-    title: 'SaaS Multi-Tenancy',
-    description: 'SaaS providers offering isolated messaging capabilities to each customer.',
-    teams: ['Customer A', 'Customer B', 'Customer C'],
-    benefits: ['Customer isolation', 'Usage tracking', 'Custom quotas']
-  },
-  {
-    title: 'Development Environments',
-    description: 'Providing isolated messaging environments for development, staging, and production.',
-    teams: ['Dev Team', 'QA Team', 'Production'],
-    benefits: ['Environment parity', 'Safe testing', 'Promotion workflows']
   }
 ]
 
@@ -110,64 +89,12 @@ export default function BusinessPage() {
 
       {/* ROI Calculator Visual */}
       <Section title="Return on Investment" subtitle="Typical benefits observed">
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-800 text-center">
-            <div className="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">70%</div>
-            <div className="text-sm text-green-700 dark:text-green-300">Infrastructure Cost Reduction</div>
-            <p className="text-xs text-gray-500 mt-2">Through multi-tenant resource sharing</p>
+        <div className="flex justify-center">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8 border border-purple-200 dark:border-purple-800 text-center max-w-md">
+            <div className="text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">100%</div>
+            <div className="text-lg text-purple-700 dark:text-purple-300">Audit Compliance</div>
+            <p className="text-sm text-gray-500 mt-3">Full GitOps trail for all changes</p>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800 text-center">
-            <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">90%</div>
-            <div className="text-sm text-blue-700 dark:text-blue-300">Faster Time to Market</div>
-            <p className="text-xs text-gray-500 mt-2">Self-service vs ticket-based provisioning</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800 text-center">
-            <div className="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">100%</div>
-            <div className="text-sm text-purple-700 dark:text-purple-300">Audit Compliance</div>
-            <p className="text-xs text-gray-500 mt-2">Full GitOps trail for all changes</p>
-          </div>
-        </div>
-      </Section>
-
-      {/* Use Cases */}
-      <Section title="Use Cases" subtitle="Common deployment scenarios">
-        <div className="space-y-6">
-          {useCases.map((useCase, index) => (
-            <Card key={index}>
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl shrink-0">
-                  <Building2 className="text-blue-600 dark:text-blue-400" size={24} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-2">{useCase.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{useCase.description}</p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Teams</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {useCase.teams.map((team) => (
-                          <span key={team} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-                            {team}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Benefits</h4>
-                      <ul className="space-y-1">
-                        {useCase.benefits.map((benefit) => (
-                          <li key={benefit} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <CheckCircle2 size={14} className="text-green-500" />
-                            {benefit}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
       </Section>
 

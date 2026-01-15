@@ -13,14 +13,8 @@ public class ReconciliationEventPublisher {
     private static final Logger logger = LoggerFactory.getLogger(ReconciliationEventPublisher.class);
 
     private final List<ReconciliationEventListener> listeners = new CopyOnWriteArrayList<>();
-    private final boolean auditLoggingEnabled;
 
     public ReconciliationEventPublisher() {
-        this(true);
-    }
-
-    public ReconciliationEventPublisher(boolean auditLoggingEnabled) {
-        this.auditLoggingEnabled = auditLoggingEnabled;
     }
 
     public void addListener(ReconciliationEventListener listener) {
@@ -34,14 +28,12 @@ public class ReconciliationEventPublisher {
     }
 
     public void publish(ReconciliationEvent event) {
-        if (auditLoggingEnabled) {
-            if (event.getPhase() == ReconciliationEvent.Phase.BEFORE) {
-                logger.info("RECONCILIATION_START: {} {} {}/{}", event.getOperation(), event.getResourceKind(), event.getResourceNamespace(), event.getResourceName());
-            } else {
-                String resultIndicator = event.isSuccess() ? "SUCCESS" : "FAILED";
-                logger.info("RECONCILIATION_END: {} {} {}/{} - {} {}", event.getOperation(), event.getResourceKind(), event.getResourceNamespace(),
-                        event.getResourceName(), resultIndicator, event.getMessage() != null ? event.getMessage() : "");
-            }
+        if (event.getPhase() == ReconciliationEvent.Phase.BEFORE) {
+            logger.info("RECONCILIATION_START: {} {} {}/{}", event.getOperation(), event.getResourceKind(), event.getResourceNamespace(), event.getResourceName());
+        } else {
+            String resultIndicator = event.isSuccess() ? "SUCCESS" : "FAILED";
+            logger.info("RECONCILIATION_END: {} {} {}/{} - {} {}", event.getOperation(), event.getResourceKind(), event.getResourceNamespace(),
+                    event.getResourceName(), resultIndicator, event.getMessage() != null ? event.getMessage() : "");
         }
 
         for (ReconciliationEventListener listener : listeners) {

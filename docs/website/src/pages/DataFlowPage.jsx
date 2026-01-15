@@ -195,60 +195,6 @@ export default function DataFlowPage() {
         </div>
       </Section>
 
-      {/* mTLS Data Flow */}
-      <Section title="mTLS Authentication Flow" subtitle="Certificate-based identity in action">
-        <DiagramBox title="Client to Topic Access">
-          <div className="py-8">
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
-              {/* Client */}
-              <div className="flex flex-col items-center gap-2">
-                <DiagramNode color="gray" className="w-48">
-                  Kafka Client
-                </DiagramNode>
-                <span className="text-xs text-gray-500">CN=team-a-sa</span>
-              </div>
-
-              <div className="flex flex-col items-center">
-                <DiagramArrow direction="right" label="TLS handshake" />
-                <span className="text-xs text-gray-500 mt-1">client cert</span>
-              </div>
-
-              {/* Gateway */}
-              <div className="flex flex-col items-center gap-2">
-                <DiagramNode color="purple" className="w-48">
-                  Conduktor Gateway
-                </DiagramNode>
-                <span className="text-xs text-gray-500">Extracts CN</span>
-              </div>
-
-              <div className="flex flex-col items-center">
-                <DiagramArrow direction="right" label="lookup" />
-              </div>
-
-              {/* ServiceAccount */}
-              <div className="flex flex-col items-center gap-2">
-                <DiagramNode color="green" className="w-48">
-                  ServiceAccount CRD
-                </DiagramNode>
-                <span className="text-xs text-gray-500">dn: CN=team-a-sa</span>
-              </div>
-
-              <div className="flex flex-col items-center">
-                <DiagramArrow direction="right" label="check ACL" />
-              </div>
-
-              {/* Topic */}
-              <div className="flex flex-col items-center gap-2">
-                <DiagramNode color="orange" className="w-48">
-                  Topic Access
-                </DiagramNode>
-                <span className="text-xs text-green-500">READ/WRITE</span>
-              </div>
-            </div>
-          </div>
-        </DiagramBox>
-      </Section>
-
       {/* Summary */}
       <Section title="Key Takeaways">
         <CardGrid cols={3}>

@@ -91,7 +91,7 @@ spec:
     fields: [
       { name: 'serviceRef', type: 'string', required: true, description: 'Reference to ServiceAccount' },
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
-      { name: 'topicRef', type: 'string', required: false, description: 'Reference to Topic (optional)' },
+      { name: 'topicRef', type: 'string', required: true, description: 'Reference to Topic' },
       { name: 'consumerGroupRef', type: 'string', required: false, description: 'Reference to ConsumerGroup (optional)' },
       { name: 'operations', type: 'string[]', required: true, description: 'Operations: READ, WRITE, etc.' },
       { name: 'permission', type: 'string', required: true, description: 'ALLOW or DENY' }

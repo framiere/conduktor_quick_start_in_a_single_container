@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical
+  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity
 } from 'lucide-react'
 
 import './index.css'
@@ -19,11 +19,12 @@ import CRDPage from './pages/CRDPage'
 import WebhookPage from './pages/WebhookPage'
 import DataFlowPage from './pages/DataFlowPage'
 import TestResultsPage from './pages/TestResultsPage'
+import OperabilityPage from './pages/OperabilityPage'
 
 const perspectives = [
   { path: '/', name: 'Overview', icon: Home, description: 'Project introduction and quick start' },
-  { path: '/architecture', name: 'Architecture', icon: Building2, description: 'System design and components' },
   { path: '/business', name: 'Business', icon: Users, description: 'Value proposition and use cases' },
+  { path: '/architecture', name: 'Architecture', icon: Building2, description: 'System design and components' },
   { path: '/security', name: 'Security', icon: Shield, description: 'mTLS, ownership, and access control' },
   { path: '/testing', name: 'Testing', icon: TestTube2, description: 'Unit, integration, and E2E tests' },
   { path: '/test-results', name: 'Test Results', icon: FlaskConical, description: 'Live test execution results' },
@@ -32,6 +33,7 @@ const perspectives = [
   { path: '/crds', name: 'CRDs', icon: Boxes, description: 'Custom Resource Definitions' },
   { path: '/webhook', name: 'Webhook', icon: Lock, description: 'Admission controller deep-dive' },
   { path: '/data-flow', name: 'Data Flow', icon: Network, description: 'Request lifecycle visualization' },
+  { path: '/operability', name: 'Operability', icon: Activity, description: 'Logs, events, and audit trail' },
 ]
 
 function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
@@ -154,6 +156,7 @@ function App() {
                 <Route path="/crds" element={<CRDPage />} />
                 <Route path="/webhook" element={<WebhookPage />} />
                 <Route path="/data-flow" element={<DataFlowPage />} />
+                <Route path="/operability" element={<OperabilityPage />} />
               </Routes>
             </div>
           </main>

@@ -163,7 +163,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish event to single listener")
         void testPublishToSingleListener() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> receivedEvents = new ArrayList<>();
 
             publisher.addListener(receivedEvents::add);
@@ -184,7 +184,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish event to multiple listeners")
         void testPublishToMultipleListeners() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
 
             AtomicInteger listener1Count = new AtomicInteger(0);
             AtomicInteger listener2Count = new AtomicInteger(0);
@@ -213,7 +213,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should handle listener exceptions gracefully")
         void testListenerExceptionHandling() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
 
             List<ReconciliationEvent> successfulEvents = new ArrayList<>();
 
@@ -242,7 +242,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should remove listener")
         void testRemoveListener() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
 
             AtomicInteger count = new AtomicInteger(0);
             ReconciliationEventPublisher.ReconciliationEventListener listener = e -> count.incrementAndGet();
@@ -269,7 +269,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should clear all listeners")
         void testClearListeners() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
 
             publisher.addListener(e -> {
             });
@@ -293,7 +293,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish BEFORE event using convenience method")
         void testPublishBefore() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -321,7 +321,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish success event using convenience method")
         void testPublishSuccess() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -350,7 +350,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish failure event using convenience method")
         void testPublishFailure() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -378,7 +378,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should publish validation error using convenience method")
         void testPublishValidationError() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -410,7 +410,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should emit BEFORE and AFTER events for successful create")
         void testSuccessfulCreateLifecycle() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -458,7 +458,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should emit BEFORE and AFTER events for failed create")
         void testFailedCreateLifecycle() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -502,7 +502,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should track complete update lifecycle with resource version changes")
         void testUpdateLifecycleWithVersioning() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
@@ -547,7 +547,7 @@ class ReconciliationEventTest {
         @Test
         @DisplayName("should track delete lifecycle")
         void testDeleteLifecycle() {
-            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher(false);
+            ReconciliationEventPublisher publisher = new ReconciliationEventPublisher();
             List<ReconciliationEvent> events = new ArrayList<>();
             publisher.addListener(events::add);
 
