@@ -6,8 +6,8 @@
 # BEFORE RECORDING:
 #   1. Deploy Conduktor: ./functional-tests/deploy-conduktor.sh
 #   2. Start port-forwards in separate terminals:
-#      kubectl port-forward svc/console 8080:8080 -n conduktor
-#      kubectl port-forward svc/gateway 8888:8888 -n conduktor
+#      kubectl port-forward svc/console 8080:80 -n conduktor
+#      kubectl port-forward svc/gateway-conduktor-gateway-internal 8888:8888 -n conduktor
 #
 # TO RECORD:
 #   asciinema rec docs/demos/cli-integration.cast \
@@ -32,13 +32,15 @@ echo ""
 
 # --- Step 2: Check services are accessible ---
 echo "First, let's check if Console is ready..."
-curl -sf http://localhost:8080/platform/api/modules/resources/health/live | jq .
-# Expected: {"status":"UP"}
+curl -sf http://localhost:8080/api/login -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@demo.dev","password":"123_ABC_abc"}' | jq '.access_token | length'
+# Expected: 800+ (token length)
 
 echo ""
 echo "And Gateway..."
 curl -sf http://localhost:8888/health/ready
-# Expected: OK or similar
+# Expected: READY
 
 # --- Step 3: Show the bootstrap script ---
 echo ""
@@ -48,13 +50,13 @@ head -50 scripts/bootstrap-conduktor-token.sh
 # --- Step 4: Run the bootstrap script ---
 echo ""
 echo "Let's run it to get tokens and create the Secret..."
-./scripts/bootstrap-conduktor-token.sh
+SECRET_NAMESPACE=conduktor ./scripts/bootstrap-conduktor-token.sh
 
 # --- Step 5: Verify the secret ---
 echo ""
 echo "The Secret should now be created. Let's check:"
-kubectl get secret conduktor-cli-credentials
-kubectl get secret conduktor-cli-credentials -o jsonpath='{.data}' | jq 'keys'
+kubectl get secret conduktor-cli-credentials -n conduktor
+kubectl get secret conduktor-cli-credentials -n conduktor -o jsonpath='{.data}' | jq 'keys'
 
 # --- Step 6: Show how the operator uses it ---
 echo ""
@@ -87,7 +89,7 @@ cat /tmp/test-vcluster.yaml
 
 # If conduktor CLI is installed:
 # export CDK_BASE_URL=http://localhost:8080
-# export CDK_TOKEN=$(kubectl get secret conduktor-cli-credentials -o jsonpath='{.data.console-token}' | base64 -d)
+# export CDK_TOKEN=$(kubectl get secret conduktor-cli-credentials -n conduktor -o jsonpath='{.data.console-token}' | base64 -d)
 # conduktor apply -f /tmp/test-vcluster.yaml --dry-run
 
 # --- Done ---

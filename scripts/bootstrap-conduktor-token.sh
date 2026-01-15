@@ -130,33 +130,32 @@ create_secret() {
 
     log_info "Creating/updating Secret '${SECRET_NAME}' in namespace '${SECRET_NAMESPACE}'..."
 
-    local secret_yaml
-    secret_yaml=$(cat <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ${SECRET_NAME}
-  namespace: ${SECRET_NAMESPACE}
-  labels:
-    app.kubernetes.io/name: conduktor-cli
-    app.kubernetes.io/component: credentials
-type: Opaque
-stringData:
-  console-url: "${CONSOLE_URL}"
-  console-token: "${token}"
-  gateway-url: "${GATEWAY_URL}"
-  gateway-user: "${GATEWAY_USER}"
-  gateway-password: "${GATEWAY_PASSWORD}"
-EOF
-)
-
     if [ -n "${DRY_RUN:-}" ]; then
-        log_info "DRY_RUN mode - Secret YAML:"
-        echo "${secret_yaml}"
+        log_info "DRY_RUN mode - would create secret with:"
+        echo "  console-url: ${CONSOLE_URL}"
+        echo "  console-token: <redacted, ${#token} chars>"
+        echo "  gateway-url: ${GATEWAY_URL}"
+        echo "  gateway-user: ${GATEWAY_USER}"
+        echo "  gateway-password: <redacted>"
         return 0
     fi
 
-    echo "${secret_yaml}" | kubectl apply -f -
+    # Use kubectl create secret with --from-literal to avoid YAML escaping issues
+    kubectl create secret generic "${SECRET_NAME}" \
+        --namespace "${SECRET_NAMESPACE}" \
+        --from-literal=console-url="${CONSOLE_URL}" \
+        --from-literal=console-token="${token}" \
+        --from-literal=gateway-url="${GATEWAY_URL}" \
+        --from-literal=gateway-user="${GATEWAY_USER}" \
+        --from-literal=gateway-password="${GATEWAY_PASSWORD}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # Add labels
+    kubectl label secret "${SECRET_NAME}" \
+        --namespace "${SECRET_NAMESPACE}" \
+        app.kubernetes.io/name=conduktor-cli \
+        app.kubernetes.io/component=credentials \
+        --overwrite
 
     log_info "Secret '${SECRET_NAME}' created/updated successfully"
 }

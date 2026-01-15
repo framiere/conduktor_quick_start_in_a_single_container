@@ -58,6 +58,9 @@ setup_helm_repos() {
     # Redpanda Helm repo
     helm repo add redpanda https://charts.redpanda.com 2>/dev/null || true
 
+    # Bitnami repo (for PostgreSQL)
+    helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
+
     helm repo update
 
     log_info "Helm repos configured"
@@ -69,20 +72,59 @@ create_namespace() {
     kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
 }
 
+# Deploy PostgreSQL (for Console)
+deploy_postgresql() {
+    log_info "Deploying PostgreSQL..."
+
+    cat <<EOF | helm upgrade --install postgresql bitnami/postgresql \
+        --namespace "${NAMESPACE}" \
+        -f - \
+        --wait --timeout 5m
+auth:
+  postgresPassword: "conduktor"
+  database: "conduktor"
+primary:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  persistence:
+    size: "1Gi"
+EOF
+
+    log_info "PostgreSQL deployed"
+}
+
 # Deploy Redpanda (Kafka-compatible)
 deploy_redpanda() {
     log_info "Deploying Redpanda..."
 
-    helm upgrade --install redpanda redpanda/redpanda \
+    cat <<EOF | helm upgrade --install redpanda redpanda/redpanda \
         --namespace "${NAMESPACE}" \
-        --set statefulset.replicas=1 \
-        --set resources.cpu.cores=1 \
-        --set resources.memory.container.max=1Gi \
-        --set storage.persistentVolume.size=2Gi \
-        --set external.enabled=false \
-        --set auth.sasl.enabled=false \
-        --set tls.enabled=false \
+        -f - \
         --wait --timeout 5m
+statefulset:
+  replicas: 1
+resources:
+  cpu:
+    cores: "1"
+  memory:
+    container:
+      max: "1536Mi"
+storage:
+  persistentVolume:
+    size: "2Gi"
+external:
+  enabled: false
+auth:
+  sasl:
+    enabled: false
+tls:
+  enabled: false
+EOF
 
     log_info "Redpanda deployed"
 }
@@ -97,6 +139,8 @@ deploy_console() {
         -f - \
         --wait --timeout 5m
 config:
+  database:
+    url: "postgresql://postgres:conduktor@postgresql.${NAMESPACE}.svc.cluster.local:5432/conduktor"
   organization:
     name: "Demo Organization"
   admin:
@@ -182,12 +226,12 @@ show_status() {
     kubectl get svc -n "${NAMESPACE}"
     echo ""
     log_info "To access Console:"
-    echo "  kubectl port-forward svc/console 8080:8080 -n ${NAMESPACE}"
+    echo "  kubectl port-forward svc/console 8080:80 -n ${NAMESPACE}"
     echo "  Open: http://localhost:8080"
     echo "  Login: admin@demo.dev / 123_ABC_abc"
     echo ""
     log_info "To access Gateway Admin API:"
-    echo "  kubectl port-forward svc/gateway 8888:8888 -n ${NAMESPACE}"
+    echo "  kubectl port-forward svc/gateway-conduktor-gateway-internal 8888:8888 -n ${NAMESPACE}"
     echo ""
     log_info "To run the bootstrap script:"
     echo "  CONSOLE_URL=http://localhost:8080 ./scripts/bootstrap-conduktor-token.sh"
@@ -200,6 +244,7 @@ main() {
     check_prerequisites
     setup_helm_repos
     create_namespace
+    deploy_postgresql
     deploy_redpanda
     deploy_console
     deploy_gateway
