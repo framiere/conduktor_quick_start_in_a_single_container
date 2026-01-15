@@ -224,20 +224,12 @@ install_helm() {
 
     local os=$(detect_os)
     case $os in
-        ubuntu|debian)
-            curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
-            sudo apt-get install -y -qq apt-transport-https
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq helm
-            ;;
-        fedora|rhel|centos)
-            sudo dnf install -y helm || {
-                curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-                chmod 700 get_helm.sh
-                ./get_helm.sh
-                rm get_helm.sh
-            }
+        ubuntu|debian|fedora|rhel|centos)
+            # Use official install script - most reliable method
+            curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 /tmp/get_helm.sh
+            /tmp/get_helm.sh
+            rm -f /tmp/get_helm.sh
             ;;
         macos)
             brew install helm
