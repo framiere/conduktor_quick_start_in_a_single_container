@@ -10,7 +10,6 @@ const buildSteps = [
   { step: 3, title: 'Compile', command: 'mvn compile', description: 'Compile the Java sources' },
   { step: 4, title: 'Run Tests', command: 'mvn test', description: 'Execute unit tests' },
   { step: 5, title: 'Package', command: 'mvn package -DskipTests', description: 'Create executable JAR' },
-  { step: 6, title: 'Format Check', command: 'mvn spotless:check', description: 'Verify code formatting' },
 ]
 
 const projectStructure = `
@@ -72,10 +71,7 @@ mvn clean package -DskipTests
 mvn test
 
 # Run integration tests
-mvn verify
-
-# Format code
-mvn spotless:apply`}
+mvn verify`}
         />
       </Section>
 
@@ -228,7 +224,6 @@ mvn spotless:apply`}
               <li>• Import as Maven project</li>
               <li>• Enable Lombok plugin</li>
               <li>• Set Java 21 SDK</li>
-              <li>• Import Eclipse formatter settings</li>
             </ul>
           </Card>
           <Card icon={Terminal} title="VS Code">
