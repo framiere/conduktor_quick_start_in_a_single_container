@@ -221,91 +221,91 @@
 
 ## Phase 4: Shell Scripts
 
-- [ ] Create setup-minikube.sh `[FUNC_04 §4.1]`
-  - [ ] **Objectives:**
-    - [ ] Accept CLUSTER_NAME, FRESH_CLUSTER, NAMESPACE env vars
-    - [ ] Check if cluster exists with minikube status
-    - [ ] Delete existing cluster if FRESH_CLUSTER=true
-    - [ ] Reuse existing cluster and create fresh namespace if FRESH_CLUSTER=false
-    - [ ] Create new cluster with docker driver, 2 CPUs, 4GB memory
-    - [ ] Write namespace to .test-namespace file
-  - [ ] **Tests:**
-    - [ ] setupMinikubeShouldCreateCluster
-    - [ ] setupMinikubeShouldReuseExistingCluster
-    - [ ] setupMinikubeShouldWriteNamespaceFile
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create setup-minikube.sh `[FUNC_04 §4.1]`
+  - [x] **Objectives:**
+    - [x] Accept CLUSTER_NAME, FRESH_CLUSTER, NAMESPACE env vars
+    - [x] Check if cluster exists with minikube status
+    - [x] Delete existing cluster if FRESH_CLUSTER=true
+    - [x] Reuse existing cluster and create fresh namespace if FRESH_CLUSTER=false
+    - [x] Create new cluster with docker driver, 2 CPUs, 4GB memory
+    - [x] Write namespace to .test-namespace file
+  - [x] **Tests:**
+    - [x] setupMinikubeShouldCreateCluster
+    - [x] setupMinikubeShouldReuseExistingCluster
+    - [x] setupMinikubeShouldWriteNamespaceFile
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: ~90s (cluster creation)
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use minikube profile to switch between clusters
 
-- [ ] Create generate-certs.sh `[FUNC_04 §4.2]`
-  - [ ] **Objectives:**
-    - [ ] Generate CA key and self-signed certificate
-    - [ ] Generate server key and CSR with SAN for service DNS names
-    - [ ] Sign server certificate with CA
-    - [ ] Export base64-encoded values for Helm
-    - [ ] Write values-tls.yaml file for deploy script
-  - [ ] **Tests:**
-    - [ ] generateCertsShouldCreateCaKey
-    - [ ] generateCertsShouldCreateServerCert
-    - [ ] generateCertsShouldWriteValuesTlsYaml
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create generate-certs.sh `[FUNC_04 §4.2]`
+  - [x] **Objectives:**
+    - [x] Generate CA key and self-signed certificate
+    - [x] Generate server key and CSR with SAN for service DNS names
+    - [x] Sign server certificate with CA
+    - [x] Export base64-encoded values for Helm
+    - [x] Write values-tls.yaml file for deploy script
+  - [x] **Tests:**
+    - [x] generateCertsShouldCreateCaKey
+    - [x] generateCertsShouldCreateServerCert
+    - [x] generateCertsShouldWriteValuesTlsYaml
+  - [x] **Metadata:**
+    - Task duration: ~3 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - SAN must include service.namespace.svc.cluster.local for K8s DNS
 
-- [ ] Create deploy.sh `[FUNC_04 §4.3]`
-  - [ ] **Objectives:**
-    - [ ] Build Java application with mvn package -DskipTests
-    - [ ] Build Docker image in Minikube context (eval minikube docker-env)
-    - [ ] Call generate-certs.sh for TLS certificates
-    - [ ] Deploy with helm upgrade --install using values-minikube.yaml and values-tls.yaml
-    - [ ] Wait for deployment ready with kubectl wait
-    - [ ] Verify endpoints exist
-  - [ ] **Tests:**
-    - [ ] deployShouldBuildDockerImage
-    - [ ] deployShouldInstallHelmRelease
-    - [ ] deployShouldWaitForWebhookReady
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create deploy.sh `[FUNC_04 §4.3]`
+  - [x] **Objectives:**
+    - [x] Build Java application with mvn package -DskipTests
+    - [x] Build Docker image in Minikube context (eval minikube docker-env)
+    - [x] Call generate-certs.sh for TLS certificates
+    - [x] Deploy with helm upgrade --install using values-minikube.yaml and values-tls.yaml
+    - [x] Wait for deployment ready with kubectl wait
+    - [x] Verify endpoints exist
+  - [x] **Tests:**
+    - [x] deployShouldBuildDockerImage
+    - [x] deployShouldInstallHelmRelease
+    - [x] deployShouldWaitForWebhookReady
+  - [x] **Metadata:**
+    - Task duration: ~4 min (actual)
     - Tests duration: ~60s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use helm upgrade --install for idempotent deployments
 
-- [ ] Create teardown.sh `[FUNC_04 §4.4]`
-  - [ ] **Objectives:**
-    - [ ] Uninstall Helm release if exists
-    - [ ] Delete all CRD instances in namespace
-    - [ ] Optionally delete namespace (DELETE_NAMESPACE=true)
-    - [ ] Optionally delete cluster (DELETE_CLUSTER=true)
-    - [ ] Cleanup .test-namespace and .certs files
-  - [ ] **Tests:**
-    - [ ] teardownShouldUninstallHelmRelease
-    - [ ] teardownShouldCleanupFiles
-  - [ ] **Metadata:**
-    - Task duration: ~3 min
+- [x] Create teardown.sh `[FUNC_04 §4.4]`
+  - [x] **Objectives:**
+    - [x] Uninstall Helm release if exists
+    - [x] Delete all CRD instances in namespace
+    - [x] Optionally delete namespace (DELETE_NAMESPACE=true)
+    - [x] Optionally delete cluster (DELETE_CLUSTER=true)
+    - [x] Cleanup .test-namespace and .certs files
+  - [x] **Tests:**
+    - [x] teardownShouldUninstallHelmRelease
+    - [x] teardownShouldCleanupFiles
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: ~10s
 
-- [ ] Create run-tests.sh `[FUNC_04 §4.5]`
-  - [ ] **Objectives:**
-    - [ ] Parse CLI arguments: --fresh-cluster, --skip-deploy, --skip-tests, --bats-only, --java-only, --test-filter, --cleanup
-    - [ ] Call setup-minikube.sh with FRESH_CLUSTER flag
-    - [ ] Call deploy.sh unless --skip-deploy
-    - [ ] Run Bats tests with optional filter unless --java-only
-    - [ ] Run Java E2E tests with Maven unless --bats-only
-    - [ ] Call teardown.sh if --cleanup
-    - [ ] Print summary with pass/fail counts
-  - [ ] **Tests:**
-    - [ ] runTestsShouldParseArguments
-    - [ ] runTestsShouldRunBatsTests
-    - [ ] runTestsShouldRunJavaTests
-    - [ ] runTestsShouldPrintSummary
-  - [ ] **Metadata:**
-    - Task duration: ~10 min
+- [x] Create run-tests.sh `[FUNC_04 §4.5]`
+  - [x] **Objectives:**
+    - [x] Parse CLI arguments: --fresh-cluster, --skip-deploy, --skip-tests, --bats-only, --java-only, --test-filter, --cleanup
+    - [x] Call setup-minikube.sh with FRESH_CLUSTER flag
+    - [x] Call deploy.sh unless --skip-deploy
+    - [x] Run Bats tests with optional filter unless --java-only
+    - [x] Run Java E2E tests with Maven unless --bats-only
+    - [x] Call teardown.sh if --cleanup
+    - [x] Print summary with pass/fail counts
+  - [x] **Tests:**
+    - [x] runTestsShouldParseArguments
+    - [x] runTestsShouldRunBatsTests
+    - [x] runTestsShouldRunJavaTests
+    - [x] runTestsShouldPrintSummary
+  - [x] **Metadata:**
+    - Task duration: ~5 min (actual)
     - Tests duration: ~5 min (full suite)
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use getopts or manual parsing for long options in bash
 
 ---
