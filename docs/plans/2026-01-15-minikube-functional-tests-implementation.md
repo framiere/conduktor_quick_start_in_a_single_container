@@ -754,15 +754,15 @@
 
 ```bash
 # Full fresh run (CI-style)
-./functional-tests/scripts/run-tests.sh --fresh-cluster --cleanup
+./functional-tests/run-tests.sh --fresh-cluster --cleanup
 
 # Quick local iteration (reuse cluster)
-./functional-tests/scripts/run-tests.sh
+./functional-tests/run-tests.sh
 
 # Run specific test suites
-./functional-tests/scripts/run-tests.sh --bats-only --test-filter "02_webhook"
-./functional-tests/scripts/run-tests.sh --java-only
+./functional-tests/run-tests.sh --bats-only --test-filter "02_webhook"
+./functional-tests/run-tests.sh --java-only
 
 # Deploy only for manual exploration
-./functional-tests/scripts/run-tests.sh --skip-tests
+./functional-tests/run-tests.sh --skip-tests
 ```

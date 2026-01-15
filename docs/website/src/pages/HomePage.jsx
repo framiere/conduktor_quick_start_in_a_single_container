@@ -128,10 +128,10 @@ export default function HomePage() {
 mvn clean package -DskipTests
 
 # Start Minikube cluster
-./functional-tests/scripts/setup-minikube.sh
+./functional-tests/setup-minikube.sh
 
 # Deploy operator
-./functional-tests/scripts/deploy.sh
+./functional-tests/deploy.sh
 
 # Create an ApplicationService
 kubectl apply -f - <<EOF

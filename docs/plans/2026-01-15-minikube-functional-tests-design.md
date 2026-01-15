@@ -33,11 +33,10 @@ functional-tests/
 │       │   └── tls-secret.yaml
 │       └── tests/
 │           └── test-webhook-health.yaml
-├── scripts/
-│   ├── setup-minikube.sh
-│   ├── deploy.sh
-│   ├── teardown.sh
-│   └── run-tests.sh
+├── setup-minikube.sh
+├── deploy.sh
+├── teardown.sh
+├── run-tests.sh
 ├── bats/
 │   ├── test_helper.bash
 │   ├── 01_deployment.bats
@@ -469,17 +468,17 @@ fixtures/
 
 ```bash
 # Full fresh run (CI-style)
-./scripts/run-tests.sh --fresh-cluster --cleanup
+./run-tests.sh --fresh-cluster --cleanup
 
 # Quick local iteration
-./scripts/run-tests.sh
+./run-tests.sh
 
 # Run specific test suites
-./scripts/run-tests.sh --bats-only --test-filter "02_webhook"
-./scripts/run-tests.sh --java-only
+./run-tests.sh --bats-only --test-filter "02_webhook"
+./run-tests.sh --java-only
 
 # Deploy only (manual exploration)
-./scripts/run-tests.sh --skip-tests
+./run-tests.sh --skip-tests
 ```
 
 ## Expected Output

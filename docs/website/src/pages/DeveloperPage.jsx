@@ -31,7 +31,9 @@ const projectStructure = `
 ├── functional-tests/
 │   ├── bats/                      # Bats E2E tests
 │   ├── helm/                      # Helm chart
-│   └── scripts/                   # Deployment scripts
+│   ├── setup-minikube.sh          # Cluster setup
+│   ├── deploy.sh                  # Helm deployment
+│   └── run-tests.sh               # Test runner
 ├── k8s/                           # K8s manifests
 └── pom.xml                        # Maven config
 `

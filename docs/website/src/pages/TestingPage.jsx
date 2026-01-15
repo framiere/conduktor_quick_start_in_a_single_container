@@ -262,7 +262,7 @@ void shouldRejectTopicWithDifferentOwner() {
             <p className="text-sm text-gray-500 mt-2">Runs *IT.java files</p>
           </Card>
           <Card icon={Server} title="E2E Tests">
-            <CodeBlock code="./functional-tests/scripts/run-tests.sh" className="mt-4" />
+            <CodeBlock code="./functional-tests/run-tests.sh" className="mt-4" />
             <p className="text-sm text-gray-500 mt-2">Full Minikube deployment</p>
           </Card>
         </CardGrid>

@@ -38,16 +38,16 @@ resources:
 createNamespace: false`
 
 const minikubeCommands = `# Start Minikube cluster
-./functional-tests/scripts/setup-minikube.sh
+./functional-tests/setup-minikube.sh
 
 # Deploy operator
-./functional-tests/scripts/deploy.sh
+./functional-tests/deploy.sh
 
 # Run E2E tests
-./functional-tests/scripts/run-tests.sh
+./functional-tests/run-tests.sh
 
 # With fresh cluster and cleanup
-./functional-tests/scripts/run-tests.sh --fresh-cluster --cleanup
+./functional-tests/run-tests.sh --fresh-cluster --cleanup
 
 # Check webhook pods
 kubectl get pods -n operator-system
