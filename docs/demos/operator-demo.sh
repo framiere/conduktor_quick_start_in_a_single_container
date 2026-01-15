@@ -34,8 +34,8 @@ echo "╚═══════════════════════�
 sleep 2
 
 section "1. Check the Operator is Running"
-cmd "kubectl get pods -n $OPERATOR_NS -l app=messaging-operator-webhook"
-kubectl get pods -n $OPERATOR_NS -l app=messaging-operator-webhook
+cmd "kubectl get pods -n $OPERATOR_NS -l app.kubernetes.io/name=messaging-operator"
+kubectl get pods -n $OPERATOR_NS -l app.kubernetes.io/name=messaging-operator
 sleep 1
 
 section "2. View Available CRDs"
