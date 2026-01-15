@@ -206,7 +206,7 @@ export default function TestResultsPage() {
           <StatCard
             label="Passed"
             value={totalPassed}
-            subValue={`${Math.round((totalPassed / totalTests) * 100)}% pass rate`}
+            subValue={`${totalTests > 0 ? Math.round((totalPassed / totalTests) * 100) : 0}% pass rate`}
             icon={CheckCircle2}
             color="green"
           />
@@ -220,7 +220,7 @@ export default function TestResultsPage() {
           <StatCard
             label="Total Time"
             value={`${totalTime.toFixed(1)}s`}
-            subValue={`${(totalTests / totalTime).toFixed(1)} tests/sec`}
+            subValue={`${totalTime > 0 ? (totalTests / totalTime).toFixed(1) : 0} tests/sec`}
             icon={Clock}
             color="purple"
           />
@@ -249,7 +249,7 @@ export default function TestResultsPage() {
             <div className="mt-4 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500"
-                style={{ width: `${(summary.unit.passed / summary.unit.tests) * 100}%` }}
+                style={{ width: `${summary.unit.tests > 0 ? (summary.unit.passed / summary.unit.tests) * 100 : 0}%` }}
               />
             </div>
           </Card>
@@ -272,7 +272,7 @@ export default function TestResultsPage() {
             <div className="mt-4 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500"
-                style={{ width: `${(summary.integration.passed / summary.integration.tests) * 100}%` }}
+                style={{ width: `${summary.integration.tests > 0 ? (summary.integration.passed / summary.integration.tests) * 100 : 0}%` }}
               />
             </div>
           </Card>
