@@ -1,0 +1,23 @@
+# Minikube-specific values for local development and testing
+# Use: helm install ... -f values.yaml -f values-minikube.yaml
+
+# Single replica for local testing (saves resources)
+webhook:
+  replicas: 1
+
+  image:
+    # Use locally-built image in Minikube
+    pullPolicy: Never
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+  # Faster health checks for local testing
+  healthCheck:
+    initialDelaySeconds: 5
+    periodSeconds: 5

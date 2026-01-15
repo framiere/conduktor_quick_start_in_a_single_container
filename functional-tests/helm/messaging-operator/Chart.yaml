@@ -1,0 +1,14 @@
+apiVersion: v2
+name: messaging-operator
+description: Kubernetes Messaging Operator with CRDs and Validating Webhook
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - kubernetes
+  - operator
+  - kafka
+  - messaging
+  - webhook
+maintainers:
+  - name: Conduktor Team

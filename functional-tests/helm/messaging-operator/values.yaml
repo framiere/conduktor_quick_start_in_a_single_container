@@ -1,0 +1,72 @@
+# Default values for messaging-operator
+# Production defaults - override with values-minikube.yaml for local testing
+
+# Namespace to deploy operator resources
+namespace: operator-system
+
+# Webhook deployment configuration
+webhook:
+  # Number of replicas for high availability
+  replicas: 2
+
+  image:
+    repository: messaging-operator
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # Webhook server port inside container
+  port: 8443
+
+  # Health check configuration
+  healthCheck:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# TLS configuration
+tls:
+  # Set to true to use placeholder (replaced by generate-certs.sh)
+  generate: true
+  # Required when generate=false
+  cert: ""
+  key: ""
+  caCert: ""
+  secretName: webhook-tls-secret
+
+# ValidatingWebhookConfiguration settings
+webhookConfig:
+  # Failure policy: Fail or Ignore
+  failurePolicy: Fail
+  # Timeout for webhook calls
+  timeoutSeconds: 10
+  # Resources to validate
+  resources:
+    - name: topic
+      kind: Topic
+      plural: topics
+    - name: acl
+      kind: ACL
+      plural: acls
+    - name: serviceaccount
+      kind: ServiceAccount
+      plural: serviceaccounts
+    - name: virtualcluster
+      kind: VirtualCluster
+      plural: virtualclusters
+    - name: consumergroup
+      kind: ConsumerGroup
+      plural: consumergroups
+
+# CRD API group
+apiGroup: messaging.example.com
+apiVersion: v1

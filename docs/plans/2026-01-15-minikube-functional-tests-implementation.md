@@ -26,17 +26,17 @@
   - [x] **Learning:**
     - Helm 3 auto-installs CRDs from templates/crds before other resources
 
-- [ ] Create Helm Chart base files `[FUNC_01 §1.2]`
-  - [ ] **Objectives:**
-    - [ ] Create Chart.yaml with apiVersion v2, name, version, appVersion
-    - [ ] Create values.yaml with production defaults (2 replicas, 256Mi-512Mi memory)
-    - [ ] Create values-minikube.yaml with local overrides (1 replica, pullPolicy: Never)
-  - [ ] **Tests:**
-    - [ ] helmLintShouldPassWithNoErrors
-  - [ ] **Metadata:**
-    - Task duration: ~5 min
+- [x] Create Helm Chart base files `[FUNC_01 §1.2]`
+  - [x] **Objectives:**
+    - [x] Create Chart.yaml with apiVersion v2, name, version, appVersion
+    - [x] Create values.yaml with production defaults (2 replicas, 256Mi-512Mi memory)
+    - [x] Create values-minikube.yaml with local overrides (1 replica, pullPolicy: Never)
+  - [x] **Tests:**
+    - [x] helmLintShouldPassWithNoErrors
+  - [x] **Metadata:**
+    - Task duration: ~2 min (actual)
     - Tests duration: <1s
-  - [ ] **Learning:**
+  - [x] **Learning:**
     - Use pullPolicy: Never in Minikube to use locally-built images
 
 - [ ] Create Helm template helpers `[FUNC_01 §1.3]`
