@@ -1,0 +1,101 @@
+# Test fixtures for GatewayPolicy CRD transformation
+# These policies demonstrate various policy types and scoping configurations
+---
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: enforce-topic-partitions
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster
+  policyType: CREATE_TOPIC_POLICY
+  priority: 100
+  config:
+    topic: "payments-.*"
+    numPartition:
+      min: 3
+      max: 12
+      action: BLOCK
+    replicationFactor:
+      min: 3
+      max: 3
+      action: BLOCK
+---
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: enforce-producer-settings
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster
+  serviceAccountRef: payments-admin
+  policyType: PRODUCE_POLICY
+  priority: 50
+  config:
+    topic: "payments-.*"
+    acks:
+      value:
+        - -1
+      action: BLOCK
+    compressions:
+      value:
+        - GZIP
+        - LZ4
+        - SNAPPY
+      action: BLOCK
+---
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: mask-pii-data
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster
+  policyType: DATA_MASKING
+  priority: 200
+  config:
+    topic: "payments.customers.*"
+    fields:
+      - fieldName: email
+        rule: MASK_ALL
+      - fieldName: phone
+        rule: MASK_LAST_N
+        nChars: 4
+      - fieldName: ssn
+        rule: MASK_ALL
+---
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: audit-all-requests
+  namespace: orders-team
+spec:
+  applicationServiceRef: orders-service
+  clusterRef: orders-cluster
+  policyType: AUDIT
+  priority: 1
+  config:
+    topic: ".*"
+    apiKeys:
+      - PRODUCE
+      - FETCH
+      - CREATE_TOPICS
+      - DELETE_TOPICS
+---
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: chaos-latency-test
+  namespace: staging
+spec:
+  applicationServiceRef: test-service
+  clusterRef: staging-cluster
+  policyType: CHAOS_LATENCY
+  priority: 100
+  config:
+    rateInPercent: 10
+    minLatencyMs: 100
+    maxLatencyMs: 500

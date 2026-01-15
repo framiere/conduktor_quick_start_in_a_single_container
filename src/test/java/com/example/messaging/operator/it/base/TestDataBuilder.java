@@ -1,14 +1,12 @@
 package com.example.messaging.operator.it.base;
 
+import com.example.messaging.operator.conduktor.model.PolicyType;
 import com.example.messaging.operator.crd.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.*;
 
-/**
- * Fluent builder for creating test data for all CRD types. Provides a clean, readable API for test data setup.
- */
 public class TestDataBuilder {
 
     // Static factory methods
@@ -34,6 +32,10 @@ public class TestDataBuilder {
 
     public static ConsumerGroupBuilder consumerGroup() {
         return new ConsumerGroupBuilder();
+    }
+
+    public static GatewayPolicyBuilder gatewayPolicy() {
+        return new GatewayPolicyBuilder();
     }
 
     // ApplicationService Builder
@@ -497,8 +499,8 @@ public class TestDataBuilder {
         }
     }
 
-    // Helper method to create OwnerReference
-    private static OwnerReference createOwnerReference(ApplicationService owner) {
+    private static <T extends io.fabric8.kubernetes.client.CustomResource<?, ?>> OwnerReference createOwnerReference(
+            T owner) {
         OwnerReference ref = new OwnerReference();
         ref.setApiVersion(owner.getApiVersion());
         ref.setKind(owner.getKind());
@@ -509,25 +511,100 @@ public class TestDataBuilder {
         return ref;
     }
 
-    private static OwnerReference createOwnerReference(KafkaCluster owner) {
-        OwnerReference ref = new OwnerReference();
-        ref.setApiVersion(owner.getApiVersion());
-        ref.setKind(owner.getKind());
-        ref.setName(owner.getMetadata().getName());
-        ref.setUid(owner.getMetadata().getUid());
-        ref.setController(true);
-        ref.setBlockOwnerDeletion(true);
-        return ref;
-    }
+    // GatewayPolicy Builder
+    public static class GatewayPolicyBuilder {
+        private String namespace = "default";
+        private String name = "test-policy";
+        private String applicationServiceRef;
+        private String clusterRef;
+        private String serviceAccountRef;
+        private String groupRef;
+        private PolicyType policyType = PolicyType.CREATE_TOPIC_POLICY;
+        private Integer priority = 100;
+        private Map<String, Object> config = new HashMap<>();
+        private List<OwnerReference> owners = new ArrayList<>();
 
-    private static OwnerReference createOwnerReference(ServiceAccount owner) {
-        OwnerReference ref = new OwnerReference();
-        ref.setApiVersion(owner.getApiVersion());
-        ref.setKind(owner.getKind());
-        ref.setName(owner.getMetadata().getName());
-        ref.setUid(owner.getMetadata().getUid());
-        ref.setController(true);
-        ref.setBlockOwnerDeletion(true);
-        return ref;
+        public GatewayPolicyBuilder namespace(String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public GatewayPolicyBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public GatewayPolicyBuilder applicationServiceRef(String applicationServiceRef) {
+            this.applicationServiceRef = applicationServiceRef;
+            return this;
+        }
+
+        public GatewayPolicyBuilder clusterRef(String clusterRef) {
+            this.clusterRef = clusterRef;
+            return this;
+        }
+
+        public GatewayPolicyBuilder serviceAccountRef(String serviceAccountRef) {
+            this.serviceAccountRef = serviceAccountRef;
+            return this;
+        }
+
+        public GatewayPolicyBuilder groupRef(String groupRef) {
+            this.groupRef = groupRef;
+            return this;
+        }
+
+        public GatewayPolicyBuilder policyType(PolicyType policyType) {
+            this.policyType = policyType;
+            return this;
+        }
+
+        public GatewayPolicyBuilder priority(Integer priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        public GatewayPolicyBuilder config(Map<String, Object> config) {
+            this.config = new HashMap<>(config);
+            return this;
+        }
+
+        public GatewayPolicyBuilder config(String key, Object value) {
+            this.config.put(key, value);
+            return this;
+        }
+
+        public GatewayPolicyBuilder ownedBy(ApplicationService owner) {
+            this.owners.add(createOwnerReference(owner));
+            return this;
+        }
+
+        public GatewayPolicy build() {
+            GatewayPolicy policy = new GatewayPolicy();
+            ObjectMeta metadata = new ObjectMeta();
+            metadata.setNamespace(namespace);
+            metadata.setName(name);
+            if (!owners.isEmpty()) {
+                metadata.setOwnerReferences(owners);
+            }
+            policy.setMetadata(metadata);
+
+            GatewayPolicySpec spec = new GatewayPolicySpec();
+            spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
+            spec.setClusterRef(clusterRef != null ? clusterRef : "test-cluster");
+            spec.setServiceAccountRef(serviceAccountRef);
+            spec.setGroupRef(groupRef);
+            spec.setPolicyType(policyType);
+            spec.setPriority(priority);
+            spec.setConfig(config.isEmpty() ? null : config);
+            policy.setSpec(spec);
+
+            return policy;
+        }
+
+        public GatewayPolicy createIn(KubernetesClient client) {
+            GatewayPolicy policy = build();
+            return client.resource(policy).create();
+        }
     }
 }

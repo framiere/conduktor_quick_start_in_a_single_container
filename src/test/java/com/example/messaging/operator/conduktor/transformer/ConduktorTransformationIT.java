@@ -2,12 +2,15 @@ package com.example.messaging.operator.conduktor.transformer;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.example.messaging.operator.conduktor.model.ConduktorInterceptor;
 import com.example.messaging.operator.conduktor.model.ConduktorResource;
-import com.example.messaging.operator.conduktor.model.GatewayServiceAccount;
-import com.example.messaging.operator.conduktor.model.VirtualCluster;
 import com.example.messaging.operator.conduktor.model.ConduktorTopic;
+import com.example.messaging.operator.conduktor.model.GatewayServiceAccount;
+import com.example.messaging.operator.conduktor.model.PolicyType;
+import com.example.messaging.operator.conduktor.model.VirtualCluster;
 import com.example.messaging.operator.conduktor.yaml.ConduktorYamlWriter;
 import com.example.messaging.operator.crd.ApplicationService;
+import com.example.messaging.operator.crd.GatewayPolicy;
 import com.example.messaging.operator.crd.KafkaCluster;
 import com.example.messaging.operator.crd.ServiceAccount;
 import com.example.messaging.operator.crd.Topic;
@@ -32,7 +35,7 @@ import org.junit.jupiter.api.Test;
  * These tests validate end-to-end YAML transformation from internal CRDs to Conduktor format.
  */
 @DisplayName("Conduktor Transformation Functional Tests")
-class ConduktorTransformationFT {
+class ConduktorTransformationIT {
 
     private static final String FIXTURES_PATH = "/fixtures/conduktor/";
 
@@ -376,6 +379,184 @@ class ConduktorTransformationFT {
                     .contains("partitions: 3")
                     .contains("replicationFactor: 1")
                     .doesNotContain("configs:");
+        }
+    }
+
+    @Nested
+    @DisplayName("GatewayPolicy → Interceptor Transformation")
+    class GatewayPolicyTransformationTests {
+
+        private CRDStore store;
+        private GatewayPolicyTransformer transformer;
+
+        @BeforeEach
+        void setUp() {
+            store = new CRDStore();
+            transformer = new GatewayPolicyTransformer(store);
+            setupTestData();
+        }
+
+        private void setupTestData() {
+            createAppServiceAndCluster("payments-service", "payments-team", "payments-admin", "payments-cluster", "payments-prod-vcluster");
+            createAppServiceAndCluster("orders-service", "orders-team", "orders-processor", "orders-cluster", "orders-prod-vcluster");
+            createAppServiceAndCluster("test-service", "staging", "test-sa", "staging-cluster", "staging-vcluster");
+        }
+
+        private void createAppServiceAndCluster(String appService, String namespace, String saName, String clusterName, String clusterId) {
+            ApplicationService app = TestDataBuilder.applicationService()
+                    .namespace(namespace)
+                    .name(appService)
+                    .appName(appService)
+                    .build();
+            store.create(CRDKind.APPLICATION_SERVICE, namespace, app);
+
+            KafkaCluster cluster = TestDataBuilder.kafkaCluster()
+                    .namespace(namespace)
+                    .name(clusterName)
+                    .clusterId(clusterId)
+                    .applicationServiceRef(appService)
+                    .build();
+            store.create(CRDKind.KAFKA_CLUSTER, namespace, cluster);
+
+            ServiceAccount sa = TestDataBuilder.serviceAccount()
+                    .namespace(namespace)
+                    .name(saName)
+                    .saName(saName)
+                    .clusterRef(clusterName)
+                    .applicationServiceRef(appService)
+                    .dn("CN=" + saName)
+                    .build();
+            store.create(CRDKind.SERVICE_ACCOUNT, namespace, sa);
+        }
+
+        @Test
+        @DisplayName("should transform GatewayPolicy to Interceptor with correct structure")
+        void shouldTransformGatewayPolicyToInterceptor() {
+            GatewayPolicy input = TestDataBuilder.gatewayPolicy()
+                    .namespace("payments-team")
+                    .name("enforce-partitions")
+                    .applicationServiceRef("payments-service")
+                    .clusterRef("payments-cluster")
+                    .policyType(PolicyType.CREATE_TOPIC_POLICY)
+                    .priority(100)
+                    .config(Map.of(
+                            "topic", "payments-.*",
+                            "numPartition", Map.of("min", 3, "max", 12, "action", "BLOCK")))
+                    .build();
+
+            ConduktorInterceptor result = transformer.transform(input);
+            String yaml = conduktorWriter.toYaml(result);
+
+            assertThat(yaml)
+                    .contains("apiVersion: gateway/v2")
+                    .contains("kind: Interceptor")
+                    .contains("name: payments-team--enforce-partitions")
+                    .contains("vCluster: payments-prod-vcluster")
+                    .contains("pluginClass: io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin")
+                    .contains("priority: 100")
+                    .contains("topic: payments-.*");
+        }
+
+        @Test
+        @DisplayName("should transform DataMasking policy with complex config")
+        void shouldTransformDataMaskingPolicy() {
+            GatewayPolicy input = TestDataBuilder.gatewayPolicy()
+                    .namespace("payments-team")
+                    .name("mask-pii")
+                    .applicationServiceRef("payments-service")
+                    .clusterRef("payments-cluster")
+                    .policyType(PolicyType.DATA_MASKING)
+                    .priority(200)
+                    .config(Map.of(
+                            "topic", "payments.customers.*",
+                            "fields", List.of(
+                                    Map.of("fieldName", "email", "rule", "MASK_ALL"),
+                                    Map.of("fieldName", "phone", "rule", "MASK_LAST_N", "nChars", 4))))
+                    .build();
+
+            ConduktorInterceptor result = transformer.transform(input);
+            String yaml = conduktorWriter.toYaml(result);
+
+            assertThat(yaml)
+                    .contains("pluginClass: io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin")
+                    .contains("fieldName: email")
+                    .contains("rule: MASK_ALL")
+                    .contains("fieldName: phone")
+                    .contains("rule: MASK_LAST_N");
+        }
+
+        @Test
+        @DisplayName("should transform Audit policy")
+        void shouldTransformAuditPolicy() {
+            GatewayPolicy input = TestDataBuilder.gatewayPolicy()
+                    .namespace("orders-team")
+                    .name("audit-requests")
+                    .applicationServiceRef("orders-service")
+                    .clusterRef("orders-cluster")
+                    .policyType(PolicyType.AUDIT)
+                    .priority(1)
+                    .config(Map.of(
+                            "topic", ".*",
+                            "apiKeys", List.of("PRODUCE", "FETCH")))
+                    .build();
+
+            ConduktorInterceptor result = transformer.transform(input);
+            String yaml = conduktorWriter.toYaml(result);
+
+            assertThat(yaml)
+                    .contains("name: orders-team--audit-requests")
+                    .contains("vCluster: orders-prod-vcluster")
+                    .contains("pluginClass: io.conduktor.gateway.interceptor.AuditPlugin")
+                    .contains("priority: 1");
+        }
+
+        @Test
+        @DisplayName("should transform Chaos policy for testing")
+        void shouldTransformChaosPolicy() {
+            GatewayPolicy input = TestDataBuilder.gatewayPolicy()
+                    .namespace("staging")
+                    .name("chaos-latency")
+                    .applicationServiceRef("test-service")
+                    .clusterRef("staging-cluster")
+                    .policyType(PolicyType.CHAOS_LATENCY)
+                    .priority(100)
+                    .config(Map.of(
+                            "rateInPercent", 10,
+                            "minLatencyMs", 100,
+                            "maxLatencyMs", 500))
+                    .build();
+
+            ConduktorInterceptor result = transformer.transform(input);
+            String yaml = conduktorWriter.toYaml(result);
+
+            assertThat(yaml)
+                    .contains("name: staging--chaos-latency")
+                    .contains("vCluster: staging-vcluster")
+                    .contains("pluginClass: io.conduktor.gateway.interceptor.chaos.SimulateLatencyPlugin")
+                    .contains("rateInPercent: 10")
+                    .contains("minLatencyMs: 100")
+                    .contains("maxLatencyMs: 500");
+        }
+
+        @Test
+        @DisplayName("should include username scope when serviceAccountRef is set")
+        void shouldIncludeUsernameScopeWhenServiceAccountRefSet() {
+            GatewayPolicy input = TestDataBuilder.gatewayPolicy()
+                    .namespace("payments-team")
+                    .name("user-scoped-policy")
+                    .applicationServiceRef("payments-service")
+                    .clusterRef("payments-cluster")
+                    .serviceAccountRef("payments-admin")
+                    .policyType(PolicyType.PRODUCE_POLICY)
+                    .priority(50)
+                    .build();
+
+            ConduktorInterceptor result = transformer.transform(input);
+            String yaml = conduktorWriter.toYaml(result);
+
+            assertThat(yaml)
+                    .contains("vCluster: payments-prod-vcluster")
+                    .contains("username: payments-admin");
         }
     }
 

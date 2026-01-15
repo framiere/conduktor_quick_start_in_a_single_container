@@ -1,0 +1,93 @@
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: payments-team--enforce-topic-partitions
+  scope:
+    vCluster: payments-prod-vcluster
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin
+  priority: 100
+  config:
+    topic: "payments-.*"
+    numPartition:
+      min: 3
+      max: 12
+      action: BLOCK
+    replicationFactor:
+      min: 3
+      max: 3
+      action: BLOCK
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: payments-team--enforce-producer-settings
+  scope:
+    vCluster: payments-prod-vcluster
+    username: payments-admin
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.safeguard.ProducePolicyPlugin
+  priority: 50
+  config:
+    topic: "payments-.*"
+    acks:
+      value:
+        - -1
+      action: BLOCK
+    compressions:
+      value:
+        - GZIP
+        - LZ4
+        - SNAPPY
+      action: BLOCK
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: payments-team--mask-pii-data
+  scope:
+    vCluster: payments-prod-vcluster
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.FieldLevelDataMaskingPlugin
+  priority: 200
+  config:
+    topic: "payments.customers.*"
+    fields:
+      - fieldName: email
+        rule: MASK_ALL
+      - fieldName: phone
+        rule: MASK_LAST_N
+        nChars: 4
+      - fieldName: ssn
+        rule: MASK_ALL
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: orders-team--audit-all-requests
+  scope:
+    vCluster: orders-prod-vcluster
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.AuditPlugin
+  priority: 1
+  config:
+    topic: ".*"
+    apiKeys:
+      - PRODUCE
+      - FETCH
+      - CREATE_TOPICS
+      - DELETE_TOPICS
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: staging--chaos-latency-test
+  scope:
+    vCluster: staging-vcluster
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.chaos.SimulateLatencyPlugin
+  priority: 100
+  config:
+    rateInPercent: 10
+    minLatencyMs: 100
+    maxLatencyMs: 500

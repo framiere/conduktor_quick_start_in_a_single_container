@@ -20,6 +20,14 @@ public class ConduktorYamlWriter {
     }
 
     public String toYaml(ConduktorResource<?> resource) {
+        return toYamlObject(resource);
+    }
+
+    public String toYaml(Object resource) {
+        return toYamlObject(resource);
+    }
+
+    private String toYamlObject(Object resource) {
         try {
             return yamlMapper.writeValueAsString(resource);
         } catch (IOException e) {
