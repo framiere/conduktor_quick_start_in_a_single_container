@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Moon, Sun, Menu, X, ChevronRight, Lock, Users
+  Moon, Sun, Menu, X, ChevronRight, Lock, Users, FlaskConical
 } from 'lucide-react'
 
 import './index.css'
@@ -18,6 +18,7 @@ import OperationsPage from './pages/OperationsPage'
 import CRDPage from './pages/CRDPage'
 import WebhookPage from './pages/WebhookPage'
 import DataFlowPage from './pages/DataFlowPage'
+import TestResultsPage from './pages/TestResultsPage'
 
 const perspectives = [
   { path: '/', name: 'Overview', icon: Home, description: 'Project introduction and quick start' },
@@ -25,6 +26,7 @@ const perspectives = [
   { path: '/business', name: 'Business', icon: Users, description: 'Value proposition and use cases' },
   { path: '/security', name: 'Security', icon: Shield, description: 'mTLS, ownership, and access control' },
   { path: '/testing', name: 'Testing', icon: TestTube2, description: 'Unit, integration, and E2E tests' },
+  { path: '/test-results', name: 'Test Results', icon: FlaskConical, description: 'Live test execution results' },
   { path: '/developer', name: 'Developer', icon: Code2, description: 'Build, compile, and contribute' },
   { path: '/operations', name: 'Operations', icon: Server, description: 'Deploy and run in Kubernetes' },
   { path: '/crds', name: 'CRDs', icon: Boxes, description: 'Custom Resource Definitions' },
@@ -146,6 +148,7 @@ function App() {
                 <Route path="/business" element={<BusinessPage />} />
                 <Route path="/security" element={<SecurityPage />} />
                 <Route path="/testing" element={<TestingPage />} />
+                <Route path="/test-results" element={<TestResultsPage />} />
                 <Route path="/developer" element={<DeveloperPage />} />
                 <Route path="/operations" element={<OperationsPage />} />
                 <Route path="/crds" element={<CRDPage />} />
