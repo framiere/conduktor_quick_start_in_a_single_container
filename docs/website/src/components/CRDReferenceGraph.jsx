@@ -73,6 +73,7 @@ const crdDefinitions = [
 ]
 
 // Custom node that only renders handles that are actually used
+// All handles at bottom, except ACL which has handles at top (it only sends)
 function CRDNode({ data }) {
   const handleStyle = {
     width: 8,
@@ -81,7 +82,13 @@ function CRDNode({ data }) {
     border: '2px solid white',
   }
 
-  const { targetHandles = [], sourceHandles = [] } = data
+  const { targetHandles = [], sourceHandles = [], label } = data
+  const isACL = label === 'ACL'
+
+  // ACL: source handles at top (sends upward)
+  // Others: source handles at bottom, target handles at bottom too
+  const sourcePosition = isACL ? Position.Top : Position.Bottom
+  const targetPosition = Position.Bottom
 
   return (
     <div
@@ -95,28 +102,28 @@ function CRDNode({ data }) {
         position: 'relative',
       }}
     >
-      {/* Target handles (top) - only render used ones */}
+      {/* Target handles - at bottom for all nodes */}
       {targetHandles.map((h) => (
         <Handle
           key={h.id}
           type="target"
-          position={Position.Top}
+          position={targetPosition}
           id={h.id}
           style={{ ...handleStyle, left: h.position }}
         />
       ))}
 
-      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>{data.label}</div>
+      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>{label}</div>
       <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
         {data.description}
       </div>
 
-      {/* Source handles (bottom) - only render used ones */}
+      {/* Source handles - at top for ACL, bottom for others */}
       {sourceHandles.map((h) => (
         <Handle
           key={h.id}
           type="source"
-          position={Position.Bottom}
+          position={sourcePosition}
           id={h.id}
           style={{ ...handleStyle, left: h.position }}
         />
@@ -140,6 +147,14 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
   const edgeColor = data?.color || '#6B7280'
   const isRequired = data?.required !== false
 
+  // Arrow direction based on target position
+  // Bottom: arrow points down (into bottom of node)
+  // Top: arrow points up (into top of node)
+  const arrowDown = targetPosition === Position.Bottom
+  const arrowPoints = arrowDown
+    ? `${targetX},${targetY + 2} ${targetX - 6},${targetY + 12} ${targetX + 6},${targetY + 12}`
+    : `${targetX},${targetY - 2} ${targetX - 6},${targetY - 12} ${targetX + 6},${targetY - 12}`
+
   return (
     <>
       <path
@@ -151,10 +166,7 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
         strokeDasharray={isRequired ? undefined : '8,4'}
         style={{ pointerEvents: 'stroke' }}
       />
-      <polygon
-        points={`${targetX},${targetY - 2} ${targetX - 6},${targetY - 12} ${targetX + 6},${targetY - 12}`}
-        fill={edgeColor}
-      />
+      <polygon points={arrowPoints} fill={edgeColor} />
     </>
   )
 }
@@ -254,11 +266,14 @@ function getLayoutedElements(nodes, edges) {
   // Build final nodes with handle info
   const layoutedNodes = nodes.map((node) => {
     const handles = nodeHandles[node.id] || { targetHandles: [], sourceHandles: [] }
+    const isACL = node.id === 'ACL'
     return {
       ...node,
       position: nodePositions[node.id],
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
+      // ACL sends from top, others send from bottom
+      sourcePosition: isACL ? Position.Top : Position.Bottom,
+      // All nodes receive at bottom
+      targetPosition: Position.Bottom,
       data: {
         ...node.data,
         targetHandles: handles.targetHandles,
