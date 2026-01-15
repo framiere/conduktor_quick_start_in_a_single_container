@@ -1,0 +1,26 @@
+package com.example.messaging.operator.conduktor.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
+public class VirtualCluster extends ConduktorResource<VirtualClusterSpec> {
+    public static final String API_VERSION = "gateway/v2";
+    public static final String KIND = "VirtualCluster";
+
+    private VirtualClusterSpec spec;
+
+    @Override
+    public VirtualClusterSpec getSpec() {
+        return spec;
+    }
+}
