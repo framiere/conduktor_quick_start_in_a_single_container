@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
-  Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw
+  Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw,
+  Moon, Sun
 } from 'lucide-react'
 
 import './index.css'
@@ -42,7 +43,7 @@ const perspectives = [
   { path: '/operability', name: 'Operability', icon: Activity, description: 'Logs, events, and audit trail' },
 ]
 
-function Navigation({ isOpen, setIsOpen }) {
+function Navigation({ isOpen, setIsOpen, darkMode, setDarkMode }) {
   const location = useLocation()
 
   return (
@@ -50,7 +51,7 @@ function Navigation({ isOpen, setIsOpen }) {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-gray-800 shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -59,15 +60,15 @@ function Navigation({ isOpen, setIsOpen }) {
       <aside className={`
         fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        bg-gray-900/80 backdrop-blur-xl border-r border-gray-800
+        bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-gray-200 dark:border-gray-800
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gray-800">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-800">
             <h1 className="text-xl font-semibold gradient-text">
               Messaging Operator
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Kubernetes Multi-Tenant Platform
             </p>
           </div>
@@ -86,7 +87,7 @@ function Navigation({ isOpen, setIsOpen }) {
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                     ${isActive
                       ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                      : 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }
                   `}
                 >
@@ -102,6 +103,27 @@ function Navigation({ isOpen, setIsOpen }) {
               )
             })}
           </nav>
+
+          {/* Theme toggle */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {darkMode ? (
+                <>
+                  <Sun size={20} />
+                  <span className="font-medium">Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={20} />
+                  <span className="font-medium">Dark Mode</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -118,14 +140,51 @@ function Navigation({ isOpen, setIsOpen }) {
 
 function App() {
   const [isOpen, setIsOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    // Check localStorage first
+    const stored = localStorage.getItem('darkMode')
+    if (stored !== null) {
+      return stored === 'true'
+    }
+    // Fall back to system preference
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    // Default to dark mode
+    return true
+  })
+
+  // Persist dark mode preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode)
+  }, [darkMode])
+
+  // Listen for system preference changes
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e) => {
+      // Only update if user hasn't explicitly set a preference
+      const stored = localStorage.getItem('darkMode')
+      if (stored === null) {
+        setDarkMode(e.matches)
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   return (
     <Router>
-      <div className="dark">
-        <div className="min-h-screen bg-gray-950 text-gray-100">
+      <div className={darkMode ? 'dark' : ''}>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
           <Navigation
             isOpen={isOpen}
             setIsOpen={setIsOpen}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
           />
 
           {/* Main content */}
