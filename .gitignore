@@ -2,3 +2,8 @@
 certs/
 .idea/
 target/
+
+# Functional tests runtime files
+functional-tests/.test-namespace
+functional-tests/.certs/
+functional-tests/helm/messaging-operator/values-tls.yaml
