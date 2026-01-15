@@ -3,23 +3,26 @@ package com.example.messaging.operator.validation;
 import com.example.messaging.operator.crd.*;
 import com.example.messaging.operator.store.CRDStore;
 
-import static com.example.messaging.operator.store.CRDKind.*;
 import static com.example.messaging.operator.validation.ValidationResult.*;
 
 /**
- * Validator for enforcing applicationService ownership rules. Ensures that: - Resources can only be modified by their owner applicationService - Referenced resources
- * exist and belong to the same owner - Ownership chains are maintained (ApplicationService -> VirtualCluster -> ServiceAccount -> Topic/ACL)
+ * Validator for enforcing applicationService ownership rules. Ensures that:
+ * - Resources can only be modified by their owner applicationService
+ * - Referenced resources exist and belong to the same owner
+ * - Ownership chains are maintained (ApplicationService -> VirtualCluster -> ServiceAccount -> Topic/ACL)
  */
 public class OwnershipValidator {
-    private final CRDStore store;
+    private final ResourceLookup resourceLookup;
 
     public OwnershipValidator(CRDStore store) {
-        this.store = store;
+        this.resourceLookup = new CRDStoreResourceLookup(store);
     }
 
-    /**
-     * Validate resource creation Ensures that all referenced resources exist and belong to the same applicationService
-     */
+    public OwnershipValidator(ResourceLookup resourceLookup) {
+        this.resourceLookup = resourceLookup;
+    }
+
+    /** Validates that all referenced resources exist and belong to the same applicationService. */
     public ValidationResult validateCreate(Object resource, String namespace) {
         return switch (resource) {
             case VirtualCluster vc -> validateApplicationServiceExists(vc.getSpec().getApplicationServiceRef(), namespace);
@@ -35,9 +38,7 @@ public class OwnershipValidator {
         };
     }
 
-    /**
-     * Validate resource update Ensures that applicationServiceRef cannot be changed (immutable ownership)
-     */
+    /** Validates that applicationServiceRef cannot be changed (immutable ownership). */
     public ValidationResult validateUpdate(Object existingResource, Object newResource) {
         String existingOwner = getApplicationServiceRef(existingResource);
         String newOwner = getApplicationServiceRef(newResource);
@@ -47,15 +48,13 @@ public class OwnershipValidator {
         }
 
         if (!existingOwner.equals(newOwner)) {
-            return invalid("Cannot change applicationServiceRef from '%s' to '%s'. " + "Only the original owner can modify this resource.", existingOwner, newOwner);
+            return invalid("Cannot change applicationServiceRef from '%s' to '%s'. Only the original owner can modify this resource.", existingOwner, newOwner);
         }
 
         return valid();
     }
 
-    /**
-     * Validate resource deletion Ensures that only the owner can delete the resource
-     */
+    /** Validates that only the owner can delete the resource. */
     public ValidationResult validateDelete(Object resource, String requestingOwner) {
         String resourceOwner = getApplicationServiceRef(resource);
 
@@ -67,17 +66,17 @@ public class OwnershipValidator {
     }
 
     private ValidationResult validateApplicationServiceExists(String appServiceName, String namespace) {
-        ApplicationService appService = store.get(APPLICATION_SERVICE, namespace, appServiceName);
+        ApplicationService appService = resourceLookup.getApplicationService(namespace, appServiceName);
         if (appService == null) {
-            return invalid("Referenced ApplicationService '" + appServiceName + "' does not exist");
+            return invalid("Referenced ApplicationService '%s' does not exist", appServiceName);
         }
         return valid();
     }
 
     private ValidationResult validateVirtualClusterExists(String clusterRef, String namespace, String expectedAppService) {
-        VirtualCluster vc = store.get(VIRTUAL_CLUSTER, namespace, clusterRef);
+        VirtualCluster vc = resourceLookup.getVirtualCluster(namespace, clusterRef);
         if (vc == null) {
-            return invalid("Referenced VirtualCluster '" + clusterRef + "' does not exist");
+            return invalid("Referenced VirtualCluster '%s' does not exist", clusterRef);
         }
         if (!vc.getSpec().getApplicationServiceRef().equals(expectedAppService)) {
             return invalid("VirtualCluster '%s' is owned by '%s', not '%s'", clusterRef, vc.getSpec().getApplicationServiceRef(), expectedAppService);
@@ -86,9 +85,9 @@ public class OwnershipValidator {
     }
 
     private ValidationResult validateServiceAccountExists(String saRef, String namespace, String expectedAppService) {
-        ServiceAccount sa = store.get(SERVICE_ACCOUNT, namespace, saRef);
+        ServiceAccount sa = resourceLookup.getServiceAccount(namespace, saRef);
         if (sa == null) {
-            return invalid("Referenced ServiceAccount '" + saRef + "' does not exist");
+            return invalid("Referenced ServiceAccount '%s' does not exist", saRef);
         }
         if (!sa.getSpec().getApplicationServiceRef().equals(expectedAppService)) {
             return invalid("ServiceAccount '%s' is owned by '%s', not '%s'", saRef, sa.getSpec().getApplicationServiceRef(), expectedAppService);

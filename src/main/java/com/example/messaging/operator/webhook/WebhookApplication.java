@@ -1,10 +1,12 @@
 package com.example.messaging.operator.webhook;
 
-import com.example.messaging.operator.store.CRDStore;
+import com.example.messaging.operator.validation.KubernetesResourceLookup;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +42,11 @@ public class WebhookApplication {
             log.info("Starting Webhook server on port {}", port);
             log.info("TLS cert: {}, key: {}", certPath, keyPath);
 
-            CRDStore store = new CRDStore();
-            OwnershipValidator ownershipValidator = new OwnershipValidator(store);
+            KubernetesClient k8sClient = new KubernetesClientBuilder().build();
+            log.info("Connected to Kubernetes cluster: {}", k8sClient.getMasterUrl());
+
+            KubernetesResourceLookup resourceLookup = new KubernetesResourceLookup(k8sClient);
+            OwnershipValidator ownershipValidator = new OwnershipValidator(resourceLookup);
             WebhookValidator webhookValidator = new WebhookValidator(ownershipValidator);
 
             HttpsServer httpsServer = createHttpsServer(port, certPath, keyPath);
@@ -65,6 +70,7 @@ public class WebhookApplication {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Shutting down webhook server...");
                 httpsServer.stop(5);
+                k8sClient.close();
             }));
 
             Thread.currentThread().join();

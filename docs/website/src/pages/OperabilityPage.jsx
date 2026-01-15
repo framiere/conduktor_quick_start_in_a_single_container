@@ -1,4 +1,4 @@
-import { Activity, Search, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Database, ArrowRight, Filter } from 'lucide-react'
+import { Activity, Search, FileText, CheckCircle2, XCircle, Filter } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
@@ -26,11 +26,11 @@ const sampleLogs = `[main] INFO ReconciliationEventPublisher - RECONCILIATION_ST
 const failedLog = `[main] INFO ReconciliationEventPublisher - RECONCILIATION_START: CREATE Topic default/cross-tenant-topic
 [main] INFO ReconciliationEventPublisher - RECONCILIATION_END: CREATE Topic default/cross-tenant-topic - FAILED Validation failed: Referenced ServiceAccount 'other-team-sa' has different applicationServiceRef`
 
-const searchExamples = [
-  { query: 'grep "team-a-app" logs.txt', description: 'Find all operations for team-a-app' },
-  { query: 'grep "FAILED" logs.txt', description: 'Find all failed operations' },
-  { query: 'grep "CREATE Topic" logs.txt', description: 'Find all topic creations' },
-  { query: 'grep "RECONCILIATION_START.*UPDATE" logs.txt', description: 'Find all update operations' },
+const kubeEventExamples = [
+  { query: 'kubectl get events --field-selector involvedObject.name=team-a-app', description: 'Get events for specific resource' },
+  { query: 'kubectl get events --field-selector reason=ReconciliationFailed', description: 'Find all failed reconciliations' },
+  { query: 'kubectl get events --field-selector involvedObject.kind=Topic', description: 'Find all topic-related events' },
+  { query: 'kubectl get events -w', description: 'Watch events in real-time' },
 ]
 
 const eventFields = [
@@ -211,20 +211,20 @@ export default function OperabilityPage() {
         </Card>
       </Section>
 
-      {/* Search Examples */}
-      <Section title="Searching Logs" subtitle="Finding exactly what you need">
+      {/* Kubernetes Events */}
+      <Section title="Kubernetes Events" subtitle="Query events using kubectl">
         <Card>
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <Search className="text-purple-600 dark:text-purple-400" size={20} />
             </div>
             <div>
-              <h4 className="font-semibold">Structured Format Enables Powerful Queries</h4>
-              <p className="text-sm text-gray-500">The consistent log format makes filtering and searching easy</p>
+              <h4 className="font-semibold">Native Kubernetes Event Integration</h4>
+              <p className="text-sm text-gray-500">Use standard kubectl commands to query reconciliation events</p>
             </div>
           </div>
           <div className="space-y-4">
-            {searchExamples.map((example, index) => (
+            {kubeEventExamples.map((example, index) => (
               <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg shrink-0">
                   <Filter size={16} className="text-gray-500" />
@@ -237,45 +237,6 @@ export default function OperabilityPage() {
             ))}
           </div>
         </Card>
-      </Section>
-
-      {/* Integration */}
-      <Section title="Integration Points" subtitle="Connect logs to your observability stack">
-        <CardGrid cols={3}>
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Database className="text-blue-600 dark:text-blue-400" size={20} />
-              </div>
-              <h4 className="font-semibold">Log Aggregation</h4>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Ship logs to Elasticsearch, Loki, or any aggregator. The structured format enables powerful queries.
-            </p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Activity className="text-green-600 dark:text-green-400" size={20} />
-              </div>
-              <h4 className="font-semibold">Metrics Export</h4>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Count operations per resource type, track failure rates, measure reconciliation latency.
-            </p>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <AlertCircle className="text-purple-600 dark:text-purple-400" size={20} />
-              </div>
-              <h4 className="font-semibold">Alerting</h4>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Alert on FAILED events, unusual operation patterns, or missing reconciliation events.
-            </p>
-          </Card>
-        </CardGrid>
       </Section>
 
       {/* Key Benefits */}
