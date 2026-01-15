@@ -3,10 +3,10 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MarkerType,
   Position,
   useNodesState,
   useEdgesState,
+  Handle,
   BaseEdge,
   EdgeLabelRenderer,
   getSmoothStepPath,
@@ -19,21 +19,21 @@ const crdDefinitions = [
   {
     id: 'ApplicationService',
     label: 'ApplicationService',
-    color: '#3B82F6', // blue
+    color: '#3B82F6',
     description: 'Root resource (tenant)',
     refs: [],
   },
   {
     id: 'KafkaCluster',
     label: 'KafkaCluster',
-    color: '#8B5CF6', // purple
+    color: '#8B5CF6',
     description: 'Virtual Kafka cluster',
     refs: [{ target: 'ApplicationService', label: 'applicationServiceRef', required: true }],
   },
   {
     id: 'ServiceAccount',
     label: 'ServiceAccount',
-    color: '#10B981', // green
+    color: '#10B981',
     description: 'Client identity',
     refs: [
       { target: 'KafkaCluster', label: 'clusterRef', required: true },
@@ -43,7 +43,7 @@ const crdDefinitions = [
   {
     id: 'Topic',
     label: 'Topic',
-    color: '#F59E0B', // orange
+    color: '#F59E0B',
     description: 'Kafka topic',
     refs: [
       { target: 'ServiceAccount', label: 'serviceRef', required: true },
@@ -53,7 +53,7 @@ const crdDefinitions = [
   {
     id: 'ConsumerGroup',
     label: 'ConsumerGroup',
-    color: '#6B7280', // gray
+    color: '#6B7280',
     description: 'Consumer group',
     refs: [
       { target: 'ServiceAccount', label: 'serviceRef', required: true },
@@ -63,7 +63,7 @@ const crdDefinitions = [
   {
     id: 'ACL',
     label: 'ACL',
-    color: '#EF4444', // red
+    color: '#EF4444',
     description: 'Access control',
     refs: [
       { target: 'ServiceAccount', label: 'serviceRef', required: true },
@@ -74,7 +74,7 @@ const crdDefinitions = [
   },
 ]
 
-// Custom node component
+// Custom node with connection handles
 function CRDNode({ data }) {
   return (
     <div
@@ -85,20 +85,45 @@ function CRDNode({ data }) {
         border: `2px solid ${data.color}`,
         backgroundColor: data.color,
         minWidth: '160px',
+        position: 'relative',
       }}
     >
+      {/* Target handle (top) - where edges come IN */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        style={{
+          background: data.color,
+          width: 10,
+          height: 10,
+          border: '2px solid white',
+        }}
+      />
+
       <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', textAlign: 'center' }}>
         {data.label}
       </div>
       <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
         {data.description}
       </div>
+
+      {/* Source handle (bottom) - where edges go OUT */}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{
+          background: data.color,
+          width: 10,
+          height: 10,
+          border: '2px solid white',
+        }}
+      />
     </div>
   )
 }
 
-// Custom edge with visible styling
-function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style }) {
+// Custom edge with visible styling and labels
+function LabeledEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }) {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -106,7 +131,7 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 16,
+    borderRadius: 20,
   })
 
   const edgeColor = data?.color || '#6B7280'
@@ -115,44 +140,39 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
 
   return (
     <>
-      <BaseEdge
+      {/* The edge path */}
+      <path
         id={id}
-        path={edgePath}
-        style={{
-          stroke: edgeColor,
-          strokeWidth: isRequired ? 3 : 2,
-          strokeDasharray: isRequired ? undefined : '8,4',
-          ...style,
-        }}
-        markerEnd={`url(#arrow-${id})`}
+        d={edgePath}
+        fill="none"
+        stroke={edgeColor}
+        strokeWidth={isRequired ? 3 : 2}
+        strokeDasharray={isRequired ? undefined : '8,4'}
+        style={{ pointerEvents: 'stroke' }}
       />
-      <defs>
-        <marker
-          id={`arrow-${id}`}
-          markerWidth="12"
-          markerHeight="12"
-          refX="10"
-          refY="6"
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <path d="M0,0 L0,12 L12,6 z" fill={edgeColor} />
-        </marker>
-      </defs>
+      {/* Arrow marker at the end */}
+      <polygon
+        points={`${targetX},${targetY - 2} ${targetX - 6},${targetY - 12} ${targetX + 6},${targetY - 12}`}
+        fill={edgeColor}
+      />
+      {/* Edge label */}
       <EdgeLabelRenderer>
         <div
           style={{
             position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             background: 'white',
-            padding: '2px 6px',
+            padding: '3px 8px',
             borderRadius: '4px',
             fontSize: '10px',
-            fontWeight: 500,
+            fontWeight: 600,
             color: edgeColor,
             border: `1px solid ${edgeColor}`,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
             pointerEvents: 'all',
+            whiteSpace: 'nowrap',
           }}
+          className="nodrag nopan"
         >
           {label}
         </div>
@@ -161,48 +181,28 @@ function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, ta
   )
 }
 
-const nodeTypes = {
-  crd: CRDNode,
-}
+const nodeTypes = { crd: CRDNode }
+const edgeTypes = { labeled: LabeledEdge }
 
-const edgeTypes = {
-  custom: CustomEdge,
-}
-
-// Use dagre for automatic hierarchical layout
+// Dagre layout
 function getLayoutedElements(nodes, edges) {
-  const dagreGraph = new dagre.graphlib.Graph()
-  dagreGraph.setDefaultEdgeLabel(() => ({}))
+  const g = new dagre.graphlib.Graph()
+  g.setDefaultEdgeLabel(() => ({}))
+  g.setGraph({ rankdir: 'TB', nodesep: 80, ranksep: 100, marginx: 40, marginy: 40 })
 
   const nodeWidth = 180
-  const nodeHeight = 70
+  const nodeHeight = 65
 
-  dagreGraph.setGraph({
-    rankdir: 'TB',
-    nodesep: 100,
-    ranksep: 120,
-    marginx: 50,
-    marginy: 50,
-  })
+  nodes.forEach((node) => g.setNode(node.id, { width: nodeWidth, height: nodeHeight }))
+  edges.forEach((edge) => g.setEdge(edge.source, edge.target))
 
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
-  })
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target)
-  })
-
-  dagre.layout(dagreGraph)
+  dagre.layout(g)
 
   const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id)
+    const pos = g.node(node.id)
     return {
       ...node,
-      position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      },
+      position: { x: pos.x - nodeWidth / 2, y: pos.y - nodeHeight / 2 },
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
     }
@@ -216,11 +216,7 @@ export default function CRDReferenceGraph() {
     crdDefinitions.map((crd) => ({
       id: crd.id,
       type: 'crd',
-      data: {
-        label: crd.label,
-        color: crd.color,
-        description: crd.description,
-      },
+      data: { label: crd.label, color: crd.color, description: crd.description },
       position: { x: 0, y: 0 },
     })), []
   )
@@ -228,17 +224,13 @@ export default function CRDReferenceGraph() {
   const initialEdges = useMemo(() => {
     const edges = []
     crdDefinitions.forEach((crd) => {
-      crd.refs.forEach((ref, index) => {
+      crd.refs.forEach((ref, idx) => {
         edges.push({
-          id: `${crd.id}-${ref.target}-${index}`,
+          id: `e-${crd.id}-${ref.target}-${idx}`,
           source: crd.id,
           target: ref.target,
-          type: 'custom',
-          data: {
-            label: ref.label,
-            color: crd.color,
-            required: ref.required,
-          },
+          type: 'labeled',
+          data: { label: ref.label, color: crd.color, required: ref.required },
         })
       })
     })
@@ -254,7 +246,7 @@ export default function CRDReferenceGraph() {
   const [edges, , onEdgesChange] = useEdgesState(layoutedEdges)
 
   return (
-    <div style={{ width: '100%', height: '600px', background: '#f9fafb', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', position: 'relative' }}>
+    <div style={{ width: '100%', height: '650px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -263,40 +255,37 @@ export default function CRDReferenceGraph() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.3 }}
-        minZoom={0.5}
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.4}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
+        defaultEdgeOptions={{ type: 'labeled' }}
       >
-        <Background color="#d1d5db" gap={20} size={1} />
+        <Background color="#cbd5e1" gap={24} size={1} />
         <Controls showInteractive={false} />
       </ReactFlow>
 
       {/* Legend */}
       <div style={{
         position: 'absolute',
-        bottom: '16px',
-        left: '16px',
+        bottom: 16,
+        left: 16,
         background: 'white',
         borderRadius: '8px',
         padding: '12px 16px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        border: '1px solid #e5e7eb',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        border: '1px solid #e2e8f0',
         zIndex: 10,
       }}>
-        <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Legend</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="32" height="3">
-              <line x1="0" y1="1.5" x2="32" y2="1.5" stroke="#3B82F6" strokeWidth="3" />
-            </svg>
-            <span style={{ fontSize: '11px', color: '#6b7280' }}>Required ref</span>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: 8 }}>Legend</div>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="30" height="4"><line x1="0" y1="2" x2="30" y2="2" stroke="#3B82F6" strokeWidth="3"/></svg>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Required</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="32" height="3">
-              <line x1="0" y1="1.5" x2="32" y2="1.5" stroke="#9CA3AF" strokeWidth="2" strokeDasharray="6,3" />
-            </svg>
-            <span style={{ fontSize: '11px', color: '#6b7280' }}>Optional ref</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="30" height="4"><line x1="0" y1="2" x2="30" y2="2" stroke="#94a3b8" strokeWidth="2" strokeDasharray="6,3"/></svg>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Optional</span>
           </div>
         </div>
       </div>
