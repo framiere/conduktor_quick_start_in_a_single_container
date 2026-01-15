@@ -1,0 +1,32 @@
+apiVersion: messaging.example.com/v1
+kind: KafkaCluster
+metadata:
+  name: production-cluster
+  namespace: payments-team
+  labels:
+    team: payments
+    environment: production
+spec:
+  clusterId: payments-prod-vcluster
+  applicationServiceRef: payments-service
+---
+apiVersion: messaging.example.com/v1
+kind: KafkaCluster
+metadata:
+  name: staging-cluster
+  namespace: payments-team
+  labels:
+    team: payments
+    environment: staging
+spec:
+  clusterId: payments-staging-vcluster
+  applicationServiceRef: payments-service
+---
+apiVersion: messaging.example.com/v1
+kind: KafkaCluster
+metadata:
+  name: orders-cluster
+  namespace: orders-team
+spec:
+  clusterId: orders-prod-vcluster
+  applicationServiceRef: orders-service

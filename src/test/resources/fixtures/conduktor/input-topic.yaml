@@ -1,0 +1,76 @@
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: payments-events-topic
+  namespace: payments-team
+spec:
+  name: payments.events.v1
+  serviceRef: payments-admin
+  applicationServiceRef: payments-service
+  partitions: 12
+  replicationFactor: 3
+  config:
+    retention.ms: "604800000"
+    cleanup.policy: delete
+    min.insync.replicas: "2"
+    compression.type: lz4
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: payments-dlq-topic
+  namespace: payments-team
+spec:
+  name: payments.dlq.v1
+  serviceRef: payments-admin
+  applicationServiceRef: payments-service
+  partitions: 6
+  replicationFactor: 3
+  config:
+    retention.ms: "2592000000"
+    cleanup.policy: delete
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-commands-topic
+  namespace: orders-team
+spec:
+  name: orders.commands.v2
+  serviceRef: orders-processor
+  applicationServiceRef: orders-service
+  partitions: 24
+  replicationFactor: 3
+  config:
+    retention.ms: "86400000"
+    cleanup.policy: delete
+    max.message.bytes: "10485760"
+    segment.bytes: "1073741824"
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: orders-changelog-topic
+  namespace: orders-team
+spec:
+  name: orders.changelog
+  serviceRef: orders-processor
+  applicationServiceRef: orders-service
+  partitions: 12
+  replicationFactor: 3
+  config:
+    cleanup.policy: compact
+    min.cleanable.dirty.ratio: "0.1"
+    delete.retention.ms: "86400000"
+---
+apiVersion: messaging.example.com/v1
+kind: Topic
+metadata:
+  name: simple-topic
+  namespace: simple-team
+spec:
+  name: simple.events
+  serviceRef: simple-sa
+  applicationServiceRef: simple-service
+  partitions: 3
+  replicationFactor: 1
