@@ -306,6 +306,13 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- JKube Kubernetes Maven Plugin -->
+            <plugin>
+                <groupId>org.eclipse.jkube</groupId>
+                <artifactId>kubernetes-maven-plugin</artifactId>
+                <version>1.18.2</version>
+            </plugin>
         </plugins>
     </build>
 
