@@ -17,6 +17,7 @@ spec:
         {{- include "messaging-operator.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: webhook
     spec:
+      serviceAccountName: {{ include "messaging-operator.fullname" . }}
       containers:
         - name: webhook
           image: "{{ .Values.webhook.image.repository }}:{{ .Values.webhook.image.tag }}"
@@ -28,10 +29,17 @@ spec:
           env:
             - name: WEBHOOK_PORT
               value: "{{ .Values.webhook.port }}"
+            - name: RECONCILIATION_ENABLED
+              value: "{{ .Values.conduktorCli.enabled }}"
           volumeMounts:
             - name: tls-certs
               mountPath: /etc/webhook/certs
               readOnly: true
+            {{- if .Values.conduktorCli.enabled }}
+            - name: conduktor-credentials
+              mountPath: /var/run/secrets/conduktor
+              readOnly: true
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.webhook.healthCheck.path }}
@@ -56,3 +64,8 @@ spec:
         - name: tls-certs
           secret:
             secretName: {{ .Values.tls.secretName }}
+        {{- if .Values.conduktorCli.enabled }}
+        - name: conduktor-credentials
+          secret:
+            secretName: {{ .Values.conduktorCli.secretName }}
+        {{- end }}
