@@ -71,7 +71,13 @@ mvn clean package -DskipTests
 mvn test
 
 # Run integration tests
-mvn verify`}
+mvn verify
+
+# Kubernetes deployment (JKube)
+mvn k8s:build      # Build Docker image
+mvn k8s:resource   # Generate K8s manifests
+mvn k8s:apply      # Deploy to cluster
+mvn k8s:deploy     # Build + resource + apply`}
         />
       </Section>
 
@@ -115,6 +121,11 @@ mvn verify`}
           <Card title="Maven">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Build tool with shade plugin for uber-JAR packaging
+            </p>
+          </Card>
+          <Card title="Eclipse JKube">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Kubernetes Maven plugin for image building and deployment
             </p>
           </Card>
           <Card title="Fabric8 Client">

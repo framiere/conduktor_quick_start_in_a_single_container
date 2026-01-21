@@ -119,6 +119,12 @@ mvn verify         # Integration tests (39 tests)
 
 # Format code
 mvn spotless:apply
+
+# Kubernetes deployment (JKube)
+mvn k8s:build      # Build Docker image
+mvn k8s:resource   # Generate Kubernetes manifests
+mvn k8s:apply      # Deploy to Kubernetes cluster
+mvn k8s:deploy     # Build, resource, and apply in one step
 ```
 
 ## Services & Ports
