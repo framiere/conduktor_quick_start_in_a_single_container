@@ -3,7 +3,7 @@ import { HashRouter as Router, Routes, Route, NavLink, useLocation } from 'react
 import {
   Home, Building2, Shield, TestTube2, Code2, Server, Boxes, Network,
   Menu, X, ChevronRight, Lock, Users, FlaskConical, Activity, Wrench, RefreshCw,
-  Moon, Sun, Terminal
+  Moon, Sun, Terminal, Play
 } from 'lucide-react'
 
 import './index.css'
@@ -25,6 +25,7 @@ import TestSetupPage from './pages/TestSetupPage'
 import TransformationPage from './pages/TransformationPage'
 import GatewayPolicyPage from './pages/GatewayPolicyPage'
 import CLIIntegrationPage from './pages/CLIIntegrationPage'
+import DemosPage from './pages/DemosPage'
 
 const perspectives = [
   { path: '/', name: 'Overview', icon: Home, description: 'Project introduction and quick start' },
@@ -34,6 +35,7 @@ const perspectives = [
   { path: '/testing', name: 'Testing', icon: TestTube2, description: 'Unit, integration, and E2E tests' },
   { path: '/test-setup', name: 'Test Setup', icon: Wrench, description: 'Install Minikube, Helm, Bats' },
   { path: '/test-results', name: 'Test Results', icon: FlaskConical, description: 'Live test execution results' },
+  { path: '/demos', name: 'Demos', icon: Play, description: 'Interactive asciinema recordings' },
   { path: '/developer', name: 'Developer', icon: Code2, description: 'Build, compile, and contribute' },
   { path: '/operations', name: 'Operations', icon: Server, description: 'Deploy and run in Kubernetes' },
   { path: '/crds', name: 'CRDs', icon: Boxes, description: 'Custom Resource Definitions' },
@@ -200,6 +202,7 @@ function App() {
                 <Route path="/testing" element={<TestingPage />} />
                 <Route path="/test-setup" element={<TestSetupPage />} />
                 <Route path="/test-results" element={<TestResultsPage />} />
+                <Route path="/demos" element={<DemosPage />} />
                 <Route path="/developer" element={<DeveloperPage />} />
                 <Route path="/operations" element={<OperationsPage />} />
                 <Route path="/crds" element={<CRDPage />} />
