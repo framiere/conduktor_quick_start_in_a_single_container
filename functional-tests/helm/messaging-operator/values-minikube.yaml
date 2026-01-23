@@ -1,6 +1,9 @@
 # Minikube-specific values for local development and testing
 # Use: helm install ... -f values.yaml -f values-minikube.yaml
 
+# Use release namespace (set via -n flag), not hardcoded operator-system
+namespace: ""
+
 # Namespace created by setup-minikube.sh, not Helm
 createNamespace: false
 
@@ -24,3 +27,9 @@ webhook:
   healthCheck:
     initialDelaySeconds: 5
     periodSeconds: 5
+
+# Conduktor CLI credentials for reconciliation
+conduktorCli:
+  enabled: true
+  # Secret created by bootstrap-conduktor-token.sh in the operator namespace
+  secretName: conduktor-cli-credentials

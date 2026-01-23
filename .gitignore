@@ -9,3 +9,4 @@ functional-tests/.certs/
 functional-tests/values-tls.yaml
 dependency-reduced-pom.xml
 test-output.log
+.certs/

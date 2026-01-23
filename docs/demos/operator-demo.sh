@@ -180,14 +180,21 @@ cmd "kubectl get applicationservices,kafkaclusters,serviceaccounts.messaging.exa
 kubectl get applicationservices,kafkaclusters,serviceaccounts.messaging.example.com,topics -n $NAMESPACE
 sleep 2
 
-section "6. Check Operator Logs"
+section "6. Check Kubernetes Events"
+echo "Events show resource lifecycle activity:"
+echo ""
+cmd "kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp'"
+kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' 2>/dev/null || echo "No events yet"
+sleep 2
+
+section "7. Check Operator Logs"
 echo "The operator validates each resource creation:"
 echo ""
 cmd "kubectl logs deployment/messaging-operator-webhook -n $OPERATOR_NS --tail=15"
 kubectl logs deployment/messaging-operator-webhook -n $OPERATOR_NS --tail=15
 sleep 2
 
-section "7. Try an Invalid Resource (Cross-Tenant Violation)"
+section "8. Try an Invalid Resource (Cross-Tenant Violation)"
 echo "The operator prevents creating resources that reference"
 echo "ApplicationServices from different tenants:"
 echo ""
@@ -219,7 +226,7 @@ spec:
 EOF
 sleep 2
 
-section "8. View Resources in Conduktor Console (CLI)"
+section "9. View Resources in Conduktor Console (CLI)"
 echo "Using conduktor CLI to see what's visible in Console:"
 echo ""
 
@@ -234,7 +241,7 @@ cmd "conduktor get Topic"
 ~/bin/conduktor get Topic 2>/dev/null || echo "(Topics will appear after sync)"
 sleep 2
 
-section "9. Cleanup"
+section "10. Cleanup"
 cmd "kubectl delete namespace $NAMESPACE"
 kubectl delete namespace $NAMESPACE --wait=false
 sleep 1

@@ -1,5 +1,7 @@
 package com.example.messaging.operator.webhook;
 
+import com.example.messaging.operator.reconciliation.ReconciliationController;
+import com.example.messaging.operator.store.CRDStore;
 import com.example.messaging.operator.validation.KubernetesResourceLookup;
 import com.example.messaging.operator.validation.OwnershipValidator;
 import com.sun.net.httpserver.HttpsConfigurator;
@@ -21,13 +23,15 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
-/**
- * Main entry point for the Webhook server application.
- * Starts an HTTPS server to handle Kubernetes ValidatingWebhook requests.
- */
 public class WebhookApplication {
     private static final Logger log = LoggerFactory.getLogger(WebhookApplication.class);
+
+    private static final String PEM_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----";
+    private static final String PEM_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----";
+    private static final String PEM_RSA_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";
+    private static final String PEM_RSA_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----";
 
     private static final String DEFAULT_PORT = "8443";
     private static final String DEFAULT_CERT_PATH = "/etc/webhook/certs/tls.crt";
@@ -67,8 +71,32 @@ public class WebhookApplication {
 
             log.info("Webhook server started successfully on port {}", port);
 
+            // Start reconciliation controller if enabled
+            CRDStore store = new CRDStore();
+            ReconciliationController reconciler = null;
+            boolean reconciliationEnabled = Boolean.parseBoolean(
+                    System.getenv().getOrDefault("RECONCILIATION_ENABLED", "true"));
+
+            if (reconciliationEnabled) {
+                log.info("Starting reconciliation controller...");
+                reconciler = new ReconciliationController(k8sClient, store);
+                reconciler.start();
+
+                if (reconciler.waitForSync(60, TimeUnit.SECONDS)) {
+                    log.info("Reconciliation controller ready");
+                } else {
+                    log.warn("Reconciliation controller sync timeout - continuing anyway");
+                }
+            } else {
+                log.info("Reconciliation disabled via RECONCILIATION_ENABLED=false");
+            }
+
+            final ReconciliationController finalReconciler = reconciler;
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("Shutting down webhook server...");
+                log.info("Shutting down...");
+                if (finalReconciler != null) {
+                    finalReconciler.close();
+                }
                 httpsServer.stop(5);
                 k8sClient.close();
             }));
@@ -95,10 +123,10 @@ public class WebhookApplication {
 
         byte[] keyBytes = Files.readAllBytes(Path.of(keyPath));
         String keyPem = new String(keyBytes);
-        keyPem = keyPem.replace("-----BEGIN PRIVATE KEY-----", "")
-                       .replace("-----END PRIVATE KEY-----", "")
-                       .replace("-----BEGIN RSA PRIVATE KEY-----", "")
-                       .replace("-----END RSA PRIVATE KEY-----", "")
+        keyPem = keyPem.replace(PEM_PRIVATE_KEY_HEADER, "")
+                       .replace(PEM_PRIVATE_KEY_FOOTER, "")
+                       .replace(PEM_RSA_PRIVATE_KEY_HEADER, "")
+                       .replace(PEM_RSA_PRIVATE_KEY_FOOTER, "")
                        .replaceAll("\\s", "");
 
         byte[] decoded = java.util.Base64.getDecoder().decode(keyPem);

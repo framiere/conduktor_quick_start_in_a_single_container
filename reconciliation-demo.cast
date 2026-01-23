@@ -1,0 +1,2 @@
+{"version": 2, "width": 120, "height": 40, "timestamp": 1768579687, "idle_time_limit": 2.0, "env": {"SHELL": "/bin/bash", "TERM": "screen-256color"}}
+[0.009413, "o", "sh: 1: ./reconciliation-demo.sh: not found\r\n"]

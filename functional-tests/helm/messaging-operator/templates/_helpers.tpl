@@ -57,10 +57,14 @@ Webhook service name
 {{- end }}
 
 {{/*
-Namespace helper - uses .Values.namespace or .Release.Namespace
+Namespace helper - uses .Values.namespace if set and non-empty, otherwise .Release.Namespace
 */}}
 {{- define "messaging-operator.namespace" -}}
-{{- default .Release.Namespace .Values.namespace }}
+{{- if and .Values.namespace (ne .Values.namespace "") }}
+{{- .Values.namespace }}
+{{- else }}
+{{- .Release.Namespace }}
+{{- end }}
 {{- end }}
 
 {{/*

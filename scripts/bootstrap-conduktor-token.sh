@@ -9,15 +9,19 @@
 #   ./bootstrap-conduktor-token.sh
 #
 # Environment variables:
-#   CONSOLE_URL       - Console URL (default: http://localhost:8080)
+#   CONSOLE_URL       - Console URL for authentication (default: http://localhost:8080)
 #   CONSOLE_USER      - Console username (default: admin@demo.dev)
 #   CONSOLE_PASSWORD  - Console password (default: 123_ABC_abc)
-#   GATEWAY_URL       - Gateway Admin API URL (default: http://localhost:8888)
+#   GATEWAY_URL       - Gateway Admin API URL for health check (default: http://localhost:8888)
 #   GATEWAY_USER      - Gateway username (default: admin)
 #   GATEWAY_PASSWORD  - Gateway password (default: conduktor)
 #   SECRET_NAME       - Kubernetes Secret name (default: conduktor-cli-credentials)
 #   SECRET_NAMESPACE  - Kubernetes namespace (default: default)
 #   DRY_RUN           - If set, only print the Secret YAML without applying
+#
+# In-cluster URLs (for operator running inside the cluster):
+#   IN_CLUSTER_CONSOLE_URL - Console URL stored in secret (default: same as CONSOLE_URL)
+#   IN_CLUSTER_GATEWAY_URL - Gateway URL stored in secret (default: same as GATEWAY_URL)
 #
 
 set -euo pipefail
@@ -31,6 +35,11 @@ GATEWAY_USER="${GATEWAY_USER:-admin}"
 GATEWAY_PASSWORD="${GATEWAY_PASSWORD:-conduktor}"
 SECRET_NAME="${SECRET_NAME:-conduktor-cli-credentials}"
 SECRET_NAMESPACE="${SECRET_NAMESPACE:-default}"
+
+# In-cluster URLs (for operator running inside the cluster)
+# Defaults to the same URL used for authentication if not specified
+IN_CLUSTER_CONSOLE_URL="${IN_CLUSTER_CONSOLE_URL:-${CONSOLE_URL}}"
+IN_CLUSTER_GATEWAY_URL="${IN_CLUSTER_GATEWAY_URL:-${GATEWAY_URL}}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -132,20 +141,21 @@ create_secret() {
 
     if [ -n "${DRY_RUN:-}" ]; then
         log_info "DRY_RUN mode - would create secret with:"
-        echo "  console-url: ${CONSOLE_URL}"
+        echo "  console-url: ${IN_CLUSTER_CONSOLE_URL}"
         echo "  console-token: <redacted, ${#token} chars>"
-        echo "  gateway-url: ${GATEWAY_URL}"
+        echo "  gateway-url: ${IN_CLUSTER_GATEWAY_URL}"
         echo "  gateway-user: ${GATEWAY_USER}"
         echo "  gateway-password: <redacted>"
         return 0
     fi
 
     # Use kubectl create secret with --from-literal to avoid YAML escaping issues
+    # Note: Uses IN_CLUSTER URLs for operator running inside the cluster
     kubectl create secret generic "${SECRET_NAME}" \
         --namespace "${SECRET_NAMESPACE}" \
-        --from-literal=console-url="${CONSOLE_URL}" \
+        --from-literal=console-url="${IN_CLUSTER_CONSOLE_URL}" \
         --from-literal=console-token="${token}" \
-        --from-literal=gateway-url="${GATEWAY_URL}" \
+        --from-literal=gateway-url="${IN_CLUSTER_GATEWAY_URL}" \
         --from-literal=gateway-user="${GATEWAY_USER}" \
         --from-literal=gateway-password="${GATEWAY_PASSWORD}" \
         --dry-run=client -o yaml | kubectl apply -f -
@@ -183,6 +193,10 @@ main() {
     log_info "=== Conduktor CLI Bootstrap ==="
     log_info "Console URL: ${CONSOLE_URL}"
     log_info "Gateway URL: ${GATEWAY_URL}"
+    if [ "${IN_CLUSTER_CONSOLE_URL}" != "${CONSOLE_URL}" ] || [ "${IN_CLUSTER_GATEWAY_URL}" != "${GATEWAY_URL}" ]; then
+        log_info "In-cluster Console URL: ${IN_CLUSTER_CONSOLE_URL}"
+        log_info "In-cluster Gateway URL: ${IN_CLUSTER_GATEWAY_URL}"
+    fi
     log_info "Secret: ${SECRET_NAMESPACE}/${SECRET_NAME}"
     echo ""
 
