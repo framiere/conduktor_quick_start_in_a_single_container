@@ -10,7 +10,6 @@ const buildSteps = [
   { step: 3, title: 'Compile', command: 'mvn compile', description: 'Compile the Java sources' },
   { step: 4, title: 'Run Tests', command: 'mvn test', description: 'Execute unit tests' },
   { step: 5, title: 'Package', command: 'mvn package -DskipTests', description: 'Create executable JAR' },
-  { step: 6, title: 'Format Check', command: 'mvn spotless:check', description: 'Verify code formatting' },
 ]
 
 const projectStructure = `
@@ -74,8 +73,11 @@ mvn test
 # Run integration tests
 mvn verify
 
-# Format code
-mvn spotless:apply`}
+# Kubernetes deployment (JKube)
+mvn k8s:build      # Build Docker image
+mvn k8s:resource   # Generate K8s manifests
+mvn k8s:apply      # Deploy to cluster
+mvn k8s:deploy     # Build + resource + apply`}
         />
       </Section>
 
@@ -119,6 +121,11 @@ mvn spotless:apply`}
           <Card title="Maven">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Build tool with shade plugin for uber-JAR packaging
+            </p>
+          </Card>
+          <Card title="Eclipse JKube">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Kubernetes Maven plugin for image building and deployment
             </p>
           </Card>
           <Card title="Fabric8 Client">
@@ -228,7 +235,6 @@ mvn spotless:apply`}
               <li>• Import as Maven project</li>
               <li>• Enable Lombok plugin</li>
               <li>• Set Java 21 SDK</li>
-              <li>• Import Eclipse formatter settings</li>
             </ul>
           </Card>
           <Card icon={Terminal} title="VS Code">

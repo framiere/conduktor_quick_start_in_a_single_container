@@ -73,3 +73,12 @@ webhookConfig:
 # CRD API group
 apiGroup: messaging.example.com
 apiVersion: v1
+
+# Conduktor CLI credentials for reconciliation
+conduktorCli:
+  # Enable reconciliation to Conduktor Console/Gateway
+  enabled: true
+  # Name of the secret containing CLI credentials
+  secretName: conduktor-cli-credentials
+  # Namespace where the secret is located (empty = same as operator)
+  secretNamespace: ""

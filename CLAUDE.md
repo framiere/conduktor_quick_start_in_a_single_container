@@ -24,12 +24,6 @@ mvn verify
 # Run single integration test
 mvn verify -Dit.test=CRDStoreIT
 
-# Format code (Spotless with Eclipse formatter)
-mvn spotless:apply
-
-# Check formatting without applying
-mvn spotless:check
-
 # Full Docker build and run
 make all
 
@@ -177,6 +171,7 @@ protected void setup() {
 
 ## Code Quality Patterns
 
+- **Never use box characters with right-side lines** in shell scripts or terminal output (║ on the right side gets misaligned). Use left-only borders or simple separators instead.
 - **Code is optimized for human reading** - code is read 10x more than written:
   - Clarity over cleverness
   - Explicit over implicit

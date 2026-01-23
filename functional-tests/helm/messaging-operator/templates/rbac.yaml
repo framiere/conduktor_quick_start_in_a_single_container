@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "messaging-operator.fullname" . }}
+  namespace: {{ include "messaging-operator.namespace" . }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "messaging-operator.fullname" . }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+rules:
+  # CRD resources - watch for reconciliation
+  - apiGroups: ["{{ .Values.apiGroup }}"]
+    resources:
+      - applicationservices
+      - kafkaclusters
+      - serviceaccounts
+      - topics
+      - acls
+      - consumergroups
+    verbs: ["get", "list", "watch"]
+  # ConfigMaps and Secrets for storing state
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - secrets
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "messaging-operator.fullname" . }}
+  labels:
+    {{- include "messaging-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "messaging-operator.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "messaging-operator.fullname" . }}
+    namespace: {{ include "messaging-operator.namespace" . }}

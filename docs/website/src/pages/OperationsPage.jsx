@@ -222,6 +222,20 @@ make logs    # Follow logs`}
             />
           </Card>
         </div>
+
+        <div className="mt-6">
+          <Card icon={Cloud} title="JKube - Kubernetes Maven Plugin">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Eclipse JKube provides Maven goals for building images and deploying to Kubernetes
+            </p>
+            <CodeBlock
+              code={`mvn k8s:build      # Build Docker image
+mvn k8s:resource   # Generate K8s manifests
+mvn k8s:apply      # Deploy to cluster
+mvn k8s:deploy     # Build + resource + apply in one step`}
+            />
+          </Card>
+        </div>
       </Section>
 
       {/* Health Checks */}
