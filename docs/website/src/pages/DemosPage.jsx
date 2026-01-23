@@ -10,7 +10,7 @@ const demos = [
     title: 'CLI Integration Demo',
     description: 'Demonstrates the Conduktor CLI integration with token bootstrap and authentication flow',
     icon: Terminal,
-    file: '/demos/cli-integration.cast',
+    file: './demos/cli-integration.cast',
     duration: '~30s',
     highlights: [
       'Bootstrap script authenticates to Console API',
@@ -24,7 +24,7 @@ const demos = [
     title: 'Operator Demo',
     description: 'Shows the Kubernetes operator in action with kubectl commands and CRD management',
     icon: GitBranch,
-    file: '/demos/operator-demo.cast',
+    file: './demos/operator-demo.cast',
     duration: '~1m',
     highlights: [
       'Apply ApplicationService, KafkaCluster, and ServiceAccount CRDs',
@@ -38,7 +38,7 @@ const demos = [
     title: 'Reconciliation Controller Demo',
     description: 'Demonstrates the reconciliation loop that watches CRDs and syncs to Conduktor Gateway',
     icon: RefreshCw,
-    file: '/demos/reconciliation-demo.cast',
+    file: './demos/reconciliation-demo.cast',
     duration: '~2m',
     highlights: [
       'ReconciliationController starts and watches CRDs',
