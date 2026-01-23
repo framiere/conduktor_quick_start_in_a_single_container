@@ -29,7 +29,7 @@ const categoryColors = {
   Other: 'gray'
 }
 
-function StatCard({ label, value, subValue, color }) {
+function StatCard({ label, value, subValue, color, icon: Icon }) {
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
     green: 'from-green-500 to-green-600',
