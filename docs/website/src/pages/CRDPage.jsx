@@ -4,6 +4,7 @@ import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
 import CodeBlock from '../components/CodeBlock'
 import DiagramBox, { DiagramNode } from '../components/DiagramBox'
+import slugify from '../utils/slugify'
 
 const crds = [
   {
@@ -261,7 +262,7 @@ export default function CRDPage() {
       {crds.map((crd, index) => {
         const Icon = crd.icon
         return (
-          <Section key={index} className="scroll-mt-20" title="">
+          <Section key={index} id={slugify(crd.name)} title="">
             <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
               {/* Header */}
               <div className={`

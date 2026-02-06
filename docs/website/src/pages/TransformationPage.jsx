@@ -3,6 +3,7 @@ import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
 import CodeBlock from '../components/CodeBlock'
+import slugify from '../utils/slugify'
 
 const transformations = [
   {
@@ -202,7 +203,7 @@ function TransformationCard({ transformation }) {
   }
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+    <div id={slugify(transformation.name)} className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden scroll-mt-24">
       <div className={`px-6 py-4 border-b border-gray-800 ${colorClasses[transformation.color]}`}>
         <div className="flex items-center gap-3">
           <Icon size={24} />

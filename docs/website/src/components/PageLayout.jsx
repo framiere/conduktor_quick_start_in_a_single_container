@@ -1,6 +1,9 @@
 import { ChevronRight, Quote } from 'lucide-react'
+import useScrollToHash from '../hooks/useScrollToHash'
 
 export default function PageLayout({ title, subtitle, icon: Icon, children, breadcrumb, aphorism }) {
+  useScrollToHash()
+
   return (
     <div className="animate-fade-in">
       {/* Hero section */}
