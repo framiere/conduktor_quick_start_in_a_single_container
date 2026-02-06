@@ -17,7 +17,8 @@ metadata:
   namespace: payments-team
 spec:
   clusterId: payments-prod-vcluster
-  applicationServiceRef: payments-service`,
+  applicationServiceRef: payments-service
+  authType: MTLS  # or SASL_SSL`,
     outputYaml: `apiVersion: gateway/v2
 kind: VirtualCluster
 metadata:
@@ -33,34 +34,61 @@ spec:
     name: 'ServiceAccount → GatewayServiceAccount',
     icon: Users,
     color: 'green',
-    description: 'Transforms ServiceAccount with DN extraction from certificate distinguished names.',
-    inputYaml: `apiVersion: messaging.example.com/v1
+    description: 'Transforms ServiceAccount with auth-type-aware identity resolution. Resolves KafkaCluster from CRDStore to determine authType (MTLS or SASL_SSL), then branches externalNames logic accordingly.',
+    inputYaml: `# MTLS with DN → extracts CN from each DN entry
+apiVersion: messaging.example.com/v1
 kind: ServiceAccount
 metadata:
   name: payments-admin-sa
   namespace: payments-team
 spec:
   name: payments-admin
-  clusterRef: payments-prod-vcluster
+  clusterRef: production-cluster  # → KafkaCluster (authType: MTLS)
   applicationServiceRef: payments-service
   dn:
     - "CN=payments-admin,OU=ServiceAccounts,O=Company"
-    - "CN=payments-backup,OU=ServiceAccounts,O=Company"`,
-    outputYaml: `apiVersion: gateway/v2
+    - "CN=payments-backup,OU=ServiceAccounts,O=Company"
+---
+# SASL_SSL → uses name directly, ignores dn
+apiVersion: messaging.example.com/v1
+kind: ServiceAccount
+metadata:
+  name: sasl-user-sa
+  namespace: sasl-team
+spec:
+  name: sasl-user
+  clusterRef: sasl-cluster  # → KafkaCluster (authType: SASL_SSL)
+  applicationServiceRef: sasl-service`,
+    outputYaml: `# From MTLS + DN
+apiVersion: gateway/v2
 kind: GatewayServiceAccount
 metadata:
   name: payments-admin
-  vCluster: payments-prod-vcluster
+  vCluster: production-cluster
 spec:
   type: EXTERNAL
   externalNames:
-    - payments-admin
-    - payments-backup`,
+    - payments-admin       # CN extracted from DN
+    - payments-backup      # CN extracted from DN
+---
+# From SASL_SSL (dn ignored)
+apiVersion: gateway/v2
+kind: GatewayServiceAccount
+metadata:
+  name: sasl-user
+  vCluster: sasl-cluster
+spec:
+  type: EXTERNAL
+  externalNames:
+    - sasl-user            # Name used directly`,
     mappings: [
       { from: 'spec.name', to: 'metadata.name', note: 'ServiceAccount name' },
       { from: 'spec.clusterRef', to: 'metadata.vCluster', note: 'Links to VirtualCluster' },
-      { from: 'spec.dn[].CN=*', to: 'spec.externalNames[]', note: 'Extracts CN from each DN' },
-      { from: '-', to: 'spec.type', note: 'Always EXTERNAL for mTLS mapping' }
+      { from: 'clusterRef → authType', to: 'logic branch', note: 'Resolves KafkaCluster from CRDStore to read authType' },
+      { from: 'MTLS + dn present', to: 'spec.externalNames[]', note: 'Extracts CN from each DN entry' },
+      { from: 'MTLS + dn absent', to: 'spec.externalNames[]', note: 'Auto-generates [name]' },
+      { from: 'SASL_SSL (any)', to: 'spec.externalNames[]', note: 'Always uses [name], ignores dn' },
+      { from: '-', to: 'spec.type', note: 'Always EXTERNAL' }
     ]
   },
   {
@@ -305,7 +333,8 @@ export default function TransformationPage() {
           >
             <p className="text-gray-400 text-sm mb-4">
               Each transformer implements a generic interface for type-safe conversions.
-              The TopicTransformer demonstrates cluster resolution via CRDStore lookup.
+              Both TopicTransformer and ServiceAccountTransformer resolve references via CRDStore lookup.
+              ServiceAccountTransformer reads authType from the referenced KafkaCluster to branch transformation logic.
             </p>
             <CodeBlock code={transformerExample} language="yaml" />
           </Card>
@@ -333,11 +362,11 @@ export default function TransformationPage() {
               <li>• Compile-time validation</li>
             </ul>
           </Card>
-          <Card title="DN Extraction" icon={Users} color="blue">
+          <Card title="Auth-Type Aware" icon={Users} color="blue">
             <ul className="text-gray-400 text-sm space-y-2">
-              <li>• Parses X.509 DNs</li>
-              <li>• Extracts CN components</li>
-              <li>• Preserves full DN if no CN</li>
+              <li>• MTLS: extracts CN from X.509 DNs</li>
+              <li>• MTLS without DN: auto-uses name</li>
+              <li>• SASL_SSL: uses name directly</li>
             </ul>
           </Card>
           <Card title="Dry-Run Only" icon={Terminal} color="orange">

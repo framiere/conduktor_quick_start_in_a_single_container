@@ -373,6 +373,7 @@ public class CRDStore {
             case Topic r -> r.getMetadata().getName();
             case ConsumerGroup r -> r.getMetadata().getName();
             case ACL r -> r.getMetadata().getName();
+            case Scope r -> r.getMetadata().getName();
             default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         };
     }
@@ -385,6 +386,7 @@ public class CRDStore {
             case Topic r -> r.getSpec().getApplicationServiceRef();
             case ConsumerGroup r -> r.getSpec().getApplicationServiceRef();
             case ACL r -> r.getSpec().getApplicationServiceRef();
+            case Scope r -> r.getSpec().getApplicationServiceRef();
             default -> null;
         };
     }
@@ -397,6 +399,7 @@ public class CRDStore {
             case Topic r -> r.getMetadata().setResourceVersion(version);
             case ConsumerGroup r -> r.getMetadata().setResourceVersion(version);
             case ACL r -> r.getMetadata().setResourceVersion(version);
+            case Scope r -> r.getMetadata().setResourceVersion(version);
             default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         }
     }
@@ -409,6 +412,7 @@ public class CRDStore {
             case Topic r -> r.getMetadata().setUid(uid);
             case ConsumerGroup r -> r.getMetadata().setUid(uid);
             case ACL r -> r.getMetadata().setUid(uid);
+            case Scope r -> r.getMetadata().setUid(uid);
             default -> throw new IllegalArgumentException("Unknown resource type: " + resource.getClass());
         }
     }

@@ -25,10 +25,11 @@ spec:
     name: 'KafkaCluster',
     icon: Database,
     color: 'purple',
-    description: 'Represents a logical Kafka cluster mapped to an ApplicationService. Provides cluster isolation.',
+    description: 'Represents a logical Kafka cluster mapped to an ApplicationService. Provides cluster isolation and authentication type configuration.',
     fields: [
       { name: 'clusterId', type: 'string', required: true, description: 'Unique identifier for the virtual cluster' },
-      { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' }
+      { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
+      { name: 'authType', type: 'AuthType', required: false, description: 'Authentication type: MTLS or SASL_SSL (defaults to MTLS)' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
 kind: KafkaCluster
@@ -36,16 +37,17 @@ metadata:
   name: team-a-cluster
 spec:
   clusterId: team-a-cluster
-  applicationServiceRef: team-a-app`
+  applicationServiceRef: team-a-app
+  authType: MTLS`
   },
   {
     name: 'ServiceAccount',
     icon: Users,
     color: 'green',
-    description: 'Identity for mTLS authentication. Maps certificate CN to permissions.',
+    description: 'Identity for authentication. Maps certificate CN (MTLS) or username (SASL_SSL) to permissions.',
     fields: [
       { name: 'name', type: 'string', required: true, description: 'Service account identifier' },
-      { name: 'dn', type: 'string[]', required: true, description: 'Distinguished names (CNs) for certificate mapping' },
+      { name: 'dn', type: 'string[]', required: false, description: 'Distinguished names for certificate mapping (MTLS only, optional)' },
       { name: 'clusterRef', type: 'string', required: true, description: 'Reference to KafkaCluster' },
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' }
     ],
@@ -137,17 +139,33 @@ spec:
   patternType: LITERAL`
   },
   {
-    name: 'GatewayPolicy',
-    icon: Shield,
+    name: 'Scope',
+    icon: Database,
     color: 'cyan',
-    description: 'Configures Conduktor Gateway interceptors for governance, security, and data quality policies.',
+    description: 'Defines where a GatewayPolicy applies — bundles cluster, service account, and group targeting into a reusable resource.',
     fields: [
       { name: 'applicationServiceRef', type: 'string', required: true, description: 'Reference to owning ApplicationService' },
-      { name: 'clusterRef', type: 'string', required: true, description: 'Reference to KafkaCluster' },
+      { name: 'clusterRef', type: 'string', required: true, description: 'Reference to KafkaCluster (resolves to vCluster)' },
+      { name: 'serviceAccountRef', type: 'string', required: false, description: 'Reference to ServiceAccount (resolves to username)' },
+      { name: 'groupRef', type: 'string', required: false, description: 'Target a specific group of users' }
+    ],
+    yaml: `apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: team-a-cluster-scope
+spec:
+  applicationServiceRef: team-a-app
+  clusterRef: team-a-cluster`
+  },
+  {
+    name: 'GatewayPolicy',
+    icon: Shield,
+    color: 'purple',
+    description: 'Configures Conduktor Gateway interceptors for governance, security, and data quality policies. References a Scope for targeting.',
+    fields: [
+      { name: 'scopeRef', type: 'string', required: true, description: 'Reference to a Scope defining where this policy applies' },
       { name: 'policyType', type: 'PolicyType', required: true, description: 'Type of policy (CreateTopicPolicy, SchemaValidation, FieldEncryption, etc.)' },
       { name: 'priority', type: 'integer', required: true, description: 'Policy execution priority (lower = earlier)' },
-      { name: 'serviceAccountRef', type: 'string', required: false, description: 'Scope to specific ServiceAccount' },
-      { name: 'groupRef', type: 'string', required: false, description: 'Scope to specific ConsumerGroup' },
       { name: 'config', type: 'Map<String,Object>', required: false, description: 'Policy-specific configuration' }
     ],
     yaml: `apiVersion: messaging.example.com/v1
@@ -155,9 +173,8 @@ kind: GatewayPolicy
 metadata:
   name: topic-creation-policy
 spec:
-  applicationServiceRef: team-a-app
-  clusterRef: team-a-cluster
-  policyType: CreateTopicPolicy
+  scopeRef: team-a-cluster-scope
+  policyType: CREATE_TOPIC_POLICY
   priority: 1
   config:
     replicationFactor:
@@ -172,7 +189,7 @@ export default function CRDPage() {
   return (
     <PageLayout
       title="Custom Resource Definitions"
-      subtitle="Deep dive into the 7 CRD types and their relationships"
+      subtitle="Deep dive into the 8 CRD types and their relationships"
       icon={Boxes}
       breadcrumb="CRDs"
       aphorism={{
@@ -206,7 +223,7 @@ export default function CRDPage() {
               {/* Level 2 */}
               <DiagramNode color="green">
                 <span className="font-bold">ServiceAccount</span>
-                <span className="text-xs block opacity-70">mTLS identity</span>
+                <span className="text-xs block opacity-70">Client identity (MTLS / SASL_SSL)</span>
               </DiagramNode>
 
               <div className="text-2xl text-gray-400">↓</div>
@@ -223,9 +240,18 @@ export default function CRDPage() {
                   <span className="font-bold">ConsumerGroup</span>
                 </DiagramNode>
                 <DiagramNode color="cyan">
-                  <span className="font-bold">GatewayPolicy</span>
+                  <span className="font-bold">Scope</span>
+                  <span className="text-xs block opacity-70">Policy targeting</span>
                 </DiagramNode>
               </div>
+
+              <div className="text-2xl text-gray-400">↓</div>
+
+              {/* Level 4 - GatewayPolicy references Scope */}
+              <DiagramNode color="purple">
+                <span className="font-bold">GatewayPolicy</span>
+                <span className="text-xs block opacity-70">→ Interceptor</span>
+              </DiagramNode>
             </div>
           </div>
         </DiagramBox>

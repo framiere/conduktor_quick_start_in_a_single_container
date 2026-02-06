@@ -1,14 +1,13 @@
-# Test fixtures for GatewayPolicy CRD transformation
-# These policies demonstrate various policy types and scoping configurations
 ---
+# Test fixtures for GatewayPolicy CRD transformation
+# These policies reference Scope CRDs for scoping configuration
 apiVersion: messaging.example.com/v1
 kind: GatewayPolicy
 metadata:
   name: enforce-topic-partitions
   namespace: payments-team
 spec:
-  applicationServiceRef: payments-service
-  clusterRef: payments-cluster
+  scopeRef: payments-cluster-scope
   policyType: CREATE_TOPIC_POLICY
   priority: 100
   config:
@@ -28,9 +27,7 @@ metadata:
   name: enforce-producer-settings
   namespace: payments-team
 spec:
-  applicationServiceRef: payments-service
-  clusterRef: payments-cluster
-  serviceAccountRef: payments-admin
+  scopeRef: payments-admin-scope
   policyType: PRODUCE_POLICY
   priority: 50
   config:
@@ -52,8 +49,7 @@ metadata:
   name: mask-pii-data
   namespace: payments-team
 spec:
-  applicationServiceRef: payments-service
-  clusterRef: payments-cluster
+  scopeRef: payments-cluster-scope
   policyType: DATA_MASKING
   priority: 200
   config:
@@ -73,8 +69,7 @@ metadata:
   name: audit-all-requests
   namespace: orders-team
 spec:
-  applicationServiceRef: orders-service
-  clusterRef: orders-cluster
+  scopeRef: orders-cluster-scope
   policyType: AUDIT
   priority: 1
   config:
@@ -91,8 +86,7 @@ metadata:
   name: chaos-latency-test
   namespace: staging
 spec:
-  applicationServiceRef: test-service
-  clusterRef: staging-cluster
+  scopeRef: staging-cluster-scope
   policyType: CHAOS_LATENCY
   priority: 100
   config:

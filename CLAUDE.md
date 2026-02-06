@@ -39,7 +39,7 @@ make logs     # Follow container logs
 
 ### CRD Hierarchy (Group: `messaging.example.com/v1`)
 
-Six CRD types with strict ownership chain enforcement:
+Eight CRD types with strict ownership chain enforcement:
 
 ```
 ApplicationService (root - no parent)
@@ -48,6 +48,8 @@ ApplicationService (root - no parent)
 │   ├── Topic (owned by ApplicationService, references ServiceAccount)
 │   ├── ACL (owned by ApplicationService, references ServiceAccount + Topic/ConsumerGroup)
 │   └── ConsumerGroup (owned by ApplicationService, references ServiceAccount)
+├── Scope (owned by ApplicationService, references KafkaCluster, optionally ServiceAccount/group)
+└── GatewayPolicy (references Scope via scopeRef + keeps policyType, priority, config)
 ```
 
 ### Package Structure (`com.example.messaging.operator`)

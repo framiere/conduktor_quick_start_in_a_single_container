@@ -34,6 +34,10 @@ public class TestDataBuilder {
         return new ConsumerGroupBuilder();
     }
 
+    public static ScopeBuilder scope() {
+        return new ScopeBuilder();
+    }
+
     public static GatewayPolicyBuilder gatewayPolicy() {
         return new GatewayPolicyBuilder();
     }
@@ -94,6 +98,7 @@ public class TestDataBuilder {
         private String name = "test-cluster";
         private String clusterId;
         private String applicationServiceRef;
+        private AuthType authType;
         private List<OwnerReference> owners = new ArrayList<>();
 
         public KafkaClusterBuilder namespace(String namespace) {
@@ -116,6 +121,11 @@ public class TestDataBuilder {
             return this;
         }
 
+        public KafkaClusterBuilder authType(AuthType authType) {
+            this.authType = authType;
+            return this;
+        }
+
         public KafkaClusterBuilder ownedBy(ApplicationService owner) {
             this.owners.add(createOwnerReference(owner));
             return this;
@@ -134,6 +144,7 @@ public class TestDataBuilder {
             KafkaClusterSpec spec = new KafkaClusterSpec();
             spec.setClusterId(clusterId != null ? clusterId : "test-cluster-id");
             spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
+            spec.setAuthType(authType);
             vc.setSpec(spec);
 
             return vc;
@@ -212,7 +223,7 @@ public class TestDataBuilder {
 
             ServiceAccountSpec spec = new ServiceAccountSpec();
             spec.setName(saName != null ? saName : name);
-            spec.setDn(dn.isEmpty() ? List.of("CN=test") : dn);
+            spec.setDn(dn);
             spec.setClusterRef(clusterRef != null ? clusterRef : "test-cluster");
             spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
             sa.setSpec(spec);
@@ -511,14 +522,82 @@ public class TestDataBuilder {
         return ref;
     }
 
-    // GatewayPolicy Builder
-    public static class GatewayPolicyBuilder {
+    // Scope Builder
+    public static class ScopeBuilder {
         private String namespace = "default";
-        private String name = "test-policy";
+        private String name = "test-scope";
         private String applicationServiceRef;
         private String clusterRef;
         private String serviceAccountRef;
         private String groupRef;
+        private List<OwnerReference> owners = new ArrayList<>();
+
+        public ScopeBuilder namespace(String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public ScopeBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ScopeBuilder applicationServiceRef(String applicationServiceRef) {
+            this.applicationServiceRef = applicationServiceRef;
+            return this;
+        }
+
+        public ScopeBuilder clusterRef(String clusterRef) {
+            this.clusterRef = clusterRef;
+            return this;
+        }
+
+        public ScopeBuilder serviceAccountRef(String serviceAccountRef) {
+            this.serviceAccountRef = serviceAccountRef;
+            return this;
+        }
+
+        public ScopeBuilder groupRef(String groupRef) {
+            this.groupRef = groupRef;
+            return this;
+        }
+
+        public ScopeBuilder ownedBy(ApplicationService owner) {
+            this.owners.add(createOwnerReference(owner));
+            return this;
+        }
+
+        public Scope build() {
+            Scope scope = new Scope();
+            ObjectMeta metadata = new ObjectMeta();
+            metadata.setNamespace(namespace);
+            metadata.setName(name);
+            if (!owners.isEmpty()) {
+                metadata.setOwnerReferences(owners);
+            }
+            scope.setMetadata(metadata);
+
+            ScopeSpec spec = new ScopeSpec();
+            spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
+            spec.setClusterRef(clusterRef != null ? clusterRef : "test-cluster");
+            spec.setServiceAccountRef(serviceAccountRef);
+            spec.setGroupRef(groupRef);
+            scope.setSpec(spec);
+
+            return scope;
+        }
+
+        public Scope createIn(KubernetesClient client) {
+            Scope scope = build();
+            return client.resource(scope).create();
+        }
+    }
+
+    // GatewayPolicy Builder
+    public static class GatewayPolicyBuilder {
+        private String namespace = "default";
+        private String name = "test-policy";
+        private String scopeRef;
         private PolicyType policyType = PolicyType.CREATE_TOPIC_POLICY;
         private Integer priority = 100;
         private Map<String, Object> config = new HashMap<>();
@@ -534,23 +613,8 @@ public class TestDataBuilder {
             return this;
         }
 
-        public GatewayPolicyBuilder applicationServiceRef(String applicationServiceRef) {
-            this.applicationServiceRef = applicationServiceRef;
-            return this;
-        }
-
-        public GatewayPolicyBuilder clusterRef(String clusterRef) {
-            this.clusterRef = clusterRef;
-            return this;
-        }
-
-        public GatewayPolicyBuilder serviceAccountRef(String serviceAccountRef) {
-            this.serviceAccountRef = serviceAccountRef;
-            return this;
-        }
-
-        public GatewayPolicyBuilder groupRef(String groupRef) {
-            this.groupRef = groupRef;
+        public GatewayPolicyBuilder scopeRef(String scopeRef) {
+            this.scopeRef = scopeRef;
             return this;
         }
 
@@ -590,10 +654,7 @@ public class TestDataBuilder {
             policy.setMetadata(metadata);
 
             GatewayPolicySpec spec = new GatewayPolicySpec();
-            spec.setApplicationServiceRef(applicationServiceRef != null ? applicationServiceRef : "test-app");
-            spec.setClusterRef(clusterRef != null ? clusterRef : "test-cluster");
-            spec.setServiceAccountRef(serviceAccountRef);
-            spec.setGroupRef(groupRef);
+            spec.setScopeRef(scopeRef != null ? scopeRef : "test-scope");
             spec.setPolicyType(policyType);
             spec.setPriority(priority);
             spec.setConfig(config.isEmpty() ? null : config);

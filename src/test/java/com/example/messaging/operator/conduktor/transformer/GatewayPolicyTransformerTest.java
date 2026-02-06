@@ -7,6 +7,7 @@ import com.example.messaging.operator.conduktor.model.PolicyType;
 import com.example.messaging.operator.crd.ApplicationService;
 import com.example.messaging.operator.crd.GatewayPolicy;
 import com.example.messaging.operator.crd.KafkaCluster;
+import com.example.messaging.operator.crd.Scope;
 import com.example.messaging.operator.crd.ServiceAccount;
 import com.example.messaging.operator.it.base.TestDataBuilder;
 import com.example.messaging.operator.store.CRDKind;
@@ -50,10 +51,11 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should transform with correct API version")
         void shouldTransformWithCorrectApiVersion() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
                     .name("test-policy")
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .policyType(PolicyType.CREATE_TOPIC_POLICY)
                     .build();
 
@@ -66,9 +68,10 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should transform with correct kind")
         void shouldTransformWithCorrectKind() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -80,10 +83,11 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should build namespaced interceptor name")
         void shouldBuildNamespacedInterceptorName() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
                     .name("enforce-partitions")
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -95,9 +99,10 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should map policyType to correct pluginClass")
         void shouldMapPolicyTypeToPluginClass() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .policyType(PolicyType.PRODUCE_POLICY)
                     .build();
 
@@ -111,9 +116,10 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should copy priority from source")
         void shouldCopyPriority() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .priority(50)
                     .build();
 
@@ -126,12 +132,13 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should pass through config as-is")
         void shouldPassThroughConfig() {
             createKafkaCluster("my-cluster", "my-vcluster-id");
+            createScope("my-scope", "my-cluster", null, null);
             Map<String, Object> config = Map.of(
                     "topic", "payments-.*",
                     "numPartition", Map.of("min", 3, "max", 12, "action", "BLOCK"));
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
+                    .scopeRef("my-scope")
                     .config(config)
                     .build();
 
@@ -148,12 +155,13 @@ class GatewayPolicyTransformerTest {
     class ScopeResolutionTests {
 
         @Test
-        @DisplayName("should resolve clusterRef to vCluster scope")
+        @DisplayName("should resolve clusterRef to vCluster scope via Scope CRD")
         void shouldResolveClusterRefToVClusterScope() {
             createKafkaCluster("payments-cluster", "payments-prod-vcluster");
+            createScope("payments-scope", "payments-cluster", null, null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("payments-cluster")
+                    .scopeRef("payments-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -163,14 +171,14 @@ class GatewayPolicyTransformerTest {
         }
 
         @Test
-        @DisplayName("should resolve serviceAccountRef to username scope")
+        @DisplayName("should resolve serviceAccountRef to username scope via Scope CRD")
         void shouldResolveServiceAccountRefToUsernameScope() {
             createKafkaCluster("my-cluster", "my-vcluster");
             createServiceAccount("payments-admin-sa", "payments-admin", "my-cluster");
+            createScope("sa-scope", "my-cluster", "payments-admin-sa", null);
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
-                    .serviceAccountRef("payments-admin-sa")
+                    .scopeRef("sa-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -179,13 +187,13 @@ class GatewayPolicyTransformerTest {
         }
 
         @Test
-        @DisplayName("should pass through groupRef to group scope")
+        @DisplayName("should pass through groupRef to group scope via Scope CRD")
         void shouldPassThroughGroupRef() {
             createKafkaCluster("my-cluster", "my-vcluster");
+            createScope("group-scope", "my-cluster", null, "admin-group");
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
-                    .groupRef("admin-group")
+                    .scopeRef("group-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -194,15 +202,14 @@ class GatewayPolicyTransformerTest {
         }
 
         @Test
-        @DisplayName("should combine multiple scope fields")
+        @DisplayName("should combine multiple scope fields from Scope CRD")
         void shouldCombineMultipleScopeFields() {
             createKafkaCluster("my-cluster", "my-vcluster");
             createServiceAccount("my-sa", "sa-name", "my-cluster");
+            createScope("full-scope", "my-cluster", "my-sa", "my-group");
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
-                    .serviceAccountRef("my-sa")
-                    .groupRef("my-group")
+                    .scopeRef("full-scope")
                     .build();
 
             ConduktorInterceptor result = transformer.transform(source);
@@ -218,31 +225,51 @@ class GatewayPolicyTransformerTest {
     class ErrorHandlingTests {
 
         @Test
-        @DisplayName("should throw when clusterRef not found")
-        void shouldThrowWhenClusterRefNotFound() {
+        @DisplayName("should throw when scopeRef not found")
+        void shouldThrowWhenScopeRefNotFound() {
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("non-existent-cluster")
+                    .scopeRef("non-existent-scope")
                     .build();
 
             assertThatThrownBy(() -> transformer.transform(source))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("KafkaCluster 'non-existent-cluster' not found");
+                    .hasMessageContaining("Scope 'non-existent-scope' not found");
         }
 
         @Test
-        @DisplayName("should throw when serviceAccountRef not found")
-        void shouldThrowWhenServiceAccountRefNotFound() {
-            createKafkaCluster("my-cluster", "my-vcluster");
+        @DisplayName("should throw when clusterRef in Scope not found (stale data)")
+        void shouldThrowWhenClusterRefNotFound() {
+            createKafkaCluster("temp-cluster", "temp-id");
+            createScope("broken-scope", "temp-cluster", null, null);
+            store.delete(CRDKind.KAFKA_CLUSTER, NAMESPACE, "temp-cluster");
+
             GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                     .namespace(NAMESPACE)
-                    .clusterRef("my-cluster")
-                    .serviceAccountRef("non-existent-sa")
+                    .scopeRef("broken-scope")
                     .build();
 
             assertThatThrownBy(() -> transformer.transform(source))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("ServiceAccount 'non-existent-sa' not found");
+                    .hasMessageContaining("KafkaCluster 'temp-cluster' not found");
+        }
+
+        @Test
+        @DisplayName("should throw when serviceAccountRef in Scope not found (stale data)")
+        void shouldThrowWhenServiceAccountRefNotFound() {
+            createKafkaCluster("my-cluster", "my-vcluster");
+            createServiceAccount("temp-sa", "temp-name", "my-cluster");
+            createScope("broken-sa-scope", "my-cluster", "temp-sa", null);
+            store.delete(CRDKind.SERVICE_ACCOUNT, NAMESPACE, "temp-sa");
+
+            GatewayPolicy source = TestDataBuilder.gatewayPolicy()
+                    .namespace(NAMESPACE)
+                    .scopeRef("broken-sa-scope")
+                    .build();
+
+            assertThatThrownBy(() -> transformer.transform(source))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("ServiceAccount 'temp-sa' not found");
         }
 
         @Test
@@ -262,6 +289,7 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should map all traffic control policy types")
         void shouldMapTrafficControlPolicies() {
             createKafkaCluster("my-cluster", "my-vcluster");
+            createScope("my-scope", "my-cluster", null, null);
 
             for (PolicyType type : new PolicyType[] {
                 PolicyType.CREATE_TOPIC_POLICY,
@@ -276,7 +304,7 @@ class GatewayPolicyTransformerTest {
             }) {
                 GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                         .namespace(NAMESPACE)
-                        .clusterRef("my-cluster")
+                        .scopeRef("my-scope")
                         .policyType(type)
                         .build();
 
@@ -292,6 +320,7 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should map data security policy types")
         void shouldMapDataSecurityPolicies() {
             createKafkaCluster("my-cluster", "my-vcluster");
+            createScope("my-scope", "my-cluster", null, null);
 
             for (PolicyType type : new PolicyType[] {
                 PolicyType.FIELD_ENCRYPTION,
@@ -303,7 +332,7 @@ class GatewayPolicyTransformerTest {
             }) {
                 GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                         .namespace(NAMESPACE)
-                        .clusterRef("my-cluster")
+                        .scopeRef("my-scope")
                         .policyType(type)
                         .build();
 
@@ -319,6 +348,7 @@ class GatewayPolicyTransformerTest {
         @DisplayName("should map chaos testing policy types")
         void shouldMapChaosPolicies() {
             createKafkaCluster("my-cluster", "my-vcluster");
+            createScope("my-scope", "my-cluster", null, null);
 
             for (PolicyType type : new PolicyType[] {
                 PolicyType.CHAOS_LATENCY,
@@ -331,7 +361,7 @@ class GatewayPolicyTransformerTest {
             }) {
                 GatewayPolicy source = TestDataBuilder.gatewayPolicy()
                         .namespace(NAMESPACE)
-                        .clusterRef("my-cluster")
+                        .scopeRef("my-scope")
                         .policyType(type)
                         .build();
 
@@ -364,5 +394,17 @@ class GatewayPolicyTransformerTest {
                 .dn("CN=test")
                 .build();
         store.create(CRDKind.SERVICE_ACCOUNT, NAMESPACE, sa);
+    }
+
+    private void createScope(String name, String clusterRef, String serviceAccountRef, String groupRef) {
+        Scope scope = TestDataBuilder.scope()
+                .namespace(NAMESPACE)
+                .name(name)
+                .applicationServiceRef(APP_SERVICE)
+                .clusterRef(clusterRef)
+                .serviceAccountRef(serviceAccountRef)
+                .groupRef(groupRef)
+                .build();
+        store.create(CRDKind.SCOPE, NAMESPACE, scope);
     }
 }

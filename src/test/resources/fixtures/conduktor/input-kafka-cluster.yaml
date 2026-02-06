@@ -9,6 +9,7 @@ metadata:
 spec:
   clusterId: payments-prod-vcluster
   applicationServiceRef: payments-service
+  authType: MTLS
 ---
 apiVersion: messaging.example.com/v1
 kind: KafkaCluster
@@ -21,6 +22,7 @@ metadata:
 spec:
   clusterId: payments-staging-vcluster
   applicationServiceRef: payments-service
+  authType: MTLS
 ---
 apiVersion: messaging.example.com/v1
 kind: KafkaCluster
@@ -30,3 +32,14 @@ metadata:
 spec:
   clusterId: orders-prod-vcluster
   applicationServiceRef: orders-service
+  authType: MTLS
+---
+apiVersion: messaging.example.com/v1
+kind: KafkaCluster
+metadata:
+  name: sasl-cluster
+  namespace: sasl-team
+spec:
+  clusterId: sasl-prod-vcluster
+  applicationServiceRef: sasl-service
+  authType: SASL_SSL

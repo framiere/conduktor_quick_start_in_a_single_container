@@ -42,4 +42,9 @@ public class CRDStoreResourceLookup implements ResourceLookup {
     public ACL getAcl(String namespace, String name) {
         return store.get(CRDKind.ACL, namespace, name);
     }
+
+    @Override
+    public Scope getScope(String namespace, String name) {
+        return store.get(CRDKind.SCOPE, namespace, name);
+    }
 }

@@ -10,8 +10,8 @@ import Section from '../components/Section'
 const features = [
   {
     icon: Boxes,
-    title: '6 Custom Resource Definitions',
-    description: 'ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, ConsumerGroup - all managed declaratively'
+    title: '8 Custom Resource Definitions',
+    description: 'ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, ConsumerGroup, Scope, GatewayPolicy - all managed declaratively'
   },
   {
     icon: Shield,
@@ -225,6 +225,12 @@ EOF`}
                 </div>
                 <div className="px-6 py-3 bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-800 dark:text-gray-200">
                   ConsumerGroup
+                </div>
+                <div className="px-6 py-3 bg-teal-100 dark:bg-teal-900/50 border-2 border-teal-300 dark:border-teal-700 rounded-xl font-semibold text-teal-800 dark:text-teal-200">
+                  Scope
+                </div>
+                <div className="px-6 py-3 bg-cyan-100 dark:bg-cyan-900/50 border-2 border-cyan-300 dark:border-cyan-700 rounded-xl font-semibold text-cyan-800 dark:text-cyan-200">
+                  GatewayPolicy
                 </div>
               </div>
             </div>

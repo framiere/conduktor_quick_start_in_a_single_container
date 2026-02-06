@@ -18,3 +18,10 @@ metadata:
   name: orders-prod-vcluster
 spec:
   aclEnabled: true
+---
+apiVersion: gateway/v2
+kind: VirtualCluster
+metadata:
+  name: sasl-prod-vcluster
+spec:
+  aclEnabled: true

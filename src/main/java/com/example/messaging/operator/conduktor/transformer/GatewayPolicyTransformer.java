@@ -7,6 +7,8 @@ import com.example.messaging.operator.conduktor.model.InterceptorScope;
 import com.example.messaging.operator.crd.GatewayPolicy;
 import com.example.messaging.operator.crd.GatewayPolicySpec;
 import com.example.messaging.operator.crd.KafkaCluster;
+import com.example.messaging.operator.crd.Scope;
+import com.example.messaging.operator.crd.ScopeSpec;
 import com.example.messaging.operator.crd.ServiceAccount;
 import com.example.messaging.operator.store.CRDKind;
 import com.example.messaging.operator.store.CRDStore;
@@ -47,30 +49,38 @@ public class GatewayPolicyTransformer {
     }
 
     private InterceptorScope buildScope(GatewayPolicySpec spec, String namespace) {
+        Scope scopeResource = store.get(CRDKind.SCOPE, namespace, spec.getScopeRef());
+        if (scopeResource == null) {
+            throw new IllegalStateException(
+                    "Cannot resolve scope: Scope '%s' not found in namespace '%s'"
+                            .formatted(spec.getScopeRef(), namespace));
+        }
+
+        ScopeSpec scopeSpec = scopeResource.getSpec();
         InterceptorScope.InterceptorScopeBuilder builder = InterceptorScope.builder();
 
-        if (spec.getClusterRef() != null) {
-            KafkaCluster cluster = store.get(CRDKind.KAFKA_CLUSTER, namespace, spec.getClusterRef());
+        if (scopeSpec.getClusterRef() != null) {
+            KafkaCluster cluster = store.get(CRDKind.KAFKA_CLUSTER, namespace, scopeSpec.getClusterRef());
             if (cluster == null) {
-                throw new IllegalStateException("""
-                        Cannot resolve scope: KafkaCluster '%s' not found in namespace '%s'"""
-                        .formatted(spec.getClusterRef(), namespace));
+                throw new IllegalStateException(
+                        "Cannot resolve scope: KafkaCluster '%s' not found in namespace '%s'"
+                                .formatted(scopeSpec.getClusterRef(), namespace));
             }
             builder.vCluster(cluster.getSpec().getClusterId());
         }
 
-        if (spec.getServiceAccountRef() != null) {
-            ServiceAccount sa = store.get(CRDKind.SERVICE_ACCOUNT, namespace, spec.getServiceAccountRef());
+        if (scopeSpec.getServiceAccountRef() != null) {
+            ServiceAccount sa = store.get(CRDKind.SERVICE_ACCOUNT, namespace, scopeSpec.getServiceAccountRef());
             if (sa == null) {
-                throw new IllegalStateException("""
-                        Cannot resolve scope: ServiceAccount '%s' not found in namespace '%s'"""
-                        .formatted(spec.getServiceAccountRef(), namespace));
+                throw new IllegalStateException(
+                        "Cannot resolve scope: ServiceAccount '%s' not found in namespace '%s'"
+                                .formatted(scopeSpec.getServiceAccountRef(), namespace));
             }
             builder.username(sa.getSpec().getName());
         }
 
-        if (spec.getGroupRef() != null) {
-            builder.group(spec.getGroupRef());
+        if (scopeSpec.getGroupRef() != null) {
+            builder.group(scopeSpec.getGroupRef());
         }
 
         InterceptorScope scope = builder.build();

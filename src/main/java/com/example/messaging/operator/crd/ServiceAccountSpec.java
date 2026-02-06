@@ -19,7 +19,6 @@ public class ServiceAccountSpec {
 
     @JsonProperty("dn")
     @JsonPropertyDescription("Distinguished Names (DN) for certificates")
-    @Required
     private List<String> dn = new ArrayList<>();
 
     @JsonProperty("clusterRef")

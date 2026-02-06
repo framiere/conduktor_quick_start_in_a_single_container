@@ -107,14 +107,22 @@ function PolicyCategoryCard({ category }) {
   )
 }
 
+const scopeYaml = `apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: payments-cluster-scope
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster`
+
 const inputYaml = `apiVersion: messaging.example.com/v1
 kind: GatewayPolicy
 metadata:
   name: enforce-topic-partitions
   namespace: payments-team
 spec:
-  applicationServiceRef: payments-service
-  clusterRef: payments-cluster
+  scopeRef: payments-cluster-scope
   policyType: CREATE_TOPIC_POLICY
   priority: 100
   config:
@@ -154,8 +162,7 @@ metadata:
   name: mask-pii-data
   namespace: payments-team
 spec:
-  applicationServiceRef: payments-service
-  clusterRef: payments-cluster
+  scopeRef: payments-cluster-scope
   policyType: DATA_MASKING
   priority: 200
   config:
@@ -175,24 +182,26 @@ public ConduktorInterceptor transform(GatewayPolicy source) {
     String namespace = source.getMetadata().getNamespace();
 
     // Build namespaced name to avoid collisions
-    String interceptorName = namespace + "--" + source.getMetadata().getName();
+    String interceptorName = namespace + "--"
+        + source.getMetadata().getName();
 
-    // Resolve scope from references
+    // Resolve scopeRef → Scope → individual refs
     InterceptorScope scope = buildScope(spec, namespace);
 
     return ConduktorInterceptor.builder()
-            .apiVersion("gateway/v2")
-            .kind("Interceptor")
-            .metadata(ConduktorInterceptorMetadata.builder()
-                    .name(interceptorName)
-                    .scope(scope)
-                    .build())
-            .spec(ConduktorInterceptorSpec.builder()
-                    .pluginClass(spec.getPolicyType().getPluginClass())
-                    .priority(spec.getPriority())
-                    .config(spec.getConfig())
-                    .build())
-            .build();
+        .apiVersion("gateway/v2")
+        .kind("Interceptor")
+        .metadata(ConduktorInterceptorMetadata.builder()
+                .name(interceptorName)
+                .scope(scope)
+                .build())
+        .spec(ConduktorInterceptorSpec.builder()
+                .pluginClass(spec.getPolicyType()
+                    .getPluginClass())
+                .priority(spec.getPriority())
+                .config(spec.getConfig())
+                .build())
+        .build();
 }`
 
 export default function GatewayPolicyPage() {
@@ -259,6 +268,11 @@ export default function GatewayPolicyPage() {
           <div className="grid lg:grid-cols-2 gap-0 lg:divide-x divide-gray-800">
             <div className="p-4">
               <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+                <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded">SCOPE</span>
+                <span>Scope CRD (targeting)</span>
+              </div>
+              <CodeBlock code={scopeYaml} language="yaml" />
+              <div className="flex items-center gap-2 text-sm text-gray-400 mb-3 mt-4">
                 <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">INPUT</span>
                 <span>GatewayPolicy CRD</span>
               </div>
@@ -282,10 +296,10 @@ export default function GatewayPolicyPage() {
                 <span className="text-gray-500 text-xs">Namespaced to avoid collisions</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <code className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono text-xs">clusterRef</code>
+                <code className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono text-xs">scopeRef</code>
                 <ArrowRight size={14} className="text-gray-600" />
                 <code className="px-2 py-1 bg-gray-800 rounded text-green-400 font-mono text-xs">scope.vCluster</code>
-                <span className="text-gray-500 text-xs">Resolved via KafkaCluster lookup</span>
+                <span className="text-gray-500 text-xs">Resolved via Scope → KafkaCluster lookup</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <code className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono text-xs">policyType</code>
@@ -317,27 +331,44 @@ export default function GatewayPolicyPage() {
         </CardGrid>
       </Section>
 
-      <Section title="Scoping" icon={Users}>
+      <Section title="Scoping via Scope CRD" icon={Users}>
         <p className="text-gray-300 mb-6">
-          Policies can be scoped to different levels of granularity:
+          Policies reference a <code className="text-cyan-400">Scope</code> CRD that bundles targeting fields.
+          This makes scoping reusable — multiple policies can share the same Scope.
         </p>
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+              <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded">Scope CRD</span>
+              <span>Defines where policies apply</span>
+            </div>
+            <CodeBlock code={scopeYaml} language="yaml" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">GatewayPolicy</span>
+              <span>References Scope via scopeRef</span>
+            </div>
+            <CodeBlock code={inputYaml} language="yaml" />
+          </div>
+        </div>
         <CardGrid cols={3}>
           <Card title="vCluster Scope" icon={Database} color="blue">
             <p className="text-gray-400 text-sm">
               Apply policy to all users within a specific virtual cluster.
-              Set via <code className="text-blue-400">clusterRef</code>.
+              Set via <code className="text-blue-400">clusterRef</code> on the Scope.
             </p>
           </Card>
           <Card title="User Scope" icon={Users} color="green">
             <p className="text-gray-400 text-sm">
               Apply policy to a specific service account.
-              Set via <code className="text-green-400">serviceAccountRef</code>.
+              Set via <code className="text-green-400">serviceAccountRef</code> on the Scope.
             </p>
           </Card>
           <Card title="Group Scope" icon={Shield} color="purple">
             <p className="text-gray-400 text-sm">
-              Apply policy to a group of users (future).
-              Set via <code className="text-purple-400">groupRef</code>.
+              Apply policy to a group of users.
+              Set via <code className="text-purple-400">groupRef</code> on the Scope.
             </p>
           </Card>
         </CardGrid>
@@ -352,13 +383,14 @@ export default function GatewayPolicyPage() {
 │   ├── Topic → ConduktorTopic
 │   ├── ACL
 │   └── ConsumerGroup
-└── GatewayPolicy → Interceptor  ← NEW`}
+├── Scope (bundles cluster/serviceAccount/group targeting)
+└── GatewayPolicy → Interceptor (via scopeRef)`}
           </pre>
         </div>
         <p className="text-gray-400 mt-4">
-          GatewayPolicy follows the same ownership model as other CRDs.
-          The <code className="text-blue-400">applicationServiceRef</code> field is required
-          and must reference a valid ApplicationService in the same namespace.
+          Scope follows the standard ownership model via <code className="text-blue-400">applicationServiceRef</code>.
+          GatewayPolicy references a Scope via <code className="text-cyan-400">scopeRef</code>, decoupling
+          policy logic from targeting configuration.
         </p>
       </Section>
     </PageLayout>

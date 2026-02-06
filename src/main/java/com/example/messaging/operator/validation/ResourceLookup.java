@@ -1,7 +1,6 @@
 package com.example.messaging.operator.validation;
 
 import com.example.messaging.operator.crd.*;
-import com.example.messaging.operator.store.CRDKind;
 
 /**
  * Interface for looking up CRD resources. Implementations can use either
@@ -14,4 +13,5 @@ public interface ResourceLookup {
     Topic getTopic(String namespace, String name);
     ConsumerGroup getConsumerGroup(String namespace, String name);
     ACL getAcl(String namespace, String name);
+    Scope getScope(String namespace, String name);
 }

@@ -35,7 +35,7 @@ The operator watches these CRDs and automatically provisions the corresponding r
 
 | Feature | Description |
 |---------|-------------|
-| **6 CRD Types** | ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, GatewayPolicy |
+| **8 CRD Types** | ApplicationService, KafkaCluster, ServiceAccount, Topic, ACL, ConsumerGroup, Scope, GatewayPolicy |
 | **27 Gateway Policies** | Traffic control, data masking, encryption, chaos testing |
 | **Ownership Validation** | Kubernetes-native ownership chains with ValidatingWebhook |
 | **Multi-Tenant** | Namespace-based isolation with strict resource boundaries |
@@ -93,7 +93,8 @@ ApplicationService (root - no parent)
 │   ├── Topic → ConduktorTopic
 │   ├── ACL
 │   └── ConsumerGroup
-└── GatewayPolicy → Interceptor
+├── Scope (bundles cluster/serviceAccount/group targeting)
+└── GatewayPolicy → Interceptor (references Scope via scopeRef)
 ```
 
 ## Documentation

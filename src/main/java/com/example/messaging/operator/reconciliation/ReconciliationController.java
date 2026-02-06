@@ -50,7 +50,7 @@ public class ReconciliationController implements AutoCloseable {
 
         // Initialize transformers
         this.kafkaClusterTransformer = new KafkaClusterTransformer();
-        this.serviceAccountTransformer = new ServiceAccountTransformer();
+        this.serviceAccountTransformer = new ServiceAccountTransformer(store);
         this.topicTransformer = new TopicTransformer(store);
 
         // Initialize CLI with credentials

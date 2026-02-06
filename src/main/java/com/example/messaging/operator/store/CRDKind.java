@@ -14,6 +14,7 @@ public enum CRDKind {
     TOPIC("Topic", Topic.class),
     ACL("ACL", ACL.class),
     CONSUMER_GROUP("ConsumerGroup", ConsumerGroup.class),
+    SCOPE("Scope", Scope.class),
     GATEWAY_POLICY("GatewayPolicy", GatewayPolicy.class);
 
     private final String value;

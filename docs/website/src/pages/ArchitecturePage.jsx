@@ -76,7 +76,7 @@ export default function ArchitecturePage() {
       </Section>
 
       {/* CRD References */}
-      <Section title="CRD Reference Graph" subtitle="6 Custom Resource Definitions and their reference relationships. Pan and zoom to explore.">
+      <Section title="CRD Reference Graph" subtitle="8 Custom Resource Definitions and their reference relationships. Pan and zoom to explore.">
         <CRDReferenceGraph />
 
         {/* Reference Table */}
@@ -119,6 +119,16 @@ export default function ArchitecturePage() {
                 <td className="px-6 py-3 font-medium">ACL</td>
                 <td className="px-6 py-3"><code className="text-sm">serviceRef</code>, <code className="text-sm">topicRef?</code>, <code className="text-sm">consumerGroupRef?</code></td>
                 <td className="px-6 py-3">ServiceAccount, Topic (opt), ConsumerGroup (opt)</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">Scope</td>
+                <td className="px-6 py-3"><code className="text-sm">applicationServiceRef</code>, <code className="text-sm">clusterRef</code>, <code className="text-sm">serviceAccountRef?</code>, <code className="text-sm">groupRef?</code></td>
+                <td className="px-6 py-3">ApplicationService, KafkaCluster, ServiceAccount (opt)</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3 font-medium">GatewayPolicy</td>
+                <td className="px-6 py-3"><code className="text-sm">scopeRef</code></td>
+                <td className="px-6 py-3">Scope</td>
               </tr>
             </tbody>
           </table>

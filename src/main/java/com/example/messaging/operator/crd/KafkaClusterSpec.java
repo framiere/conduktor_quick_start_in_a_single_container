@@ -19,4 +19,8 @@ public class KafkaClusterSpec {
     @JsonPropertyDescription("Reference to ApplicationService CR")
     @Required
     private String applicationServiceRef;
+
+    @JsonProperty("authType")
+    @JsonPropertyDescription("Authentication type: MTLS or SASL_SSL")
+    private AuthType authType;
 }

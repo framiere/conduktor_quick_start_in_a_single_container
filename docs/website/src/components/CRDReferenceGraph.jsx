@@ -69,6 +69,26 @@ const crdDefinitions = [
       { target: 'ApplicationService', label: 'applicationServiceRef', required: true },
     ],
   },
+  {
+    id: 'Scope',
+    label: 'Scope',
+    color: '#14B8A6',
+    description: 'Policy targeting',
+    refs: [
+      { target: 'ApplicationService', label: 'applicationServiceRef', required: true },
+      { target: 'KafkaCluster', label: 'clusterRef', required: true },
+      { target: 'ServiceAccount', label: 'serviceAccountRef', required: false },
+    ],
+  },
+  {
+    id: 'GatewayPolicy',
+    label: 'GatewayPolicy',
+    color: '#06B6D4',
+    description: 'Gateway interceptor',
+    refs: [
+      { target: 'Scope', label: 'scopeRef', required: true },
+    ],
+  },
 ]
 
 // Custom node with visible anchor points (white circles with colored border)

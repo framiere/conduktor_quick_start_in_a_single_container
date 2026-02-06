@@ -34,6 +34,7 @@ public class OwnershipValidator {
             }
             case Topic topic -> validateServiceAccountExists(topic.getSpec().getServiceRef(), namespace, topic.getSpec().getApplicationServiceRef());
             case ACL acl -> validateAcl(acl, namespace);
+            case Scope scope -> validateScope(scope, namespace);
             default -> valid();
         };
     }
@@ -113,6 +114,22 @@ public class OwnershipValidator {
         return validateServiceAccountExists(spec.getServiceRef(), namespace, spec.getApplicationServiceRef());
     }
 
+    private ValidationResult validateScope(Scope scope, String namespace) {
+        ScopeSpec spec = scope.getSpec();
+        ValidationResult appServiceResult = validateApplicationServiceExists(spec.getApplicationServiceRef(), namespace);
+        if (!appServiceResult.isValid()) {
+            return appServiceResult;
+        }
+        ValidationResult clusterResult = validateKafkaClusterExists(spec.getClusterRef(), namespace, spec.getApplicationServiceRef());
+        if (!clusterResult.isValid()) {
+            return clusterResult;
+        }
+        if (spec.getServiceAccountRef() != null) {
+            return validateServiceAccountExists(spec.getServiceAccountRef(), namespace, spec.getApplicationServiceRef());
+        }
+        return valid();
+    }
+
     private String getApplicationServiceRef(Object resource) {
         return switch (resource) {
             case KafkaCluster r -> r.getSpec().getApplicationServiceRef();
@@ -120,6 +137,7 @@ public class OwnershipValidator {
             case Topic topic -> topic.getSpec().getApplicationServiceRef();
             case ConsumerGroup cg -> cg.getSpec().getApplicationServiceRef();
             case ACL acl -> acl.getSpec().getApplicationServiceRef();
+            case Scope scope -> scope.getSpec().getApplicationServiceRef();
             default -> null;
         };
     }

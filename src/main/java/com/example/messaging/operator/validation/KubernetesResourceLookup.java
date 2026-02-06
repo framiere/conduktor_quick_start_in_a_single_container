@@ -93,4 +93,17 @@ public class KubernetesResourceLookup implements ResourceLookup {
             return null;
         }
     }
+
+    @Override
+    public Scope getScope(String namespace, String name) {
+        try {
+            return client.resources(Scope.class)
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .get();
+        } catch (KubernetesClientException e) {
+            log.debug("Failed to get Scope {}/{}: {}", namespace, name, e.getMessage());
+            return null;
+        }
+    }
 }

@@ -1,0 +1,39 @@
+# Test fixtures for Scope CRD
+# These scopes define where gateway policies apply
+---
+apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: payments-cluster-scope
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster
+---
+apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: payments-admin-scope
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: payments-cluster
+  serviceAccountRef: payments-admin
+---
+apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: orders-cluster-scope
+  namespace: orders-team
+spec:
+  applicationServiceRef: orders-service
+  clusterRef: orders-cluster
+---
+apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: staging-cluster-scope
+  namespace: staging
+spec:
+  applicationServiceRef: test-service
+  clusterRef: staging-cluster

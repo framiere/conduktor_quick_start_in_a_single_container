@@ -9,9 +9,11 @@ import com.example.messaging.operator.conduktor.model.GatewayServiceAccount;
 import com.example.messaging.operator.conduktor.model.PolicyType;
 import com.example.messaging.operator.conduktor.model.VirtualCluster;
 import com.example.messaging.operator.conduktor.yaml.ConduktorYamlWriter;
+import com.example.messaging.operator.crd.AuthType;
 import com.example.messaging.operator.crd.ApplicationService;
 import com.example.messaging.operator.crd.GatewayPolicy;
 import com.example.messaging.operator.crd.KafkaCluster;
+import com.example.messaging.operator.crd.Scope;
 import com.example.messaging.operator.crd.ServiceAccount;
 import com.example.messaging.operator.crd.Topic;
 import com.example.messaging.operator.it.base.TestDataBuilder;
@@ -123,11 +125,32 @@ class ConduktorTransformationIT {
     @DisplayName("ServiceAccount → GatewayServiceAccount Transformation")
     class ServiceAccountTransformationTests {
 
+        private CRDStore store;
         private ServiceAccountTransformer transformer;
 
         @BeforeEach
         void setUp() {
-            transformer = new ServiceAccountTransformer();
+            store = new CRDStore();
+            transformer = new ServiceAccountTransformer(store);
+            setupKafkaClusters();
+        }
+
+        private void setupKafkaClusters() {
+            createAppAndCluster("payments-service", "payments-team", "production-cluster", AuthType.MTLS);
+            createAppAndCluster("orders-service", "orders-team", "orders-cluster", AuthType.MTLS);
+            createAppAndCluster("legacy-service", "legacy-team", "legacy-cluster", AuthType.MTLS);
+            createAppAndCluster("sasl-service", "sasl-team", "sasl-cluster", AuthType.SASL_SSL);
+        }
+
+        private void createAppAndCluster(String appService, String namespace, String clusterName, AuthType authType) {
+            ApplicationService app = TestDataBuilder.applicationService()
+                    .namespace(namespace).name(appService).appName(appService).build();
+            store.create(CRDKind.APPLICATION_SERVICE, namespace, app);
+
+            KafkaCluster cluster = TestDataBuilder.kafkaCluster()
+                    .namespace(namespace).name(clusterName).clusterId(clusterName)
+                    .applicationServiceRef(appService).authType(authType).build();
+            store.create(CRDKind.KAFKA_CLUSTER, namespace, cluster);
         }
 
         @Test
@@ -178,8 +201,8 @@ class ConduktorTransformationIT {
         @DisplayName("should correctly extract CN from complex DN patterns")
         void shouldExtractCnFromComplexDnPatterns() {
             ServiceAccount input = TestDataBuilder.serviceAccount()
-                    .saName("payments-admin")
-                    .clusterRef("payments-prod-vcluster")
+                    .namespace("payments-team").saName("payments-admin")
+                    .clusterRef("production-cluster").applicationServiceRef("payments-service")
                     .dn(List.of(
                             "CN=payments-admin,OU=ServiceAccounts,O=PaymentsTeam,C=FR",
                             "CN=payments-backup-admin,OU=ServiceAccounts,O=PaymentsTeam,C=FR"))
@@ -192,7 +215,7 @@ class ConduktorTransformationIT {
                     .contains("apiVersion: gateway/v2")
                     .contains("kind: GatewayServiceAccount")
                     .contains("name: payments-admin")
-                    .containsIgnoringCase("vcluster: payments-prod-vcluster")
+                    .containsIgnoringCase("vcluster: production-cluster")
                     .contains("type: EXTERNAL")
                     .contains("- payments-admin")
                     .contains("- payments-backup-admin");
@@ -202,8 +225,8 @@ class ConduktorTransformationIT {
         @DisplayName("should preserve full DN when CN is not present")
         void shouldPreserveFullDnWhenCnNotPresent() {
             ServiceAccount input = TestDataBuilder.serviceAccount()
-                    .saName("legacy-app")
-                    .clusterRef("legacy-cluster")
+                    .namespace("legacy-team").saName("legacy-app")
+                    .clusterRef("legacy-cluster").applicationServiceRef("legacy-service")
                     .dn("OU=LegacyApps,O=Company")
                     .build();
 
@@ -400,6 +423,11 @@ class ConduktorTransformationIT {
             createAppServiceAndCluster("payments-service", "payments-team", "payments-admin", "payments-cluster", "payments-prod-vcluster");
             createAppServiceAndCluster("orders-service", "orders-team", "orders-processor", "orders-cluster", "orders-prod-vcluster");
             createAppServiceAndCluster("test-service", "staging", "test-sa", "staging-cluster", "staging-vcluster");
+
+            createScope("payments-cluster-scope", "payments-team", "payments-service", "payments-cluster", null, null);
+            createScope("payments-admin-scope", "payments-team", "payments-service", "payments-cluster", "payments-admin", null);
+            createScope("orders-cluster-scope", "orders-team", "orders-service", "orders-cluster", null, null);
+            createScope("staging-cluster-scope", "staging", "test-service", "staging-cluster", null, null);
         }
 
         private void createAppServiceAndCluster(String appService, String namespace, String saName, String clusterName, String clusterId) {
@@ -429,14 +457,25 @@ class ConduktorTransformationIT {
             store.create(CRDKind.SERVICE_ACCOUNT, namespace, sa);
         }
 
+        private void createScope(String name, String namespace, String appService, String clusterRef, String serviceAccountRef, String groupRef) {
+            Scope scope = TestDataBuilder.scope()
+                    .namespace(namespace)
+                    .name(name)
+                    .applicationServiceRef(appService)
+                    .clusterRef(clusterRef)
+                    .serviceAccountRef(serviceAccountRef)
+                    .groupRef(groupRef)
+                    .build();
+            store.create(CRDKind.SCOPE, namespace, scope);
+        }
+
         @Test
         @DisplayName("should transform GatewayPolicy to Interceptor with correct structure")
         void shouldTransformGatewayPolicyToInterceptor() {
             GatewayPolicy input = TestDataBuilder.gatewayPolicy()
                     .namespace("payments-team")
                     .name("enforce-partitions")
-                    .applicationServiceRef("payments-service")
-                    .clusterRef("payments-cluster")
+                    .scopeRef("payments-cluster-scope")
                     .policyType(PolicyType.CREATE_TOPIC_POLICY)
                     .priority(100)
                     .config(Map.of(
@@ -463,8 +502,7 @@ class ConduktorTransformationIT {
             GatewayPolicy input = TestDataBuilder.gatewayPolicy()
                     .namespace("payments-team")
                     .name("mask-pii")
-                    .applicationServiceRef("payments-service")
-                    .clusterRef("payments-cluster")
+                    .scopeRef("payments-cluster-scope")
                     .policyType(PolicyType.DATA_MASKING)
                     .priority(200)
                     .config(Map.of(
@@ -491,8 +529,7 @@ class ConduktorTransformationIT {
             GatewayPolicy input = TestDataBuilder.gatewayPolicy()
                     .namespace("orders-team")
                     .name("audit-requests")
-                    .applicationServiceRef("orders-service")
-                    .clusterRef("orders-cluster")
+                    .scopeRef("orders-cluster-scope")
                     .policyType(PolicyType.AUDIT)
                     .priority(1)
                     .config(Map.of(
@@ -516,8 +553,7 @@ class ConduktorTransformationIT {
             GatewayPolicy input = TestDataBuilder.gatewayPolicy()
                     .namespace("staging")
                     .name("chaos-latency")
-                    .applicationServiceRef("test-service")
-                    .clusterRef("staging-cluster")
+                    .scopeRef("staging-cluster-scope")
                     .policyType(PolicyType.CHAOS_LATENCY)
                     .priority(100)
                     .config(Map.of(
@@ -539,14 +575,59 @@ class ConduktorTransformationIT {
         }
 
         @Test
-        @DisplayName("should include username scope when serviceAccountRef is set")
+        @DisplayName("should transform all fixture GatewayPolicies via Scope indirection to expected Interceptors")
+        void shouldTransformFixtureGatewayPoliciesToExpectedInterceptors() throws IOException {
+            List<Map<String, Object>> inputDocs = loadYamlDocuments("input-gateway-policy.yaml");
+            List<Map<String, Object>> expectedDocs = loadYamlDocuments("expected-interceptor.yaml");
+
+            assertThat(inputDocs).hasSameSizeAs(expectedDocs);
+
+            for (int i = 0; i < inputDocs.size(); i++) {
+                GatewayPolicy input = parseGatewayPolicy(inputDocs.get(i));
+                ConduktorInterceptor result = transformer.transform(input);
+                String actualYaml = conduktorWriter.toYaml(result);
+                Map<String, Object> actualDoc = parseYaml(actualYaml);
+
+                assertThat(actualDoc)
+                        .as("Transformation %d: %s", i, input.getMetadata().getName())
+                        .containsEntry("apiVersion", expectedDocs.get(i).get("apiVersion"))
+                        .containsEntry("kind", expectedDocs.get(i).get("kind"));
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> expectedMetadata = (Map<String, Object>) expectedDocs.get(i).get("metadata");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> actualMetadata = (Map<String, Object>) actualDoc.get("metadata");
+
+                assertThat(actualMetadata.get("name"))
+                        .as("Interceptor name for transformation %d", i)
+                        .isEqualTo(expectedMetadata.get("name"));
+
+                assertThat(actualMetadata.get("scope"))
+                        .as("Scope for transformation %d", i)
+                        .isEqualTo(expectedMetadata.get("scope"));
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> expectedSpec = (Map<String, Object>) expectedDocs.get(i).get("spec");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> actualSpec = (Map<String, Object>) actualDoc.get("spec");
+
+                assertThat(actualSpec.get("pluginClass"))
+                        .as("pluginClass for transformation %d", i)
+                        .isEqualTo(expectedSpec.get("pluginClass"));
+
+                assertThat(actualSpec.get("priority"))
+                        .as("priority for transformation %d", i)
+                        .isEqualTo(expectedSpec.get("priority"));
+            }
+        }
+
+        @Test
+        @DisplayName("should include username scope when serviceAccountRef is set in Scope")
         void shouldIncludeUsernameScopeWhenServiceAccountRefSet() {
             GatewayPolicy input = TestDataBuilder.gatewayPolicy()
                     .namespace("payments-team")
                     .name("user-scoped-policy")
-                    .applicationServiceRef("payments-service")
-                    .clusterRef("payments-cluster")
-                    .serviceAccountRef("payments-admin")
+                    .scopeRef("payments-admin-scope")
                     .policyType(PolicyType.PRODUCE_POLICY)
                     .priority(50)
                     .build();
@@ -591,10 +672,21 @@ class ConduktorTransformationIT {
         @Test
         @DisplayName("should produce identical YAML structure for ServiceAccount transformation")
         void shouldProduceIdenticalYamlForServiceAccount() {
-            ServiceAccountTransformer transformer = new ServiceAccountTransformer();
+            CRDStore saStore = new CRDStore();
+
+            ApplicationService app = TestDataBuilder.applicationService()
+                    .namespace("default").name("test-app").appName("test-app").build();
+            saStore.create(CRDKind.APPLICATION_SERVICE, "default", app);
+
+            KafkaCluster cluster = TestDataBuilder.kafkaCluster()
+                    .namespace("default").name("my-cluster").clusterId("my-cluster")
+                    .applicationServiceRef("test-app").authType(AuthType.MTLS).build();
+            saStore.create(CRDKind.KAFKA_CLUSTER, "default", cluster);
+
+            ServiceAccountTransformer transformer = new ServiceAccountTransformer(saStore);
 
             ServiceAccount input = TestDataBuilder.serviceAccount()
-                    .saName("my-service-account")
+                    .namespace("default").saName("my-service-account")
                     .clusterRef("my-cluster")
                     .dn(List.of("CN=user1,O=Org", "CN=user2,O=Org"))
                     .build();
@@ -613,6 +705,61 @@ class ConduktorTransformationIT {
                       externalNames:
                         - user1
                         - user2
+                    """;
+
+            assertThat(normalizeYaml(yaml)).isEqualTo(normalizeYaml(expectedYaml));
+        }
+
+        @Test
+        @DisplayName("should produce identical YAML structure for GatewayPolicy → Interceptor via Scope")
+        void shouldProduceIdenticalYamlForGatewayPolicyViaScope() {
+            CRDStore store = new CRDStore();
+            GatewayPolicyTransformer policyTransformer = new GatewayPolicyTransformer(store);
+
+            ApplicationService app = TestDataBuilder.applicationService()
+                    .namespace("test-ns").name("test-app").appName("test-app").build();
+            store.create(CRDKind.APPLICATION_SERVICE, "test-ns", app);
+
+            KafkaCluster cluster = TestDataBuilder.kafkaCluster()
+                    .namespace("test-ns").name("my-cluster").clusterId("my-vcluster")
+                    .applicationServiceRef("test-app").build();
+            store.create(CRDKind.KAFKA_CLUSTER, "test-ns", cluster);
+
+            ServiceAccount sa = TestDataBuilder.serviceAccount()
+                    .namespace("test-ns").name("my-sa").saName("my-username")
+                    .clusterRef("my-cluster").applicationServiceRef("test-app").dn("CN=test").build();
+            store.create(CRDKind.SERVICE_ACCOUNT, "test-ns", sa);
+
+            Scope scope = TestDataBuilder.scope()
+                    .namespace("test-ns").name("my-scope")
+                    .applicationServiceRef("test-app").clusterRef("my-cluster")
+                    .serviceAccountRef("my-sa").build();
+            store.create(CRDKind.SCOPE, "test-ns", scope);
+
+            GatewayPolicy policy = TestDataBuilder.gatewayPolicy()
+                    .namespace("test-ns").name("enforce-partitions")
+                    .scopeRef("my-scope")
+                    .policyType(PolicyType.CREATE_TOPIC_POLICY)
+                    .priority(100)
+                    .config(Map.of("topic", "payments-.*"))
+                    .build();
+
+            ConduktorInterceptor result = policyTransformer.transform(policy);
+            String yaml = conduktorWriter.toYaml(result);
+
+            String expectedYaml = """
+                    apiVersion: gateway/v2
+                    kind: Interceptor
+                    metadata:
+                      name: test-ns--enforce-partitions
+                      scope:
+                        username: my-username
+                        vCluster: my-vcluster
+                    spec:
+                      pluginClass: io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin
+                      priority: 100
+                      config:
+                        topic: payments-.*
                     """;
 
             assertThat(normalizeYaml(yaml)).isEqualTo(normalizeYaml(expectedYaml));
@@ -652,12 +799,18 @@ class ConduktorTransformationIT {
         Map<String, Object> metadata = (Map<String, Object>) doc.get("metadata");
         Map<String, Object> spec = (Map<String, Object>) doc.get("spec");
 
-        return TestDataBuilder.kafkaCluster()
+        TestDataBuilder.KafkaClusterBuilder builder = TestDataBuilder.kafkaCluster()
                 .name((String) metadata.get("name"))
                 .namespace((String) metadata.get("namespace"))
                 .clusterId((String) spec.get("clusterId"))
-                .applicationServiceRef((String) spec.get("applicationServiceRef"))
-                .build();
+                .applicationServiceRef((String) spec.get("applicationServiceRef"));
+
+        String authTypeStr = (String) spec.get("authType");
+        if (authTypeStr != null) {
+            builder.authType(AuthType.valueOf(authTypeStr));
+        }
+
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")
@@ -665,14 +818,19 @@ class ConduktorTransformationIT {
         Map<String, Object> metadata = (Map<String, Object>) doc.get("metadata");
         Map<String, Object> spec = (Map<String, Object>) doc.get("spec");
 
-        return TestDataBuilder.serviceAccount()
+        TestDataBuilder.ServiceAccountBuilder builder = TestDataBuilder.serviceAccount()
                 .name((String) metadata.get("name"))
                 .namespace((String) metadata.get("namespace"))
                 .saName((String) spec.get("name"))
                 .clusterRef((String) spec.get("clusterRef"))
-                .applicationServiceRef((String) spec.get("applicationServiceRef"))
-                .dn((List<String>) spec.get("dn"))
-                .build();
+                .applicationServiceRef((String) spec.get("applicationServiceRef"));
+
+        List<String> dn = (List<String>) spec.get("dn");
+        if (dn != null) {
+            builder.dn(dn);
+        }
+
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")
@@ -690,6 +848,26 @@ class ConduktorTransformationIT {
                 .replicationFactor((Integer) spec.get("replicationFactor"));
 
         Map<String, String> config = (Map<String, String>) spec.get("config");
+        if (config != null) {
+            builder.config(config);
+        }
+
+        return builder.build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private GatewayPolicy parseGatewayPolicy(Map<String, Object> doc) {
+        Map<String, Object> metadata = (Map<String, Object>) doc.get("metadata");
+        Map<String, Object> spec = (Map<String, Object>) doc.get("spec");
+
+        TestDataBuilder.GatewayPolicyBuilder builder = TestDataBuilder.gatewayPolicy()
+                .name((String) metadata.get("name"))
+                .namespace((String) metadata.get("namespace"))
+                .scopeRef((String) spec.get("scopeRef"))
+                .policyType(PolicyType.valueOf((String) spec.get("policyType")))
+                .priority((Integer) spec.get("priority"));
+
+        Map<String, Object> config = (Map<String, Object>) spec.get("config");
         if (config != null) {
             builder.config(config);
         }
