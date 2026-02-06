@@ -1,4 +1,4 @@
-import { ArrowRight, RefreshCw, Database, Users, MessageSquare, Terminal, CheckCircle } from 'lucide-react'
+import { ArrowRight, RefreshCw, Database, Users, MessageSquare, Terminal, CheckCircle, Shield } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import Card, { CardGrid } from '../components/Card'
 import Section from '../components/Section'
@@ -130,6 +130,65 @@ spec:
       { from: 'spec.replicationFactor', to: 'spec.replicationFactor', note: 'Direct mapping' },
       { from: 'spec.config', to: 'spec.configs', note: 'Kafka configs preserved' }
     ]
+  },
+  {
+    name: 'Scope + GatewayPolicy → Interceptor',
+    icon: Shield,
+    color: 'red',
+    description: 'Transforms a GatewayPolicy and its referenced Scope into a Conduktor Gateway Interceptor. The Scope bundles targeting (cluster, service account, group) into a reusable resource. The transformer resolves all references via CRDStore to produce the final Interceptor with resolved scope and plugin configuration.',
+    inputYaml: `# 1. Scope — defines WHERE the policy applies
+apiVersion: messaging.example.com/v1
+kind: Scope
+metadata:
+  name: payments-admin-scope
+  namespace: payments-team
+spec:
+  applicationServiceRef: payments-service
+  clusterRef: production-cluster        # → KafkaCluster
+  serviceAccountRef: payments-admin-sa  # → ServiceAccount (optional)
+---
+# 2. GatewayPolicy — defines WHAT the policy does
+apiVersion: messaging.example.com/v1
+kind: GatewayPolicy
+metadata:
+  name: enforce-topic-rules
+  namespace: payments-team
+spec:
+  scopeRef: payments-admin-scope  # → Scope above
+  policyType: CREATE_TOPIC_POLICY
+  priority: 1
+  config:
+    replicationFactor:
+      min: 3
+    numPartition:
+      min: 3
+      max: 100`,
+    outputYaml: `apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: payments-team--enforce-topic-rules
+  scope:
+    vCluster: payments-prod-vcluster  # from KafkaCluster.clusterId
+    username: payments-admin           # from ServiceAccount.spec.name
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.safeguard.CreateTopicPolicyPlugin
+  priority: 1
+  config:
+    replicationFactor:
+      min: 3
+    numPartition:
+      min: 3
+      max: 100`,
+    mappings: [
+      { from: 'namespace--policy.name', to: 'metadata.name', note: 'Prefixed with namespace for uniqueness' },
+      { from: 'scopeRef → Scope', to: '-', note: 'Resolves Scope from CRDStore' },
+      { from: 'Scope.clusterRef → clusterId', to: 'scope.vCluster', note: 'Resolves KafkaCluster, uses spec.clusterId' },
+      { from: 'Scope.serviceAccountRef → name', to: 'scope.username', note: 'Resolves ServiceAccount, uses spec.name' },
+      { from: 'Scope.groupRef', to: 'scope.group', note: 'Direct mapping (optional)' },
+      { from: 'spec.policyType', to: 'spec.pluginClass', note: 'Enum maps to full Java class name' },
+      { from: 'spec.priority', to: 'spec.priority', note: 'Direct mapping' },
+      { from: 'spec.config', to: 'spec.config', note: 'Policy config passed through' }
+    ]
   }
 ]
 
@@ -138,7 +197,8 @@ function TransformationCard({ transformation }) {
   const colorClasses = {
     purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     green: 'bg-green-500/20 text-green-400 border-green-500/30',
-    orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+    orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    red: 'bg-red-500/20 text-red-400 border-red-500/30'
   }
 
   return (
@@ -207,6 +267,9 @@ function ArchitectureDiagram() {
             <div className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg border border-orange-500/30 text-sm">
               Topic
             </div>
+            <div className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 text-sm">
+              Scope + GatewayPolicy
+            </div>
           </div>
         </div>
 
@@ -233,6 +296,9 @@ function ArchitectureDiagram() {
             </div>
             <div className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg border border-orange-500/30 text-sm">
               Topic (kafka/v2)
+            </div>
+            <div className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 text-sm">
+              Interceptor
             </div>
           </div>
         </div>
@@ -270,6 +336,9 @@ $ conduktor apply -f service-account.yaml --dry-run
 
 $ conduktor apply -f topic.yaml --dry-run
 ✓ Topic "payments.events.v1" validated
+
+$ conduktor apply -f interceptor.yaml --dry-run
+✓ Interceptor "payments-team--enforce-topic-rules" validated
 
 # Apply when ready (no --dry-run)
 $ conduktor apply -f virtual-cluster.yaml
