@@ -55,7 +55,7 @@ apiVersion: kafka/v2
 kind: Topic
 metadata:
   name: simple.events
-  cluster: simple-cluster
+  cluster: simple-vcluster
 spec:
   partitions: 3
   replicationFactor: 1

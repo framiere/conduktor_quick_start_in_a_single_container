@@ -64,7 +64,7 @@ apiVersion: gateway/v2
 kind: GatewayServiceAccount
 metadata:
   name: payments-admin
-  vCluster: production-cluster
+  vCluster: payments-prod-vcluster
 spec:
   type: EXTERNAL
   externalNames:
@@ -76,14 +76,14 @@ apiVersion: gateway/v2
 kind: GatewayServiceAccount
 metadata:
   name: sasl-user
-  vCluster: sasl-cluster
+  vCluster: sasl-prod-vcluster
 spec:
   type: EXTERNAL
   externalNames:
     - sasl-user            # Name used directly`,
     mappings: [
       { from: 'spec.name', to: 'metadata.name', note: 'ServiceAccount name' },
-      { from: 'spec.clusterRef', to: 'metadata.vCluster', note: 'Links to VirtualCluster' },
+      { from: 'spec.clusterRef → clusterId', to: 'metadata.vCluster', note: 'Resolves KafkaCluster, uses spec.clusterId' },
       { from: 'clusterRef → authType', to: 'logic branch', note: 'Resolves KafkaCluster from CRDStore to read authType' },
       { from: 'MTLS + dn present', to: 'spec.externalNames[]', note: 'Extracts CN from each DN entry' },
       { from: 'MTLS + dn absent', to: 'spec.externalNames[]', note: 'Auto-generates [name]' },

@@ -37,6 +37,16 @@ spec:
 apiVersion: messaging.example.com/v1
 kind: KafkaCluster
 metadata:
+  name: legacy-cluster
+  namespace: legacy-team
+spec:
+  clusterId: legacy-vcluster
+  applicationServiceRef: legacy-service
+  authType: MTLS
+---
+apiVersion: messaging.example.com/v1
+kind: KafkaCluster
+metadata:
   name: sasl-cluster
   namespace: sasl-team
 spec:

@@ -3,6 +3,7 @@ package com.example.messaging.operator.conduktor.transformer;
 import com.example.messaging.operator.conduktor.model.ConduktorMetadata;
 import com.example.messaging.operator.conduktor.model.ConduktorTopic;
 import com.example.messaging.operator.conduktor.model.ConduktorTopicSpec;
+import com.example.messaging.operator.crd.KafkaCluster;
 import com.example.messaging.operator.crd.ServiceAccount;
 import com.example.messaging.operator.crd.Topic;
 import com.example.messaging.operator.store.CRDKind;
@@ -42,11 +43,19 @@ public class TopicTransformer implements CrdTransformer<Topic, ConduktorTopic> {
 
         ServiceAccount sa = store.get(CRDKind.SERVICE_ACCOUNT, namespace, serviceRef);
         if (sa == null) {
-            throw new IllegalStateException("""
-                    Cannot resolve cluster: ServiceAccount '%s' not found in namespace '%s'"""
-                    .formatted(serviceRef, namespace));
+            throw new IllegalStateException(
+                    "Cannot resolve cluster: ServiceAccount '%s' not found in namespace '%s'"
+                            .formatted(serviceRef, namespace));
         }
 
-        return sa.getSpec().getClusterRef();
+        String clusterRef = sa.getSpec().getClusterRef();
+        KafkaCluster cluster = store.get(CRDKind.KAFKA_CLUSTER, namespace, clusterRef);
+        if (cluster == null) {
+            throw new IllegalStateException(
+                    "Cannot resolve cluster: KafkaCluster '%s' not found in namespace '%s'"
+                            .formatted(clusterRef, namespace));
+        }
+
+        return cluster.getSpec().getClusterId();
     }
 }

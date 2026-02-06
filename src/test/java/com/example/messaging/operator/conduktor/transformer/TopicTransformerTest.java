@@ -24,11 +24,15 @@ class TopicTransformerTest {
     private CRDStore store;
     private TopicTransformer transformer;
 
+    private static final String DEFAULT_CLUSTER_NAME = "my-cluster";
+    private static final String DEFAULT_CLUSTER_ID = "my-vcluster";
+
     @BeforeEach
     void setUp() {
         store = new CRDStore();
         transformer = new TopicTransformer(store);
         createApplicationService();
+        createKafkaCluster(DEFAULT_CLUSTER_NAME, DEFAULT_CLUSTER_ID);
     }
 
     private void createApplicationService() {
@@ -43,7 +47,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should transform Topic with correct API version")
     void shouldTransformWithCorrectApiVersion() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -57,7 +61,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should transform Topic with correct kind")
     void shouldTransformWithCorrectKind() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -71,7 +75,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should use topic name as metadata name")
     void shouldUseTopicNameAsMetadataName() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("production-topic")
@@ -83,9 +87,10 @@ class TopicTransformerTest {
     }
 
     @Test
-    @DisplayName("should resolve cluster from ServiceAccount reference")
-    void shouldResolveClusterFromServiceAccount() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "production-cluster");
+    @DisplayName("should resolve cluster using clusterId (not clusterRef metadata.name)")
+    void shouldResolveClusterUsingClusterId() {
+        createKafkaCluster("production-cluster", "production-vcluster");
+        createAndStoreServiceAccount("my-sa", "production-cluster");
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -93,13 +98,13 @@ class TopicTransformerTest {
 
         ConduktorTopic result = transformer.transform(source);
 
-        assertThat(result.getMetadata().getCluster()).isEqualTo("production-cluster");
+        assertThat(result.getMetadata().getCluster()).isEqualTo("production-vcluster");
     }
 
     @Test
     @DisplayName("should copy partitions from source Topic")
     void shouldCopyPartitions() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -114,7 +119,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should copy replication factor from source Topic")
     void shouldCopyReplicationFactor() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -129,7 +134,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should copy configs from source Topic")
     void shouldCopyConfigs() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -148,7 +153,7 @@ class TopicTransformerTest {
     @Test
     @DisplayName("should set configs to null when source configs are empty")
     void shouldSetConfigsToNullWhenEmpty() {
-        ServiceAccount sa = createAndStoreServiceAccount("my-sa", "my-cluster");
+        createAndStoreServiceAccount("my-sa", DEFAULT_CLUSTER_NAME);
         Topic source = TestDataBuilder.topic()
                 .serviceRef("my-sa")
                 .topicName("my-topic")
@@ -181,13 +186,11 @@ class TopicTransformerTest {
                 .hasMessageContaining("store must not be null");
     }
 
-    private ServiceAccount createAndStoreServiceAccount(String name, String clusterRef) {
-        createKafkaCluster(clusterRef);
-
+    private ServiceAccount createAndStoreServiceAccount(String name, String clusterName) {
         ServiceAccount sa = TestDataBuilder.serviceAccount()
                 .name(name)
                 .saName(name)
-                .clusterRef(clusterRef)
+                .clusterRef(clusterName)
                 .applicationServiceRef(APP_SERVICE)
                 .dn("CN=test")
                 .build();
@@ -195,11 +198,11 @@ class TopicTransformerTest {
         return sa;
     }
 
-    private void createKafkaCluster(String clusterRef) {
+    private void createKafkaCluster(String clusterName, String clusterId) {
         KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                 .namespace(NAMESPACE)
-                .name(clusterRef)
-                .clusterId(clusterRef)
+                .name(clusterName)
+                .clusterId(clusterId)
                 .applicationServiceRef(APP_SERVICE)
                 .build();
         store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE, cluster);

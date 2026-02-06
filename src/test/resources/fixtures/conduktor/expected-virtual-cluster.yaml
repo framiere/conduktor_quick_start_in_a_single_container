@@ -22,6 +22,13 @@ spec:
 apiVersion: gateway/v2
 kind: VirtualCluster
 metadata:
+  name: legacy-vcluster
+spec:
+  aclEnabled: true
+---
+apiVersion: gateway/v2
+kind: VirtualCluster
+metadata:
   name: sasl-prod-vcluster
 spec:
   aclEnabled: true

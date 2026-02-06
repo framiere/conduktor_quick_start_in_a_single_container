@@ -28,7 +28,8 @@ public class ServiceAccountTransformer implements CrdTransformer<ServiceAccount,
     @Override
     public GatewayServiceAccount transform(ServiceAccount source) {
         ServiceAccountSpec spec = source.getSpec();
-        AuthType authType = resolveAuthType(source);
+        KafkaCluster cluster = resolveKafkaCluster(source);
+        AuthType authType = cluster.getSpec().getAuthType() != null ? cluster.getSpec().getAuthType() : AuthType.MTLS;
         List<String> externalNames = resolveExternalNames(spec, authType);
 
         return GatewayServiceAccount.builder()
@@ -36,7 +37,7 @@ public class ServiceAccountTransformer implements CrdTransformer<ServiceAccount,
                 .kind(GatewayServiceAccount.KIND)
                 .metadata(ConduktorMetadata.builder()
                         .name(spec.getName())
-                        .vCluster(spec.getClusterRef())
+                        .vCluster(cluster.getSpec().getClusterId())
                         .build())
                 .spec(GatewayServiceAccountSpec.builder()
                         .type(ServiceAccountType.EXTERNAL)
@@ -45,20 +46,17 @@ public class ServiceAccountTransformer implements CrdTransformer<ServiceAccount,
                 .build();
     }
 
-    private AuthType resolveAuthType(ServiceAccount source) {
+    private KafkaCluster resolveKafkaCluster(ServiceAccount source) {
         String namespace = source.getMetadata().getNamespace();
         String clusterRef = source.getSpec().getClusterRef();
 
         KafkaCluster cluster = store.get(CRDKind.KAFKA_CLUSTER, namespace, clusterRef);
         if (cluster == null) {
             throw new IllegalStateException(
-                    "Cannot resolve auth type: KafkaCluster '%s' not found in namespace '%s'"
+                    "Cannot resolve KafkaCluster '%s' in namespace '%s'"
                             .formatted(clusterRef, namespace));
         }
-
-        // Default to MTLS for backward compatibility
-        AuthType authType = cluster.getSpec().getAuthType();
-        return authType != null ? authType : AuthType.MTLS;
+        return cluster;
     }
 
     private List<String> resolveExternalNames(ServiceAccountSpec spec, AuthType authType) {

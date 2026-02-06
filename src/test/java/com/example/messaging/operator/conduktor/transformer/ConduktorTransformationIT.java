@@ -136,19 +136,19 @@ class ConduktorTransformationIT {
         }
 
         private void setupKafkaClusters() {
-            createAppAndCluster("payments-service", "payments-team", "production-cluster", AuthType.MTLS);
-            createAppAndCluster("orders-service", "orders-team", "orders-cluster", AuthType.MTLS);
-            createAppAndCluster("legacy-service", "legacy-team", "legacy-cluster", AuthType.MTLS);
-            createAppAndCluster("sasl-service", "sasl-team", "sasl-cluster", AuthType.SASL_SSL);
+            createAppAndCluster("payments-service", "payments-team", "production-cluster", "payments-prod-vcluster", AuthType.MTLS);
+            createAppAndCluster("orders-service", "orders-team", "orders-cluster", "orders-prod-vcluster", AuthType.MTLS);
+            createAppAndCluster("legacy-service", "legacy-team", "legacy-cluster", "legacy-vcluster", AuthType.MTLS);
+            createAppAndCluster("sasl-service", "sasl-team", "sasl-cluster", "sasl-prod-vcluster", AuthType.SASL_SSL);
         }
 
-        private void createAppAndCluster(String appService, String namespace, String clusterName, AuthType authType) {
+        private void createAppAndCluster(String appService, String namespace, String clusterName, String clusterId, AuthType authType) {
             ApplicationService app = TestDataBuilder.applicationService()
                     .namespace(namespace).name(appService).appName(appService).build();
             store.create(CRDKind.APPLICATION_SERVICE, namespace, app);
 
             KafkaCluster cluster = TestDataBuilder.kafkaCluster()
-                    .namespace(namespace).name(clusterName).clusterId(clusterName)
+                    .namespace(namespace).name(clusterName).clusterId(clusterId)
                     .applicationServiceRef(appService).authType(authType).build();
             store.create(CRDKind.KAFKA_CLUSTER, namespace, cluster);
         }
@@ -215,7 +215,7 @@ class ConduktorTransformationIT {
                     .contains("apiVersion: gateway/v2")
                     .contains("kind: GatewayServiceAccount")
                     .contains("name: payments-admin")
-                    .containsIgnoringCase("vcluster: production-cluster")
+                    .containsIgnoringCase("vcluster: payments-prod-vcluster")
                     .contains("type: EXTERNAL")
                     .contains("- payments-admin")
                     .contains("- payments-backup-admin");
@@ -253,12 +253,12 @@ class ConduktorTransformationIT {
         }
 
         private void setupTestData() {
-            createAppServiceAndCluster("payments-service", "payments-team", "payments-admin", "payments-prod-vcluster");
-            createAppServiceAndCluster("orders-service", "orders-team", "orders-processor", "orders-prod-vcluster");
-            createAppServiceAndCluster("simple-service", "simple-team", "simple-sa", "simple-cluster");
+            createAppServiceAndCluster("payments-service", "payments-team", "payments-admin", "production-cluster", "payments-prod-vcluster");
+            createAppServiceAndCluster("orders-service", "orders-team", "orders-processor", "orders-cluster", "orders-prod-vcluster");
+            createAppServiceAndCluster("simple-service", "simple-team", "simple-sa", "simple-cluster", "simple-vcluster");
         }
 
-        private void createAppServiceAndCluster(String appService, String namespace, String saName, String clusterRef) {
+        private void createAppServiceAndCluster(String appService, String namespace, String saName, String clusterName, String clusterId) {
             ApplicationService app = TestDataBuilder.applicationService()
                     .namespace(namespace)
                     .name(appService)
@@ -268,8 +268,8 @@ class ConduktorTransformationIT {
 
             KafkaCluster cluster = TestDataBuilder.kafkaCluster()
                     .namespace(namespace)
-                    .name(clusterRef)
-                    .clusterId(clusterRef)
+                    .name(clusterName)
+                    .clusterId(clusterId)
                     .applicationServiceRef(appService)
                     .build();
             store.create(CRDKind.KAFKA_CLUSTER, namespace, cluster);
@@ -278,7 +278,7 @@ class ConduktorTransformationIT {
                     .namespace(namespace)
                     .name(saName)
                     .saName(saName)
-                    .clusterRef(clusterRef)
+                    .clusterRef(clusterName)
                     .applicationServiceRef(appService)
                     .dn("CN=" + saName)
                     .build();
@@ -398,7 +398,7 @@ class ConduktorTransformationIT {
                     .contains("apiVersion: kafka/v2")
                     .contains("kind: Topic")
                     .contains("name: simple.events")
-                    .contains("cluster: simple-cluster")
+                    .contains("cluster: simple-vcluster")
                     .contains("partitions: 3")
                     .contains("replicationFactor: 1")
                     .doesNotContain("configs:");
@@ -679,7 +679,7 @@ class ConduktorTransformationIT {
             saStore.create(CRDKind.APPLICATION_SERVICE, "default", app);
 
             KafkaCluster cluster = TestDataBuilder.kafkaCluster()
-                    .namespace("default").name("my-cluster").clusterId("my-cluster")
+                    .namespace("default").name("my-cluster").clusterId("my-vcluster")
                     .applicationServiceRef("test-app").authType(AuthType.MTLS).build();
             saStore.create(CRDKind.KAFKA_CLUSTER, "default", cluster);
 
@@ -699,7 +699,7 @@ class ConduktorTransformationIT {
                     kind: GatewayServiceAccount
                     metadata:
                       name: my-service-account
-                      vCluster: my-cluster
+                      vCluster: my-vcluster
                     spec:
                       type: EXTERNAL
                       externalNames:

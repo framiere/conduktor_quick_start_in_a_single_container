@@ -28,12 +28,12 @@ class ServiceAccountTransformerTest {
         store = new CRDStore();
         transformer = new ServiceAccountTransformer(store);
 
-        // Default MTLS cluster for most tests
+        // Default MTLS cluster for most tests — name differs from clusterId to catch bugs
         store.create(CRDKind.APPLICATION_SERVICE, NAMESPACE,
                 TestDataBuilder.applicationService().namespace(NAMESPACE).name("test-app").build());
         store.create(CRDKind.KAFKA_CLUSTER, NAMESPACE,
                 TestDataBuilder.kafkaCluster()
-                        .namespace(NAMESPACE).name("my-cluster").clusterId("my-cluster")
+                        .namespace(NAMESPACE).name("my-cluster").clusterId("my-vcluster")
                         .applicationServiceRef("test-app").authType(AuthType.MTLS).build());
     }
 
@@ -78,15 +78,15 @@ class ServiceAccountTransformerTest {
         }
 
         @Test
-        @DisplayName("should use clusterRef as vCluster in metadata")
-        void shouldUseClusterRefAsVCluster() {
+        @DisplayName("should use clusterId (not clusterRef) as vCluster in metadata")
+        void shouldUseClusterIdAsVCluster() {
             ServiceAccount source = TestDataBuilder.serviceAccount()
                     .namespace(NAMESPACE).saName("my-sa").clusterRef("my-cluster")
                     .dn("CN=my-user").build();
 
             GatewayServiceAccount result = transformer.transform(source);
 
-            assertThat(result.getMetadata().getVCluster()).isEqualTo("my-cluster");
+            assertThat(result.getMetadata().getVCluster()).isEqualTo("my-vcluster");
         }
 
         @Test
@@ -202,7 +202,7 @@ class ServiceAccountTransformerTest {
                     TestDataBuilder.applicationService().namespace("sasl-ns").name("sasl-app").build());
             store.create(CRDKind.KAFKA_CLUSTER, "sasl-ns",
                     TestDataBuilder.kafkaCluster()
-                            .namespace("sasl-ns").name("sasl-cluster").clusterId("sasl-cluster")
+                            .namespace("sasl-ns").name("sasl-cluster").clusterId("sasl-vcluster")
                             .applicationServiceRef("sasl-app").authType(AuthType.SASL_SSL).build());
         }
 
@@ -260,7 +260,7 @@ class ServiceAccountTransformerTest {
 
             assertThatThrownBy(() -> transformer.transform(source))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("KafkaCluster 'nonexistent-cluster' not found");
+                    .hasMessageContaining("KafkaCluster 'nonexistent-cluster'");
         }
     }
 }
