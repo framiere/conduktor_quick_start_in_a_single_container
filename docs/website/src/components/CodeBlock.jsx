@@ -38,59 +38,81 @@ function highlightYaml(code) {
 }
 
 function highlightJava(code) {
-  const keywords = ['public', 'private', 'protected', 'class', 'interface', 'extends', 'implements', 'static', 'final', 'void', 'return', 'new', 'if', 'else', 'for', 'while', 'try', 'catch', 'throw', 'throws', 'import', 'package']
-  const types = ['String', 'int', 'boolean', 'long', 'double', 'float', 'Map', 'List', 'Set', 'Optional', 'HttpsServer', 'ValidationResult']
+  const keywords = new Set(['public', 'private', 'protected', 'class', 'interface', 'extends', 'implements', 'static', 'final', 'void', 'return', 'new', 'if', 'else', 'for', 'while', 'try', 'catch', 'throw', 'throws', 'import', 'package'])
+  const types = new Set(['String', 'int', 'boolean', 'long', 'double', 'float', 'Map', 'List', 'Set', 'Optional', 'HttpsServer', 'ValidationResult', 'ConcurrentMap', 'CRDKind', 'Object'])
 
-  let result = escapeHtml(code)
+  // Single-pass tokenizer: each token matched once from raw code, then escaped
+  const tokenRegex = /(\/\/.*$|\/\*[\s\S]*?\*\/|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\b[a-zA-Z_]\w*\b|\b\d+\b)/gm
+  let result = ''
+  let lastIndex = 0
 
-  // Comments
-  result = result.replace(/(\/\/.*$)/gm, '<span class="text-gray-500">$1</span>')
-  result = result.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="text-gray-500">$1</span>')
+  for (const match of code.matchAll(tokenRegex)) {
+    result += escapeHtml(code.slice(lastIndex, match.index))
+    const token = match[0]
+    const escaped = escapeHtml(token)
 
-  // Strings
-  result = result.replace(/("(?:[^"\\]|\\.)*")/g, '<span class="text-green-400">$1</span>')
+    if (token.startsWith('//') || token.startsWith('/*')) {
+      result += `<span class="text-gray-500">${escaped}</span>`
+    } else if (token.startsWith('"') || token.startsWith("'")) {
+      result += `<span class="text-green-400">${escaped}</span>`
+    } else if (keywords.has(token)) {
+      result += `<span class="text-purple-400">${escaped}</span>`
+    } else if (types.has(token)) {
+      result += `<span class="text-cyan-400">${escaped}</span>`
+    } else if (/^\d+$/.test(token)) {
+      result += `<span class="text-orange-400">${escaped}</span>`
+    } else {
+      result += escaped
+    }
 
-  // Keywords
-  keywords.forEach(kw => {
-    result = result.replace(new RegExp(`\\b(${kw})\\b`, 'g'), '<span class="text-purple-400">$1</span>')
-  })
+    lastIndex = match.index + match[0].length
+  }
 
-  // Types
-  types.forEach(type => {
-    result = result.replace(new RegExp(`\\b(${type})\\b`, 'g'), '<span class="text-cyan-400">$1</span>')
-  })
-
-  // Numbers
-  result = result.replace(/\b(\d+)\b/g, '<span class="text-orange-400">$1</span>')
-
+  result += escapeHtml(code.slice(lastIndex))
   return result
 }
 
 function highlightBash(code) {
+  const commands = new Set(['kubectl', 'git', 'npm', 'mvn', 'grep', 'docker', 'make', 'conduktor'])
+
   return code
     .split('\n')
     .map(line => {
-      // Comments
       if (line.trim().startsWith('#')) {
         return `<span class="text-gray-500">${escapeHtml(line)}</span>`
       }
 
-      let result = escapeHtml(line)
+      // Single-pass tokenizer on raw line
+      const tokenRegex = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\$\{[^}]*\}|\$\w+|\|\||&&|\||[<>]|\s--?[a-zA-Z0-9-]+|\b[a-zA-Z_]\w*\b)/g
+      let result = ''
+      let lastIndex = 0
+      let firstWord = true
 
-      // Strings
-      result = result.replace(/("(?:[^"\\]|\\.)*")/g, '<span class="text-green-400">$1</span>')
-      result = result.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="text-green-400">$1</span>')
+      for (const match of line.matchAll(tokenRegex)) {
+        result += escapeHtml(line.slice(lastIndex, match.index))
+        const token = match[0]
 
-      // Commands at start
-      result = result.replace(/^(\s*)(kubectl|git|npm|mvn|grep|docker|make)(\s)/,
-        '$1<span class="text-cyan-400">$2</span>$3')
+        if (token.startsWith('"') || token.startsWith("'")) {
+          result += `<span class="text-green-400">${escapeHtml(token)}</span>`
+        } else if (token.startsWith('$')) {
+          result += `<span class="text-yellow-400">${escapeHtml(token)}</span>`
+        } else if (token === '|' || token === '||' || token === '&&' || token === '>' || token === '<') {
+          result += `<span class="text-purple-400">${escapeHtml(token)}</span>`
+        } else if (token[0] === ' ' || token[0] === '\t') {
+          // Flag (starts with whitespace then -)
+          result += `${escapeHtml(token[0])}<span class="text-yellow-400">${escapeHtml(token.slice(1))}</span>`
+        } else if (firstWord && commands.has(token)) {
+          result += `<span class="text-cyan-400">${escapeHtml(token)}</span>`
+          firstWord = false
+        } else {
+          result += escapeHtml(token)
+          firstWord = false
+        }
 
-      // Flags
-      result = result.replace(/(\s)(--?[a-zA-Z0-9-]+)/g, '$1<span class="text-yellow-400">$2</span>')
+        lastIndex = match.index + match[0].length
+      }
 
-      // Pipes and operators
-      result = result.replace(/(\||&amp;&amp;|&gt;|&lt;)/g, '<span class="text-purple-400">$1</span>')
-
+      result += escapeHtml(line.slice(lastIndex))
       return result
     })
     .join('\n')
@@ -163,7 +185,7 @@ function highlight(code, language) {
       if (code.includes('public ') || code.includes('private ') || code.includes('class ')) {
         return highlightJava(code)
       }
-      if (code.includes('kubectl') || code.includes('grep') || code.includes('git')) {
+      if (code.includes('kubectl') || code.includes('grep') || code.includes('git') || code.includes('conduktor')) {
         return highlightBash(code)
       }
       return escapeHtml(code)

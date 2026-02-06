@@ -1,5 +1,6 @@
 import { ChevronRight, Quote } from 'lucide-react'
 import useScrollToHash from '../hooks/useScrollToHash'
+import TableOfContents from './TableOfContents'
 
 export default function PageLayout({ title, subtitle, icon: Icon, children, breadcrumb, aphorism }) {
   useScrollToHash()
@@ -45,6 +46,8 @@ export default function PageLayout({ title, subtitle, icon: Icon, children, brea
       <div className="max-w-6xl mx-auto px-6 py-12">
         {children}
       </div>
+
+      <TableOfContents />
     </div>
   )
 }
