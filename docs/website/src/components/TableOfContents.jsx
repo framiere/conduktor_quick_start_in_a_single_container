@@ -9,27 +9,39 @@ export default function TableOfContents() {
   const [activeId, setActiveId] = useState(null)
   const observerRef = useRef(null)
 
-  // Scan DOM for sections with id
+  // Scan DOM for h2 and h3 headings with an id (on the heading itself or parent section)
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const sections = document.querySelectorAll('section[id]')
       const found = []
-      sections.forEach(section => {
-        const h2 = section.querySelector('h2')
-        const title = h2?.textContent?.replace(/\s*$/, '') || ''
-        if (section.id && title) {
-          found.push({ id: section.id, title })
-        }
+      const content = document.querySelector('.animate-fade-in')
+      if (!content) return
+
+      content.querySelectorAll('h2, h3').forEach(heading => {
+        const text = heading.textContent?.trim() || ''
+        if (!text) return
+
+        // Find an anchor id: the heading itself, or the closest section with an id
+        const id = heading.id || heading.closest('section[id]')?.id
+        if (!id) return
+
+        found.push({ id, title: text, level: heading.tagName === 'H2' ? 2 : 3 })
       })
-      setEntries(found)
+
+      // Deduplicate by id (keep first occurrence)
+      const seen = new Set()
+      setEntries(found.filter(e => {
+        if (seen.has(e.id)) return false
+        seen.add(e.id)
+        return true
+      }))
     }, 150)
 
     return () => clearTimeout(timeout)
   }, [pathname])
 
-  // Track active section via IntersectionObserver
+  // Track active heading via IntersectionObserver
   useEffect(() => {
-    if (entries.length <= 4) return
+    if (entries.length <= 3) return
 
     observerRef.current?.disconnect()
 
@@ -54,7 +66,7 @@ export default function TableOfContents() {
     return () => observer.disconnect()
   }, [entries])
 
-  if (entries.length <= 4) return null
+  if (entries.length <= 3) return null
 
   // Portal to document.body to escape animate-fade-in's transform context
   return createPortal(
@@ -65,11 +77,13 @@ export default function TableOfContents() {
           <span>On this page</span>
         </div>
         <ul className="space-y-0.5">
-          {entries.map(({ id, title }) => (
+          {entries.map(({ id, title, level }) => (
             <li key={id}>
               <a
                 href={`#${pathname}#${id}`}
-                className={`block px-2 py-1 text-xs rounded-lg transition-colors truncate ${
+                className={`block py-1 text-xs rounded-lg transition-colors truncate ${
+                  level === 3 ? 'pl-5 pr-2' : 'px-2'
+                } ${
                   activeId === id
                     ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
