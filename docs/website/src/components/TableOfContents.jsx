@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { List } from 'lucide-react'
 
@@ -55,7 +56,8 @@ export default function TableOfContents() {
 
   if (entries.length <= 4) return null
 
-  return (
+  // Portal to document.body to escape animate-fade-in's transform context
+  return createPortal(
     <nav className="fixed right-6 top-24 z-30 max-h-[70vh] overflow-y-auto">
       <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-200 dark:border-gray-800 p-3 w-52 shadow-lg">
         <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-2 px-2">
@@ -80,6 +82,7 @@ export default function TableOfContents() {
           ))}
         </ul>
       </div>
-    </nav>
+    </nav>,
+    document.body
   )
 }
